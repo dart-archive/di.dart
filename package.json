@@ -1,0 +1,17 @@
+{
+  "name": "dart-di",
+  "version": "0.0.0",
+  "description": "ERROR: No README.md file found!",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4",
+    "grunt-contrib-watch": "~0.3"
+  },
+  "scripts": {
+    "test": "grunt dart:test"
+  },
+  "repository": "",
+  "author": "Vojta Jina <vojta.jina@gmail.com>",
+  "license": "MIT"
+}
