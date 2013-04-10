@@ -74,9 +74,11 @@ class Injector {
   // should be <Type, dynamic>
   Map<String, dynamic> instances = new Map<String, dynamic>();
   
-  Injector([Module module]) {
-    if (module != null) {
-      providers.addAll(module);
+  Injector([List<Module> modules]) {
+    if (?modules) {
+      modules.forEach((module) {
+        providers.addAll(module);
+      });
     }
   }
 

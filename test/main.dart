@@ -59,7 +59,7 @@ it('should allow modules and overriding providers', () {
   // injector is immutable
   // you can't load more modules once it's instantiated
   // (you can create a child injector)
-  var injector = new Injector(module);
+  var injector = new Injector([module]);
   var instance = injector.get(Abc);
   
   expect(instance.id, toEqual('mock-id'));
@@ -80,7 +80,7 @@ it('should allow providing values', () {
   module.value(Abc, 'str value');
   module.value(Complex, 123);
 
-  var injector = new Injector(module);
+  var injector = new Injector([module]);
   var abcInstance = injector.get(Abc);
   var complexInstance = injector.get(Complex);
 
