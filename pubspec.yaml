@@ -1,8 +1,8 @@
 name: di
 description: A prototype of Dependency Injection framework. 
-version: 0.0.1
+version: 0.0.2
 author: "Vojta Jina <vojta.jina@gmail.com>"
-homepage: https://github.com/dart-lang/dado
+homepage: https://github.com/vojtajina/dart-di
 
 dev_dependencies:
   unittest: any
