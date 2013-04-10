@@ -2,6 +2,12 @@ import 'mirrors.dart';
 import 'dart:async';
 import 'dart:collection';
 
+class NoProviderException implements Exception {
+  final String message;
+
+  const NoProviderException(this.message);
+  const NoProviderException.forType(String typeName) : this('No provider for ${typeName}!');
+}
 
 abstract class Provider {
   dynamic get(getInstanceByTypeName);
@@ -56,10 +62,18 @@ class Module extends HashMap<String, Provider> {
 }
 
 
+var PRIMITIVE_TYPES = ['dynamic', 'num', 'String', 'bool'];
+
 // terrible hack because we can't get a qualified name from a Type
 // dartbug.com/8041
 // dartbug.com/9395
 ClassMirror _getClassMirrorByTypeName (String typeName) {
+
+  if (PRIMITIVE_TYPES.contains(typeName)) {
+    throw new NoProviderException('Cannot inject a primitive type of ${typeName}!');
+  }
+
+
   for (var lib in currentMirrorSystem().libraries.values) {
     if (lib.classes.containsKey(typeName)) {
       return lib.classes[typeName];

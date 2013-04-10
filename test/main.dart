@@ -30,6 +30,17 @@ class Complex {
   }
 }
 
+class NumDependency {
+  NumDependency(num value) {}
+}
+
+class StringDependency {
+  StringDependency(String value) {}
+}
+
+class BoolDependency {
+  BoolDependency(bool value) {}
+}
 
 // pretend, you don't see this main method
 void main() {
@@ -86,6 +97,23 @@ it('should allow providing values', () {
 
   expect(abcInstance, toEqual('str value'));
   expect(complexInstance, toEqual(123));
+});
+
+
+it('should throw an exception when injecting a primitive type', () {
+  var injector = new Injector();
+
+  expect(() {
+    injector.get(NumDependency);
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of num!'));
+
+  expect(() {
+    injector.get(BoolDependency);
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of bool!'));
+
+  expect(() {
+    injector.get(StringDependency);
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of String!'));
 });
 
 }
