@@ -69,18 +69,10 @@ class Module extends HashMap<String, Provider> {
 }
 
 
-var PRIMITIVE_TYPES = ['dynamic', 'num', 'String', 'bool'];
-
 // terrible hack because we can't get a qualified name from a Type
 // dartbug.com/8041
 // dartbug.com/9395
 ClassMirror _getClassMirrorByTypeName (String typeName) {
-
-  if (PRIMITIVE_TYPES.contains(typeName)) {
-    throw new NoProviderException('Cannot inject a primitive type of ${typeName}!');
-  }
-
-
   for (var lib in currentMirrorSystem().libraries.values) {
     if (lib.classes.containsKey(typeName)) {
       return lib.classes[typeName];
@@ -90,6 +82,8 @@ ClassMirror _getClassMirrorByTypeName (String typeName) {
 
 
 class Injector {
+  final List<String> PRIMITIVE_TYPES = <String>['dynamic', 'num', 'String', 'bool'];
+
   // should be <Type, Provider>
   Map<String, Provider> providers = new Map<String, Provider>();
   // should be <Type, dynamic>
@@ -106,6 +100,12 @@ class Injector {
   }
 
   dynamic _getInstanceByTypeName(String typeName) {
+    if (PRIMITIVE_TYPES.contains(typeName)) {
+      String graph = resolving.join(' -> ') + ' -> ' + typeName;
+      resolving.clear();
+      throw new NoProviderException('Cannot inject a primitive type of ${typeName}! (resolving ${graph})');
+    }
+
     if (instances.containsKey(typeName)) {
       return instances[typeName];
     }

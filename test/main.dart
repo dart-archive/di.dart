@@ -114,15 +114,19 @@ it('should throw an exception when injecting a primitive type', () {
 
   expect(() {
     injector.get(NumDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of num!'));
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of num! ' +
+                                  '(resolving NumDependency -> num)'));
 
   expect(() {
     injector.get(BoolDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of bool!'));
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of bool! ' +
+                                  '(resolving BoolDependency -> bool)'));
 
   expect(() {
     injector.get(StringDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of String!'));
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of String! ' +
+                                  '(resolving StringDependency -> String)'));
+});
 
 
 it('should throw an exception when circular dependency', () {
