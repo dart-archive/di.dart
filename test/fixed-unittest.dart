@@ -14,6 +14,58 @@ Matcher toEqual(expected) => equals(expected);
 Matcher toBe(expected) => same(expected);
 Matcher instanceOf(Type t) => new IsInstanceOfTypeMatcher(t);
 
+Matcher toThrow(Type exceptionClass, String message) {
+  return new ThrowsMatcher(new ComplexExceptionMatcher(instanceOf(exceptionClass), toEqual(message)));
+}
+
+class ThrowsMatcher extends Throws {
+  final Matcher _matcher;
+
+  const ThrowsMatcher([Matcher matcher]) : _matcher = matcher, super(matcher);
+
+  Description describeMismatch(item, Description mismatchDescription,
+                               MatchState matchState,
+                               bool verbose) {
+    if (item is! Function && item is! Future) {
+      return mismatchDescription.add(' not a Function or Future');
+    }
+
+    if (_matcher == null ||  matchState.state == null) {
+      return mismatchDescription.add(' did not throw any exception');
+    }
+
+    return _matcher.describeMismatch(item, mismatchDescription, matchState, verbose);
+  }
+}
+
+class ComplexExceptionMatcher extends BaseMatcher {
+  Matcher classMatcher;
+  Matcher messageMatcher;
+
+  ComplexExceptionMatcher(this.classMatcher, this.messageMatcher);
+
+  bool matches(obj, MatchState ms) {
+    if (!classMatcher.matches(obj, ms)) {
+      return false;
+    }
+
+    return messageMatcher.matches(obj.message, ms);
+  }
+
+  Description describe(Description description) {
+    classMatcher.describe(description);
+
+    description.add(' with message ');
+    messageMatcher.describe(description);
+  }
+
+  Description describeMismatch(item, Description mismatchDescription, MatchState matchState,
+                               bool verbose) {
+    Exception e = matchState.state['exception'];
+    mismatchDescription.add('threw ').addDescriptionOf(e).add(' with message ').addDescriptionOf(e.message);
+  }
+
+}
 
 // Welcome to Dart ;-)
 class IsInstanceOfTypeMatcher extends BaseMatcher {
