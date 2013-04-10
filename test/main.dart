@@ -1,5 +1,5 @@
 import 'fixed-unittest.dart';
-import 'package:di/di.dart';
+import '../lib/di.dart';
 
 // just some classes for testing
 class Abc {
@@ -53,9 +53,8 @@ it('should resolve basic dependencies', () {
 
 
 it('should allow modules and overriding providers', () {
-  // module is just a Map<Type, Type>
-  var module = new Map<Type, Type>();
-  module[Abc] = MockAbc;
+  var module = new Module();
+  module.type(Abc, MockAbc);
   
   // injector is immutable
   // you can't load more modules once it's instantiated
@@ -74,5 +73,19 @@ it('should only create a single instance', () {
   
   expect(first, toBe(second));
 });
-  
+
+
+it('should allow providing values', () {
+  var module = new Module();
+  module.value(Abc, 'str value');
+  module.value(Complex, 123);
+
+  var injector = new Injector(module);
+  var abcInstance = injector.get(Abc);
+  var complexInstance = injector.get(Complex);
+
+  expect(abcInstance, toEqual('str value'));
+  expect(complexInstance, toEqual(123));
+});
+
 }
