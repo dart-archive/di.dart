@@ -9,6 +9,13 @@ class NoProviderException implements Exception {
   const NoProviderException.forType(String typeName) : this('No provider for ${typeName}!');
 }
 
+class CircularDependencyException implements Exception {
+  final String message;
+
+  const CircularDependencyException(this.message);
+}
+
+
 abstract class Provider {
   dynamic get(getInstanceByTypeName);
 }
@@ -87,6 +94,8 @@ class Injector {
   Map<String, Provider> providers = new Map<String, Provider>();
   // should be <Type, dynamic>
   Map<String, dynamic> instances = new Map<String, dynamic>();
+
+  List<String> resolving = new List<String>();
   
   Injector([List<Module> modules]) {
     if (?modules) {
@@ -100,6 +109,14 @@ class Injector {
     if (instances.containsKey(typeName)) {
       return instances[typeName];
     }
+
+    if (resolving.contains(typeName)) {
+      String graph = resolving.join(' -> ') + ' -> ' + typeName;
+      resolving.clear();
+      throw new CircularDependencyException('Cannot resolve a circular dependency! (resolving ${graph})');
+    }
+
+    resolving.add(typeName);
 
     if (providers.containsKey(typeName)) {
       instances[typeName] = providers[typeName].get(_getInstanceByTypeName);
@@ -117,6 +134,8 @@ class Injector {
 
       instances[typeName] = deprecatedFutureValue(cm.newInstance(ctor.constructorName, positionalArgs, namedArgs));
     }
+
+    resolving.removeLast();
 
     return instances[typeName];
   }

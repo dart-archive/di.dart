@@ -42,6 +42,15 @@ class BoolDependency {
   BoolDependency(bool value) {}
 }
 
+
+class CircularA {
+  CircularA(CircularB b) {}
+}
+
+class CircularB {
+  CircularB(CircularA a) {}
+}
+
 // pretend, you don't see this main method
 void main() {
   
@@ -114,6 +123,15 @@ it('should throw an exception when injecting a primitive type', () {
   expect(() {
     injector.get(StringDependency);
   }, toThrow(NoProviderException, 'Cannot inject a primitive type of String!'));
+
+
+it('should throw an exception when circular dependency', () {
+  var injector = new Injector();
+
+  expect(() {
+    injector.get(CircularA);
+  }, toThrow(CircularDependencyException, 'Cannot resolve a circular dependency! ' +
+                                          '(resolving CircularA -> CircularB -> CircularA)'));
 });
 
 }
