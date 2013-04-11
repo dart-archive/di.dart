@@ -14,8 +14,8 @@ Matcher toEqual(expected) => equals(expected);
 Matcher toBe(expected) => same(expected);
 Matcher instanceOf(Type t) => new IsInstanceOfTypeMatcher(t);
 
-Matcher toThrow(Type exceptionClass, String message) {
-  return new ThrowsMatcher(new ComplexExceptionMatcher(instanceOf(exceptionClass), toEqual(message)));
+Matcher toThrow(Type exceptionClass, String message) =>
+  new ThrowsMatcher(new ComplexExceptionMatcher(instanceOf(exceptionClass), toEqual(message)));
 
 Matcher not(Matcher matcher) => new NegateMatcher(matcher);
 
@@ -39,6 +39,7 @@ class NegateMatcher extends BaseMatcher {
     return _matcher.describeMismatch(item, mismatchDescription, matchState, verbose);
   }
 }
+
 
 class ThrowsMatcher extends Throws {
   final Matcher _matcher;
@@ -103,5 +104,5 @@ class IsInstanceOfTypeMatcher extends BaseMatcher {
   }
   
   Description describe(Description description) =>
-      description.add('an instance of ${t.toString()}');
+    description.add('an instance of ${t.toString()}');
 }
