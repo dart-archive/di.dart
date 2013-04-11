@@ -35,14 +35,14 @@ class _ValueProvider implements Provider {
 
 
 class _TypeProvider implements Provider {
-  Type type;
+  final String typeName;
 
-  _TypeProvider(Type type) {
-    this.type = type;
-  }
+  _TypeProvider(Type type) : this.typeName = type.toString();
+
+  _TypeProvider.fromString(String this.typeName);
 
   dynamic get(getInstanceByTypeName) {
-    ClassMirror cm = _getClassMirrorByTypeName(type.toString());
+    ClassMirror cm = _getClassMirrorByTypeName(typeName);
     MethodMirror ctor = cm.constructors.values.first;
 
     resolveArgument(p) {
@@ -132,18 +132,8 @@ class Injector {
     } else {
       // implicit type provider, only root injector does that
       resolving.add(typeName);
-      ClassMirror cm = _getClassMirrorByTypeName(typeName);
-      MethodMirror ctor = cm.constructors.values.first;
-
-      resolveArgument(p) {
-        return _getInstanceByTypeName(p.type.simpleName);
-      }
-
-      var positionalArgs = ctor.parameters.map(resolveArgument).toList();
-      var namedArgs = null;
-
-      instances[typeName] = deprecatedFutureValue(cm.newInstance(ctor.constructorName, positionalArgs, namedArgs));
-
+      Provider provider = new _TypeProvider.fromString(typeName);
+      instances[typeName] = provider.get(_getInstanceByTypeName);
       resolving.removeLast();
     }
 
