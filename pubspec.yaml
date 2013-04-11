@@ -1,6 +1,6 @@
 name: di
 description: A prototype of Dependency Injection framework. 
-version: 0.0.3
+version: 0.0.4
 author: "Vojta Jina <vojta.jina@gmail.com>"
 homepage: https://github.com/vojtajina/dart-di
 
