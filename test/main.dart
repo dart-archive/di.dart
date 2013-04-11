@@ -109,6 +109,33 @@ it('should allow providing values', () {
 });
 
 
+it('should allow providing factory functions', () {
+  var module = new Module();
+  module.factory(Abc, () {
+    return 'factory-product';
+  });
+
+  var injector = new Injector([module]);
+  var instance = injector.get(Abc);
+
+  expect(instance, toEqual('factory-product'));
+});
+
+
+it('should inject factory function', () {
+  var module = new Module();
+  module.factory(Complex, (Abc abc) {
+    return abc;
+  });
+
+  var injector = new Injector([module]);
+  var instance = injector.get(Complex);
+
+  expect(instance, instanceOf(Abc));
+  expect(instance.id, toEqual('abc-id'));
+});
+
+
 it('should throw an exception when injecting a primitive type', () {
   var injector = new Injector();
 

@@ -57,6 +57,27 @@ class _TypeProvider implements Provider {
 }
 
 
+class _FactoryProvider implements Provider {
+  final Function factoryFn;
+
+  _FactoryProvider(Function this.factoryFn);
+
+  dynamic get(getInstanceByTypeName) {
+    ClosureMirror cm = reflect(factoryFn);
+    MethodMirror mm = cm.function;
+
+    resolveArgument(p) {
+      return getInstanceByTypeName(p.type.simpleName);
+    }
+
+    var positionalArgs = mm.parameters.map(resolveArgument).toList();
+    var namedArgs = null;
+
+    return deprecatedFutureValue(cm.apply(positionalArgs, namedArgs));
+  }
+}
+
+
 class Module extends HashMap<String, Provider> {
 
   void value(Type id, value) {
@@ -69,6 +90,10 @@ class Module extends HashMap<String, Provider> {
 
   void provider(Type id, Provider provider) {
     this[id.toString()] = provider;
+  }
+
+  void factory(Type id, Function factoryFn) {
+    this[id.toString()] = new _FactoryProvider(factoryFn);
   }
 }
 
