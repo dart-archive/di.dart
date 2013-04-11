@@ -84,6 +84,8 @@ ClassMirror _getClassMirrorByTypeName (String typeName) {
 class Injector {
   final List<String> PRIMITIVE_TYPES = <String>['dynamic', 'num', 'String', 'bool'];
 
+  final Injector parent;
+
   // should be <Type, Provider>
   Map<String, Provider> providers = new Map<String, Provider>();
   // should be <Type, dynamic>
@@ -91,7 +93,8 @@ class Injector {
 
   List<String> resolving = new List<String>();
   
-  Injector([List<Module> modules]) {
+  Injector([List<Module> modules, Injector parent]) : this.parent = parent {
+
     if (?modules) {
       modules.forEach((module) {
         providers.addAll(module);
@@ -116,12 +119,15 @@ class Injector {
       throw new CircularDependencyException('Cannot resolve a circular dependency! (resolving ${graph})');
     }
 
-    resolving.add(typeName);
-
     if (providers.containsKey(typeName)) {
+      resolving.add(typeName);
       instances[typeName] = providers[typeName].get(_getInstanceByTypeName);
+      resolving.removeLast();
+    } else if (parent != null) {
+      return parent._getInstanceByTypeName(typeName);
     } else {
-      // implicit type provider
+      // implicit type provider, only root injector does that
+      resolving.add(typeName);
       ClassMirror cm = _getClassMirrorByTypeName(typeName);
       MethodMirror ctor = cm.constructors.values.first;
 
@@ -133,9 +139,9 @@ class Injector {
       var namedArgs = null;
 
       instances[typeName] = deprecatedFutureValue(cm.newInstance(ctor.constructorName, positionalArgs, namedArgs));
-    }
 
-    resolving.removeLast();
+      resolving.removeLast();
+    }
 
     return instances[typeName];
   }
@@ -144,5 +150,9 @@ class Injector {
   // PUBLIC API
   dynamic get(Type type) {
     return _getInstanceByTypeName(type.toString()).reflectee;
+  }
+
+  Injector createChild([List<Module> modules]) {
+    return new Injector(modules, this);
   }
 }

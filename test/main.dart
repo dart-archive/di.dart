@@ -138,4 +138,37 @@ it('should throw an exception when circular dependency', () {
                                           '(resolving CircularA -> CircularB -> CircularA)'));
 });
 
+
+// CHILD INJECTORS
+it('should inject from child', () {
+  var module = new Module();
+  module.type(Abc, MockAbc);
+
+  var parent = new Injector();
+  var child = parent.createChild([module]);
+
+  var abcFromParent = parent.get(Abc);
+  var abcFromChild = child.get(Abc);
+
+  expect(abcFromParent.id, toEqual('abc-id'));
+  expect(abcFromChild.id, toEqual('mock-id'));
+});
+
+
+it('should inject instance from parent if not provided in child', () {
+  var module = new Module();
+  module.type(Complex, Complex);
+
+  var parent = new Injector();
+  var child = parent.createChild([module]);
+
+  var complexFromParent = parent.get(Complex);
+  var complexFromChild = child.get(Complex);
+  var abcFromParent = parent.get(Abc);
+  var abcFromChild = child.get(Abc);
+
+  expect(complexFromChild, not(toBe(complexFromParent)));
+  expect(abcFromChild, toBe(abcFromParent));
+});
+
 }
