@@ -16,6 +16,28 @@ Matcher instanceOf(Type t) => new IsInstanceOfTypeMatcher(t);
 
 Matcher toThrow(Type exceptionClass, String message) {
   return new ThrowsMatcher(new ComplexExceptionMatcher(instanceOf(exceptionClass), toEqual(message)));
+
+Matcher not(Matcher matcher) => new NegateMatcher(matcher);
+
+
+class NegateMatcher extends BaseMatcher {
+  final Matcher _matcher;
+
+  const NegateMatcher(Matcher matcher) : _matcher = matcher;
+
+  bool matches(obj, MatchState ms) {
+    return !_matcher.matches(obj, ms);
+  }
+
+  Description describe(Description description) {
+    description.add('NOT ');
+    return _matcher.describe(description);
+  }
+
+  Description describeMismatch(item, Description mismatchDescription, MatchState matchState,
+                               bool verbose) {
+    return _matcher.describeMismatch(item, mismatchDescription, matchState, verbose);
+  }
 }
 
 class ThrowsMatcher extends Throws {
