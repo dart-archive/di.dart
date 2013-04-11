@@ -66,6 +66,10 @@ class Module extends HashMap<String, Provider> {
   void type(Type id, Type type) {
     this[id.toString()] = new _TypeProvider(type);
   }
+
+  void provider(Type id, Provider provider) {
+    this[id.toString()] = provider;
+  }
 }
 
 
@@ -146,13 +150,38 @@ class Injector {
     return instances[typeName];
   }
 
+  Provider _getProviderForType(Type type) {
+    String typeName = type.toString();
+
+    if (providers.containsKey(typeName)) {
+      return providers[typeName];
+    }
+
+    if (parent != null) {
+      return parent._getProviderForType(typeName);
+    }
+
+    // create a provider for implicit types
+    return new _TypeProvider(type);
+  }
+
  
   // PUBLIC API
   dynamic get(Type type) {
     return _getInstanceByTypeName(type.toString()).reflectee;
   }
 
-  Injector createChild([List<Module> modules]) {
+  Injector createChild(List<Module> modules, [List<Type> forceNewInstances]) {
+    if (?forceNewInstances) {
+      Module forceNew = new Module();
+      forceNewInstances.forEach((type) {
+        forceNew.provider(type, _getProviderForType(type));
+      });
+
+      modules = modules.toList(); // clone
+      modules.add(forceNew);
+    }
+
     return new Injector(modules, this);
   }
 }

@@ -171,4 +171,49 @@ it('should inject instance from parent if not provided in child', () {
   expect(abcFromChild, toBe(abcFromParent));
 });
 
+
+it('should inject instance from parent but never use dependency from child', () {
+  var module = new Module();
+  module.type(Abc, MockAbc);
+
+  var parent = new Injector();
+  var child = parent.createChild([module]);
+
+  var complexFromParent = parent.get(Complex);
+  var complexFromChild = child.get(Complex);
+  var abcFromParent = parent.get(Abc);
+  var abcFromChild = child.get(Abc);
+
+  expect(complexFromChild, toBe(complexFromParent));
+  expect(complexFromChild.getValue(), toBe(abcFromParent));
+  expect(complexFromChild.getValue(), not(toBe(abcFromChild)));
+});
+
+
+it('should force new instance in child even if already instantiated in parent', () {
+  var parent = new Injector();
+  var abcAlreadyInParent = parent.get(Abc);
+
+  var child = parent.createChild([], [Abc]);
+  var abcFromChild = child.get(Abc);
+
+  expect(abcFromChild, not(toBe(abcAlreadyInParent)));
+});
+
+
+it('should force new instance in child using provider from grand parent', () {
+  var module = new Module();
+  module.type(Abc, MockAbc);
+
+  var grandParent = new Injector([module]);
+  var parent = grandParent.createChild([]);
+  var child = parent.createChild([], [Abc]);
+
+  var abcFromGrandParent = grandParent.get(Abc);
+  var abcFromChild = child.get(Abc);
+
+  expect(abcFromChild.id, toEqual(('mock-id')));
+  expect(abcFromChild, not(toBe(abcFromGrandParent)));
+});
+
 }
