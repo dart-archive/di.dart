@@ -166,6 +166,13 @@ it('should throw an exception when circular dependency', () {
 });
 
 
+it('should provide the injector as Injector', () {
+  var injector = new Injector();
+
+  expect(injector.get(Injector), toBe(injector));
+});
+
+
 // CHILD INJECTORS
 it('should inject from child', () {
   var module = new Module();
@@ -241,6 +248,14 @@ it('should force new instance in child using provider from grand parent', () {
 
   expect(abcFromChild.id, toEqual(('mock-id')));
   expect(abcFromChild, not(toBe(abcFromGrandParent)));
+});
+
+
+it('should provide child injector as Injector', () {
+  var injector = new Injector();
+  var child = injector.createChild([]);
+
+  expect(child.get(Injector), toBe(child));
 });
 
 }

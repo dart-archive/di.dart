@@ -129,6 +129,9 @@ class Injector {
         providers.addAll(module);
       });
     }
+
+    // should be Injector type, not string
+    instances['Injector'] = reflect(this);
   }
 
   dynamic _getInstanceByTypeName(String typeName) {
