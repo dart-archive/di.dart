@@ -2,17 +2,13 @@ import 'mirrors.dart';
 import 'dart:async';
 import 'dart:collection';
 
-class NoProviderException implements Exception {
-  final String message;
-
-  const NoProviderException(this.message);
-  const NoProviderException.forType(String typeName) : this('No provider for ${typeName}!');
+class NoProviderException extends ArgumentError {
+  NoProviderException(message) : super(message);
+  NoProviderException.forType(String typeName) : this('No provider for ${typeName}!');
 }
 
-class CircularDependencyException implements Exception {
-  final String message;
-
-  const CircularDependencyException(this.message);
+class CircularDependencyException extends ArgumentError {
+  CircularDependencyException(message) : super(message);
 }
 
 
