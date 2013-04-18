@@ -2,31 +2,23 @@ import 'fixed-unittest.dart';
 import '../lib/di.dart';
 
 // just some classes for testing
-class Abc {
-  String id = 'abc-id';
-  
-  void greet() {
-    print('HELLO');
-  }
+class Engine {
+  String id = 'v8-id';
 }
 
-class MockAbc implements Abc {
+class MockEngine implements Engine {
   String id = 'mock-id';
-  
-  void greet() {
-    print('MOCK HELLO');
-  }
 }
 
-class Complex {
-  Abc value;
+class Car {
+  Engine engine;
   
-  Complex(Abc val) {
-    value = val;
+  Car(Engine e) {
+    engine = e;
   }
   
-  dynamic getValue() {
-    return value;
+  Engine getValue() {
+    return engine;
   }
 }
 
@@ -56,31 +48,31 @@ void main() {
   
 it('should instantiate a type', () {
   var injector = new Injector();
-  var instance = injector.get(Abc);
+  var instance = injector.get(Engine);
   
-  expect(instance, instanceOf(Abc));
-  expect(instance.id, toEqual('abc-id'));
+  expect(instance, instanceOf(Engine));
+  expect(instance.id, toEqual('v8-id'));
 });
 
 
 it('should resolve basic dependencies', () {
   var injector = new Injector();
-  var instance = injector.get(Complex);
+  var instance = injector.get(Car);
 
-  expect(instance, instanceOf(Complex));
-  expect(instance.getValue().id, toEqual('abc-id'));
+  expect(instance, instanceOf(Car));
+  expect(instance.getValue().id, toEqual('v8-id'));
 });
 
 
 it('should allow modules and overriding providers', () {
   var module = new Module();
-  module.type(Abc, MockAbc);
+  module.type(Engine, MockEngine);
   
   // injector is immutable
   // you can't load more modules once it's instantiated
   // (you can create a child injector)
   var injector = new Injector([module]);
-  var instance = injector.get(Abc);
+  var instance = injector.get(Engine);
   
   expect(instance.id, toEqual('mock-id'));
 });
@@ -88,8 +80,8 @@ it('should allow modules and overriding providers', () {
 
 it('should only create a single instance', () {
   var injector = new Injector();
-  var first = injector.get(Abc);
-  var second = injector.get(Abc);
+  var first = injector.get(Engine);
+  var second = injector.get(Engine);
   
   expect(first, toBe(second));
 });
@@ -97,12 +89,12 @@ it('should only create a single instance', () {
 
 it('should allow providing values', () {
   var module = new Module();
-  module.value(Abc, 'str value');
-  module.value(Complex, 123);
+  module.value(Engine, 'str value');
+  module.value(Car, 123);
 
   var injector = new Injector([module]);
-  var abcInstance = injector.get(Abc);
-  var complexInstance = injector.get(Complex);
+  var abcInstance = injector.get(Engine);
+  var complexInstance = injector.get(Car);
 
   expect(abcInstance, toEqual('str value'));
   expect(complexInstance, toEqual(123));
@@ -111,12 +103,12 @@ it('should allow providing values', () {
 
 it('should allow providing factory functions', () {
   var module = new Module();
-  module.factory(Abc, () {
+  module.factory(Engine, () {
     return 'factory-product';
   });
 
   var injector = new Injector([module]);
-  var instance = injector.get(Abc);
+  var instance = injector.get(Engine);
 
   expect(instance, toEqual('factory-product'));
 });
@@ -124,15 +116,15 @@ it('should allow providing factory functions', () {
 
 it('should inject factory function', () {
   var module = new Module();
-  module.factory(Complex, (Abc abc) {
+  module.factory(Car, (Engine abc) {
     return abc;
   });
 
   var injector = new Injector([module]);
-  var instance = injector.get(Complex);
+  var instance = injector.get(Car);
 
-  expect(instance, instanceOf(Abc));
-  expect(instance.id, toEqual('abc-id'));
+  expect(instance, instanceOf(Engine));
+  expect(instance.id, toEqual('v8-id'));
 });
 
 
@@ -176,30 +168,30 @@ it('should provide the injector as Injector', () {
 // CHILD INJECTORS
 it('should inject from child', () {
   var module = new Module();
-  module.type(Abc, MockAbc);
+  module.type(Engine, MockEngine);
 
   var parent = new Injector();
   var child = parent.createChild([module]);
 
-  var abcFromParent = parent.get(Abc);
-  var abcFromChild = child.get(Abc);
+  var abcFromParent = parent.get(Engine);
+  var abcFromChild = child.get(Engine);
 
-  expect(abcFromParent.id, toEqual('abc-id'));
+  expect(abcFromParent.id, toEqual('v8-id'));
   expect(abcFromChild.id, toEqual('mock-id'));
 });
 
 
 it('should inject instance from parent if not provided in child', () {
   var module = new Module();
-  module.type(Complex, Complex);
+  module.type(Car, Car);
 
   var parent = new Injector();
   var child = parent.createChild([module]);
 
-  var complexFromParent = parent.get(Complex);
-  var complexFromChild = child.get(Complex);
-  var abcFromParent = parent.get(Abc);
-  var abcFromChild = child.get(Abc);
+  var complexFromParent = parent.get(Car);
+  var complexFromChild = child.get(Car);
+  var abcFromParent = parent.get(Engine);
+  var abcFromChild = child.get(Engine);
 
   expect(complexFromChild, not(toBe(complexFromParent)));
   expect(abcFromChild, toBe(abcFromParent));
@@ -208,15 +200,15 @@ it('should inject instance from parent if not provided in child', () {
 
 it('should inject instance from parent but never use dependency from child', () {
   var module = new Module();
-  module.type(Abc, MockAbc);
+  module.type(Engine, MockEngine);
 
   var parent = new Injector();
   var child = parent.createChild([module]);
 
-  var complexFromParent = parent.get(Complex);
-  var complexFromChild = child.get(Complex);
-  var abcFromParent = parent.get(Abc);
-  var abcFromChild = child.get(Abc);
+  var complexFromParent = parent.get(Car);
+  var complexFromChild = child.get(Car);
+  var abcFromParent = parent.get(Engine);
+  var abcFromChild = child.get(Engine);
 
   expect(complexFromChild, toBe(complexFromParent));
   expect(complexFromChild.getValue(), toBe(abcFromParent));
@@ -226,10 +218,10 @@ it('should inject instance from parent but never use dependency from child', () 
 
 it('should force new instance in child even if already instantiated in parent', () {
   var parent = new Injector();
-  var abcAlreadyInParent = parent.get(Abc);
+  var abcAlreadyInParent = parent.get(Engine);
 
-  var child = parent.createChild([], [Abc]);
-  var abcFromChild = child.get(Abc);
+  var child = parent.createChild([], [Engine]);
+  var abcFromChild = child.get(Engine);
 
   expect(abcFromChild, not(toBe(abcAlreadyInParent)));
 });
@@ -237,14 +229,14 @@ it('should force new instance in child even if already instantiated in parent', 
 
 it('should force new instance in child using provider from grand parent', () {
   var module = new Module();
-  module.type(Abc, MockAbc);
+  module.type(Engine, MockEngine);
 
   var grandParent = new Injector([module]);
   var parent = grandParent.createChild([]);
-  var child = parent.createChild([], [Abc]);
+  var child = parent.createChild([], [Engine]);
 
-  var abcFromGrandParent = grandParent.get(Abc);
-  var abcFromChild = child.get(Abc);
+  var abcFromGrandParent = grandParent.get(Engine);
+  var abcFromChild = child.get(Engine);
 
   expect(abcFromChild.id, toEqual(('mock-id')));
   expect(abcFromChild, not(toBe(abcFromGrandParent)));
