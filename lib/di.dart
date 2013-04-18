@@ -4,7 +4,6 @@ import 'dart:collection';
 
 class NoProviderException extends ArgumentError {
   NoProviderException(message) : super(message);
-  NoProviderException.forType(String typeName) : this('No provider for ${typeName}!');
 }
 
 class CircularDependencyException extends ArgumentError {
@@ -41,7 +40,7 @@ class _TypeProvider implements Provider {
     ClassMirror cm = _getClassMirrorByTypeName(typeName);
 
     if (cm is TypedefMirror) {
-      throw error('No implementation provided for $typeName typedef!');
+      throw new NoProviderException(error('No implementation provided for $typeName typedef!'));
     }
 
     MethodMirror ctor = cm.constructors.values.first;
@@ -135,11 +134,21 @@ class Injector {
     instances['Injector'] = reflect(this);
   }
 
+  String _error(message, [appendDependency]) {
+    if (?appendDependency) {
+      resolving.add(appendDependency);
+    }
+
+    String graph = resolving.join(' -> ');
+
+    resolving.clear();
+
+    return '$message (resolving $graph)';
+  }
+
   dynamic _getInstanceByTypeName(String typeName) {
     if (PRIMITIVE_TYPES.contains(typeName)) {
-      String graph = resolving.join(' -> ') + ' -> ' + typeName;
-      resolving.clear();
-      throw new NoProviderException('Cannot inject a primitive type of ${typeName}! (resolving ${graph})');
+      throw new NoProviderException(_error('Cannot inject a primitive type of ${typeName}!', typeName));
     }
 
     if (instances.containsKey(typeName)) {
@@ -147,9 +156,7 @@ class Injector {
     }
 
     if (resolving.contains(typeName)) {
-      String graph = resolving.join(' -> ') + ' -> ' + typeName;
-      resolving.clear();
-      throw new CircularDependencyException('Cannot resolve a circular dependency! (resolving ${graph})');
+      throw new CircularDependencyException(_error('Cannot resolve a circular dependency!', typeName));
     }
 
     if (providers.containsKey(typeName)) {
@@ -162,11 +169,7 @@ class Injector {
       // implicit type provider, only root injector does that
       resolving.add(typeName);
       Provider provider = new _TypeProvider.fromString(typeName);
-      instances[typeName] = provider.get(_getInstanceByTypeName, (msg) {
-        String graph = resolving.join(' -> ');
-        resolving.clear();
-        return new NoProviderException('${msg} (resolving ${graph})');
-      });
+      instances[typeName] = provider.get(_getInstanceByTypeName, _error);
       resolving.removeLast();
     }
 
