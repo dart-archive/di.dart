@@ -17,7 +17,7 @@ class CircularDependencyException implements Exception {
 
 
 abstract class Provider {
-  dynamic get(getInstanceByTypeName);
+  dynamic get(getInstanceByTypeName, error);
 }
 
 
@@ -28,7 +28,7 @@ class _ValueProvider implements Provider {
     this.value = value;
   }
 
-  dynamic get(getInstanceByTypeName) {
+  dynamic get(getInstanceByTypeName, error) {
     return reflect(value);
   }
 }
@@ -41,8 +41,13 @@ class _TypeProvider implements Provider {
 
   _TypeProvider.fromString(String this.typeName);
 
-  dynamic get(getInstanceByTypeName) {
+  dynamic get(getInstanceByTypeName, error) {
     ClassMirror cm = _getClassMirrorByTypeName(typeName);
+
+    if (cm is TypedefMirror) {
+      throw error('No implementation provided for $typeName typedef!');
+    }
+
     MethodMirror ctor = cm.constructors.values.first;
 
     resolveArgument(p) {
@@ -62,7 +67,7 @@ class _FactoryProvider implements Provider {
 
   _FactoryProvider(Function this.factoryFn);
 
-  dynamic get(getInstanceByTypeName) {
+  dynamic get(getInstanceByTypeName, error) {
     ClosureMirror cm = reflect(factoryFn);
     MethodMirror mm = cm.function;
 
@@ -153,7 +158,7 @@ class Injector {
 
     if (providers.containsKey(typeName)) {
       resolving.add(typeName);
-      instances[typeName] = providers[typeName].get(_getInstanceByTypeName);
+      instances[typeName] = providers[typeName].get(_getInstanceByTypeName, null);
       resolving.removeLast();
     } else if (parent != null) {
       return parent._getInstanceByTypeName(typeName);
@@ -161,7 +166,11 @@ class Injector {
       // implicit type provider, only root injector does that
       resolving.add(typeName);
       Provider provider = new _TypeProvider.fromString(typeName);
-      instances[typeName] = provider.get(_getInstanceByTypeName);
+      instances[typeName] = provider.get(_getInstanceByTypeName, (msg) {
+        String graph = resolving.join(' -> ');
+        resolving.clear();
+        return new NoProviderException('${msg} (resolving ${graph})');
+      });
       resolving.removeLast();
     }
 

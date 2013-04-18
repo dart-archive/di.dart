@@ -43,6 +43,26 @@ class CircularB {
   CircularB(CircularA a) {}
 }
 
+typedef int CompareInt(int a, int b);
+
+int compareIntAsc(int a, int b) {
+  if (a == b) {
+    return 0;
+  }
+  if (a < b) {
+    return 1;
+  }
+  return -1;
+}
+
+class WithTypeDefDependency {
+  CompareInt compare;
+
+  WithTypeDefDependency(CompareInt c) {
+    compare = c;
+  }
+}
+
 // pretend, you don't see this main method
 void main() {
   
@@ -162,6 +182,28 @@ it('should provide the injector as Injector', () {
   var injector = new Injector();
 
   expect(injector.get(Injector), toBe(injector));
+});
+
+
+it('should inject a typedef', () {
+  var module = new Module();
+  module.value(CompareInt, compareIntAsc);
+
+  var injector = new Injector([module]);
+  var compare = injector.get(CompareInt);
+
+  expect(compare(1, 2), toBe(1));
+  expect(compare(5, 2), toBe(-1));
+});
+
+
+it('should throw an exception when injecting typedef without providing it', () {
+  var injector = new Injector();
+
+  expect(() {
+    injector.get(WithTypeDefDependency);
+  }, toThrow(NoProviderException, 'No implementation provided for CompareInt typedef! ' +
+                                  '(resolving WithTypeDefDependency -> CompareInt)'));
 });
 
 
