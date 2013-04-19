@@ -26,6 +26,14 @@ class NumDependency {
   NumDependency(num value) {}
 }
 
+class IntDependency {
+  IntDependency(int value) {}
+}
+
+class DoubleDependency {
+  DoubleDependency(double value) {}
+}
+
 class StringDependency {
   StringDependency(String value) {}
 }
@@ -155,6 +163,16 @@ it('should throw an exception when injecting a primitive type', () {
     injector.get(NumDependency);
   }, toThrow(NoProviderException, 'Cannot inject a primitive type of num! ' +
                                   '(resolving NumDependency -> num)'));
+
+  expect(() {
+    injector.get(IntDependency);
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of int! ' +
+                                  '(resolving IntDependency -> int)'));
+
+  expect(() {
+    injector.get(DoubleDependency);
+  }, toThrow(NoProviderException, 'Cannot inject a primitive type of double! ' +
+                                  '(resolving DoubleDependency -> double)'));
 
   expect(() {
     injector.get(BoolDependency);

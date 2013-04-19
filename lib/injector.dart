@@ -2,7 +2,7 @@ part of di;
 
 
 class Injector {
-  final List<String> PRIMITIVE_TYPES = <String>['dynamic', 'num', 'String', 'bool'];
+  final List<String> PRIMITIVE_TYPES = <String>['dynamic', 'num', 'int', 'double', 'String', 'bool'];
 
   final Injector parent;
 
