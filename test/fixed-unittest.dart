@@ -85,13 +85,14 @@ class ComplexExceptionMatcher extends BaseMatcher {
 
   Description describeMismatch(item, Description mismatchDescription, MatchState matchState,
                                bool verbose) {
-    Exception e = matchState.state['exception'];
+    var e = matchState.state['exception'];
 
     mismatchDescription.add('threw ').addDescriptionOf(e);
 
-    if (reflect(e).members.containsKey('message')) {
-      mismatchDescription.add(' with message ').addDescriptionOf(e.message);
-    }
+    try {
+      var message = e.message; // does not have to be defined
+      mismatchDescription.add(' with message ').addDescriptionOf(message);
+    } catch (e) {}
   }
 }
 
