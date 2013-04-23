@@ -2,16 +2,16 @@ part of di;
 
 
 class Injector {
-  final List<String> PRIMITIVE_TYPES = <String>['dynamic', 'num', 'int', 'double', 'String', 'bool'];
+  final List<Symbol> PRIMITIVE_TYPES = <Symbol>[new Symbol('dynamic'), new Symbol('num'), new Symbol('int'), new Symbol('double'), new Symbol('String'), new Symbol('bool')];
 
   final Injector parent;
 
   // should be <Type, Provider>
-  Map<String, Provider> providers = new Map<String, Provider>();
+  Map<Symbol, Provider> providers = new Map<Symbol, Provider>();
   // should be <Type, dynamic>
-  Map<String, dynamic> instances = new Map<String, dynamic>();
+  Map<Symbol, dynamic> instances = new Map<Symbol, dynamic>();
 
-  List<String> resolving = new List<String>();
+  List<Symbol> resolving = new List<Symbol>();
 
   Injector([List<Module> modules, Injector parent]) : this.parent = parent {
 
@@ -22,7 +22,7 @@ class Injector {
     }
 
     // should be Injector type, not string
-    instances['Injector'] = reflect(this);
+    instances[new Symbol('Injector')] = this;
   }
 
   String _error(message, [appendDependency]) {
@@ -37,7 +37,7 @@ class Injector {
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceByTypeName(String typeName) {
+  dynamic _getInstanceBySymbol(Symbol typeName) {
     if (PRIMITIVE_TYPES.contains(typeName)) {
       throw new NoProviderException(_error('Cannot inject a primitive type of ${typeName}!', typeName));
     }
@@ -52,15 +52,15 @@ class Injector {
 
     if (providers.containsKey(typeName)) {
       resolving.add(typeName);
-      instances[typeName] = providers[typeName].get(_getInstanceByTypeName, null);
+      instances[typeName] = providers[typeName].get(_getInstanceBySymbol, null);
       resolving.removeLast();
     } else if (parent != null) {
-      return parent._getInstanceByTypeName(typeName);
+      return parent._getInstanceBySymbol(typeName);
     } else {
       // implicit type provider, only root injector does that
       resolving.add(typeName);
       Provider provider = new _TypeProvider.fromString(typeName);
-      instances[typeName] = provider.get(_getInstanceByTypeName, _error);
+      instances[typeName] = provider.get(_getInstanceBySymbol, _error);
       resolving.removeLast();
     }
 
@@ -68,14 +68,14 @@ class Injector {
   }
 
   Provider _getProviderForType(Type type) {
-    String typeName = type.toString();
+    Symbol typeName = reflectClass(type).simpleName;
 
     if (providers.containsKey(typeName)) {
       return providers[typeName];
     }
 
     if (parent != null) {
-      return parent._getProviderForType(typeName);
+      return parent._getProviderForType(type);
     }
 
     // create a provider for implicit types
@@ -85,7 +85,7 @@ class Injector {
 
   // PUBLIC API
   dynamic get(Type type) {
-    return _getInstanceByTypeName(type.toString()).reflectee;
+    return _getInstanceBySymbol(reflectClass(type).simpleName);
   }
 
   Injector createChild(List<Module> modules, [List<Type> forceNewInstances]) {

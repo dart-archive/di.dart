@@ -1,21 +1,25 @@
 part of di;
 
 
-class Module extends HashMap<String, Provider> {
+class Module extends HashMap<Symbol, Provider> {
+
+  Symbol _idFromType(Type type) {
+    return reflectClass(type).simpleName;
+  }
 
   void value(Type id, value) {
-    this[id.toString()] = new _ValueProvider(value);
+    this[_idFromType(id)] = new _ValueProvider(value);
   }
 
   void type(Type id, Type type) {
-    this[id.toString()] = new _TypeProvider(type);
+    this[_idFromType(id)] = new _TypeProvider(type);
   }
 
   void provider(Type id, Provider provider) {
-    this[id.toString()] = provider;
+    this[_idFromType(id)] = provider;
   }
 
   void factory(Type id, Function factoryFn) {
-    this[id.toString()] = new _FactoryProvider(factoryFn);
+    this[_idFromType(id)] = new _FactoryProvider(factoryFn);
   }
 }

@@ -2,7 +2,7 @@ part of di;
 
 
 abstract class Provider {
-  dynamic get(getInstanceByTypeName, error);
+  dynamic get(getInstanceBySymbol, error);
 }
 
 
@@ -13,36 +13,35 @@ class _ValueProvider implements Provider {
     this.value = value;
   }
 
-  dynamic get(getInstanceByTypeName, error) {
-    return reflect(value);
+  dynamic get(getInstanceBySymbol, error) {
+    return value;
   }
 }
 
 
 class _TypeProvider implements Provider {
-  final String typeName;
+  final ClassMirror classMirror;
 
-  _TypeProvider(Type type) : this.typeName = type.toString();
+  _TypeProvider(Type type) : this.classMirror = reflectClass(type);
 
-  _TypeProvider.fromString(String this.typeName);
+  _TypeProvider.fromString(Symbol id) : this.classMirror = getClassMirrorBySymbol(id);
 
-  dynamic get(getInstanceByTypeName, error) {
-    ClassMirror cm = getClassMirrorByTypeName(typeName);
+  dynamic get(getInstanceBySymbol, error) {
 
-    if (cm is TypedefMirror) {
-      throw new NoProviderException(error('No implementation provided for $typeName typedef!'));
+    if (classMirror is TypedefMirror) {
+      throw new NoProviderException(error('No implementation provided for ${classMirror.simpleName} typedef!'));
     }
 
-    MethodMirror ctor = cm.constructors.values.first;
+    MethodMirror ctor = classMirror.constructors.values.first;
 
     resolveArgument(p) {
-      return getInstanceByTypeName(p.type.simpleName);
+      return getInstanceBySymbol(p.type.simpleName);
     }
 
     var positionalArgs = ctor.parameters.map(resolveArgument).toList();
     var namedArgs = null;
 
-    return deprecatedFutureValue(cm.newInstance(ctor.constructorName, positionalArgs, namedArgs));
+    return classMirror.newInstance(ctor.constructorName, positionalArgs, namedArgs).reflectee;
   }
 }
 
@@ -52,17 +51,17 @@ class _FactoryProvider implements Provider {
 
   _FactoryProvider(Function this.factoryFn);
 
-  dynamic get(getInstanceByTypeName, error) {
+  dynamic get(getInstanceBySymbol, error) {
     ClosureMirror cm = reflect(factoryFn);
     MethodMirror mm = cm.function;
 
     resolveArgument(p) {
-      return getInstanceByTypeName(p.type.simpleName);
+      return getInstanceBySymbol(p.type.simpleName);
     }
 
     var positionalArgs = mm.parameters.map(resolveArgument).toList();
     var namedArgs = null;
 
-    return deprecatedFutureValue(cm.apply(positionalArgs, namedArgs));
+    return cm.apply(positionalArgs, namedArgs).reflectee;
   }
 }
