@@ -2,6 +2,7 @@ library unittest;
 
 import 'package:unittest/unittest.dart';
 import '../lib/mirrors.dart';
+import 'dart:async';
 
 export 'package:unittest/unittest.dart';
 
