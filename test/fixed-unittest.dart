@@ -103,8 +103,7 @@ class IsInstanceOfTypeMatcher extends BaseMatcher {
   }
   
   bool matches(obj, MatchState matchState) {
-    // we should at least compare qualifiedName, but there's no way to get it from Type
-    return reflect(obj).type.simpleName == t.toString();
+    return reflect(obj).type.qualifiedName == reflectClass(t).qualifiedName;
   }
   
   Description describe(Description description) =>
