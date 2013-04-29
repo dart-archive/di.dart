@@ -88,6 +88,16 @@ class Injector {
     return _getInstanceBySymbol(reflectClass(type).simpleName);
   }
 
+  // PUBLIC API
+  dynamic invoke(Function fn) {
+    ClosureMirror cm = reflect(fn);
+    MethodMirror mm = cm.function;
+    List args = mm.parameters.map((parameter) {
+      return _getInstanceBySymbol(parameter.type.simpleName);
+    }).toList();
+    return cm.apply(args, null).reflectee;
+  }
+
   Injector createChild(List<Module> modules, [List<Type> forceNewInstances]) {
     if (?forceNewInstances) {
       Module forceNew = new Module();
