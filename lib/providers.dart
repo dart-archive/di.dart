@@ -29,7 +29,7 @@ class _TypeProvider implements Provider {
   dynamic get(getInstanceBySymbol, error) {
 
     if (classMirror is TypedefMirror) {
-      throw new NoProviderException(error('No implementation provided for ${classMirror.simpleName} typedef!'));
+      throw new NoProviderException(error('No implementation provided for ${formatSymbol(classMirror.simpleName)} typedef!'));
     }
 
     MethodMirror ctor = classMirror.constructors.values.first;

@@ -30,7 +30,7 @@ class Injector {
       resolving.add(appendDependency);
     }
 
-    String graph = resolving.join(' -> ');
+    String graph = resolving.map(formatSymbol).join(' -> ');
 
     resolving.clear();
 
@@ -39,7 +39,7 @@ class Injector {
 
   dynamic _getInstanceBySymbol(Symbol typeName) {
     if (PRIMITIVE_TYPES.contains(typeName)) {
-      throw new NoProviderException(_error('Cannot inject a primitive type of ${typeName}!', typeName));
+      throw new NoProviderException(_error('Cannot inject a primitive type of ${formatSymbol(typeName)}!', typeName));
     }
 
     if (instances.containsKey(typeName)) {
