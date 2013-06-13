@@ -3,8 +3,16 @@ part of di;
 
 class Module extends HashMap<Symbol, Provider> {
 
+  static Map<Type, Symbol> _symbolNameCache = new Map<Type, Symbol>();
+
   Symbol _idFromType(Type type) {
-    return reflectClass(type).simpleName;
+    // A hack/workaround for reflectClass performance issue (dartbug.com/11108).
+    var symbol = _symbolNameCache[type];
+    if (symbol == null) {
+      symbol = reflectClass(type).simpleName;
+      _symbolNameCache[type] = symbol;
+    }
+    return symbol;
   }
 
   void value(Type id, value) {
