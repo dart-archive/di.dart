@@ -88,7 +88,10 @@ class Injector {
     return _getInstanceBySymbol(reflectClass(type).simpleName);
   }
 
-  // PUBLIC API
+  dynamic getBySymbol(Symbol name) {
+    return _getInstanceBySymbol(name);
+  }
+
   dynamic invoke(Function fn) {
     ClosureMirror cm = reflect(fn);
     MethodMirror mm = cm.function;
