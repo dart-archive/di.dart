@@ -1,6 +1,7 @@
 part of di;
 
 class Injector {
+  final bool allowImplicitInjection;
 
   final List<Symbol> _PRIMITIVE_TYPES = <Symbol>[new Symbol('dynamic'),
       new Symbol('num'), new Symbol('int'), new Symbol('double'),
@@ -15,16 +16,20 @@ class Injector {
 
   List<Symbol> resolving = new List<Symbol>();
 
-  Injector([List<Module> modules, Injector parent]) : this.parent = parent {
+  Injector([List<Module> modules, bool allowImplicitInjection = true])
+      : this._fromParent(modules, null, allowImplicitInjection: allowImplicitInjection);
 
-    if (?modules) {
-      modules.forEach((module) {
-        providers.addAll(module);
-      });
+  Injector._fromParent(List<Module> modules, Injector this.parent,
+      {bool this.allowImplicitInjection: true}) {
+    if (modules == null) {
+      modules = <Module>[];
     }
-
-    // should be Injector type, not string
-    instances[new Symbol('Injector')] = this;
+    Module injectorModule = new Module();
+    injectorModule.value(Injector, this);
+    modules.add(injectorModule);
+    modules.forEach((module) {
+      providers.addAll(module._mappings);
+    });
   }
 
   String _error(message, [appendDependency]) {
@@ -78,6 +83,9 @@ class Injector {
 
     if (parent != null) {
       return parent._getProviderForType(type);
+    if (!allowImplicitInjection) {
+      throw new NoProviderException(_error('No provider found for '
+                                           '${formatSymbol(typeName)}!', typeName));
     }
 
     // create a provider for implicit types
