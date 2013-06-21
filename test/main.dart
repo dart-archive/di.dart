@@ -1,5 +1,7 @@
+import 'dart:collection';
+import 'dart:mirrors';
 import 'fixed-unittest.dart';
-import '../lib/di.dart';
+import 'package:di/di.dart';
 
 // just some classes for testing
 class Engine {
@@ -10,16 +12,15 @@ class MockEngine implements Engine {
   String id = 'mock-id';
 }
 
+class MockEngine2 implements Engine {
+  String id = 'mock-id-2';
+}
+
 class Car {
   Engine engine;
-  
-  Car(Engine e) {
-    engine = e;
-  }
-  
-  Engine getValue() {
-    return engine;
-  }
+  Injector injector;
+
+  Car(Engine this.engine, Injector this.injector);
 }
 
 class NumDependency {
@@ -73,13 +74,21 @@ class WithTypeDefDependency {
 
 // pretend, you don't see this main method
 void main() {
-  
+
 it('should instantiate a type', () {
   var injector = new Injector();
   var instance = injector.get(Engine);
-  
+
   expect(instance, instanceOf(Engine));
   expect(instance.id, toEqual('v8-id'));
+});
+
+it('should fail if implicit injection is disabled', () {
+  var injector = new Injector([], false);
+  expect(() {
+    injector.get(Engine);
+  }, toThrow(NoProviderException, 'No provider found for Engine! '
+                                  '(resolving Engine)'));
 });
 
 
@@ -88,20 +97,20 @@ it('should resolve basic dependencies', () {
   var instance = injector.get(Car);
 
   expect(instance, instanceOf(Car));
-  expect(instance.getValue().id, toEqual('v8-id'));
+  expect(instance.engine.id, toEqual('v8-id'));
 });
 
 
 it('should allow modules and overriding providers', () {
   var module = new Module();
   module.type(Engine, MockEngine);
-  
+
   // injector is immutable
   // you can't load more modules once it's instantiated
   // (you can create a child injector)
   var injector = new Injector([module]);
   var instance = injector.get(Engine);
-  
+
   expect(instance.id, toEqual('mock-id'));
 });
 
@@ -110,7 +119,7 @@ it('should only create a single instance', () {
   var injector = new Injector();
   var first = injector.get(Engine);
   var second = injector.get(Engine);
-  
+
   expect(first, toBe(second));
 });
 
@@ -271,8 +280,8 @@ it('should inject instance from parent but never use dependency from child', () 
   var abcFromChild = child.get(Engine);
 
   expect(complexFromChild, toBe(complexFromParent));
-  expect(complexFromChild.getValue(), toBe(abcFromParent));
-  expect(complexFromChild.getValue(), not(toBe(abcFromChild)));
+  expect(complexFromChild.engine, toBe(abcFromParent));
+  expect(complexFromChild.engine, not(toBe(abcFromChild)));
 });
 
 
@@ -308,6 +317,143 @@ it('should provide child injector as Injector', () {
   var child = injector.createChild([]);
 
   expect(child.get(Injector), toBe(child));
+});
+
+describe('instantiate', () {
+
+  it('should instantiate new instance and cache on in the requesting injector', () {
+    var module = new Module();
+    module.type(Engine, MockEngine);
+
+    var injector = new Injector([module]);
+    var child = injector.createChild([]);
+
+    var engine1 = child.instantiate(Engine);
+    var engine2 = child.instantiate(Engine);
+    var engine3 = child.get(Engine);
+    var engine4 = injector.get(Engine);
+    var engine5 = injector.instantiate(Engine);
+
+    expect(engine1, same(engine2));
+    expect(engine2, same(engine3));
+    expect(engine3, not(same(engine4)));
+    expect(engine4, same(engine5));
+  });
+
+
+  it('should override dependencies with locals', () {
+    var module = new Module();
+    module.type(Engine, MockEngine);
+
+    var injector = new Injector([module]);
+
+    Map<Type, dynamic> locals = new HashMap<Type, dynamic>();
+    var localEngine = new MockEngine2();
+    locals[Engine] = localEngine;
+    var car = injector.instantiate(Car, locals);
+    expect(car.engine, same(localEngine));
+  });
+
+
+  it('should ignore locals if value is cached', () {
+    var module = new Module();
+    module.type(Engine, MockEngine);
+
+    var injector = new Injector([module]);
+    var car1 = injector.get(Car);
+
+    Map<Type, dynamic> locals = new HashMap<Type, dynamic>();
+    var localEngine = new MockEngine2();
+    locals[Engine] = localEngine;
+    var car2 = injector.instantiate(Car, locals);
+    expect(car2, same(car1));
+    expect(car2.engine, not(same(localEngine)));
+  });
+
+
+  it('should inject "locals injector" as a dependency', () {
+    var module = new Module()
+      ..type(Car, Car)
+      ..type(Engine, MockEngine);
+
+    var injector = new Injector([module]);
+
+    Map<Type, dynamic> locals = new HashMap<Type, dynamic>();
+    var localEngine = new MockEngine2();
+    locals[Engine] = localEngine;
+    var car = injector.instantiate(Car, locals);
+    expect(car.injector.get(Engine), same(localEngine));
+  });
+
+});
+
+
+describe('creation strategy', () {
+
+  it('should get called for instance creation', () {
+
+    List creationLog = [];
+    dynamic creation(Symbol type, Injector requesting, Injector defining,
+                     bool directInstantation, Factory factory) {
+      creationLog.add([type, requesting, defining, directInstantation]);
+      return factory();
+    }
+
+    var parentModule = new Module()
+      ..type(Engine, MockEngine, creation: creation)
+      ..type(Car, Car, creation: creation);
+
+    var parentInjector = new Injector([parentModule]);
+    var childInjector = parentInjector.createChild([]);
+    childInjector.instantiate(Car);
+    expect(creationLog, [
+      [reflectClass(Car).simpleName, childInjector, parentInjector, true],
+      [reflectClass(Engine).simpleName, childInjector, parentInjector, false]
+    ]);
+  });
+
+  it('should be able to prevent instantiation in custom conditions', () {
+
+    List creationLog = [];
+    dynamic creation(Symbol type, Injector requesting, Injector defining,
+                     bool directInstantation, Factory factory) {
+      creationLog.add([type, requesting, defining, directInstantation]);
+      if (!directInstantation) {
+        throw 'not allowing $type unless called injector.intantiate on';
+      }
+      return factory();
+    }
+
+    var module = new Module()
+      ..type(Engine, MockEngine, creation: creation);
+    var injector = new Injector([module]);
+    expect(() {
+      injector.get(Engine);
+    }, throwsA('not allowing Symbol("Engine") unless called injector.intantiate on'));
+    expect(injector.instantiate(Engine), instanceOf(MockEngine));
+  });
+
+});
+
+describe('visiblity', () {
+
+  it('should hide instances', () {
+
+    var rootMock = new MockEngine();
+    var childMock = new MockEngine();
+
+    var parentModule = new Module()
+      ..value(Engine, rootMock);
+    var childModule = new Module()
+      ..value(Engine, childMock, visibility: (_, __) => false);
+
+    var parentInjector = new Injector([parentModule]);
+    var childInjector = parentInjector.createChild([childModule]);
+
+    var val = childInjector.get(Engine);
+    expect(val, same(rootMock));
+  });
+
 });
 
 }

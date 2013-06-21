@@ -22,19 +22,19 @@ class _ValueProvider implements Provider {
 class _TypeProvider implements Provider {
   final ClassMirror classMirror;
 
-  _TypeProvider(Type type) : this.classMirror = reflectClass(type);
-
-  _TypeProvider.fromString(Symbol id) : this.classMirror = getClassMirrorBySymbol(id);
+  _TypeProvider(Symbol typeName)
+      : this.classMirror = getClassMirrorBySymbol(typeName);
 
   dynamic get(getInstanceBySymbol, error) {
 
     if (classMirror is TypedefMirror) {
-      throw new NoProviderException(error('No implementation provided for ${formatSymbol(classMirror.simpleName)} typedef!'));
+      throw new NoProviderException(error('No implementation provided '
+          'for ${formatSymbol(classMirror.simpleName)} typedef!'));
     }
 
     MethodMirror ctor = classMirror.constructors.values.first;
 
-    resolveArgument(p) {
+    resolveArgument(ParameterMirror p) {
       return getInstanceBySymbol(p.type.simpleName);
     }
 
