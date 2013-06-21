@@ -170,13 +170,16 @@ class Injector {
     return cm.apply(args, null).reflectee;
   }
 
-  Injector createChild(List<Module> modules, [List<Type> forceNewInstances]) {
+// TODO(vojta): fix this hackery of passing list of Symbol or Type
+  Injector createChild(List<Module> modules, [List<dynamic> forceNewInstances]) {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
-      forceNewInstances.forEach((type) {
-        forceNew.provider(type,
-            _getProviderForSymbol(
-                  reflectClass(type).simpleName).first.provider);
+      forceNewInstances.forEach((typeOrSymbol) {
+        if (typeOrSymbol is Type) {
+          typeOrSymbol = reflectClass(typeOrSymbol).simpleName;
+        }
+
+        forceNew.symbolMetaProvider(typeOrSymbol, _getProviderForSymbol(typeOrSymbol).first);
       });
 
       modules = modules.toList(); // clone

@@ -70,6 +70,11 @@ class Module {
         new _ProviderMetadata(new _FactoryProvider(factoryFn),
                               creation, visibility);
   }
+
+  // TODO(vojta): another hacky backdoor, clean this up
+  void symbolMetaProvider(Symbol id, _ProviderMetadata metaData) {
+    _mappings[id] = metaData;
+  }
 }
 
 /** Deafault create stratrategy is to instantiate on the defining injector. */
