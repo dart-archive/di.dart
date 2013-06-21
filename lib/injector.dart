@@ -9,9 +9,8 @@ class Injector {
 
   final Injector parent;
 
-  // should be <Type, Provider>
-  Map<Symbol, Provider> providers = new Map<Symbol, Provider>();
-  // should be <Type, dynamic>
+  Map<Symbol, _ProviderMetadata> providers =
+      new Map<Symbol, _ProviderMetadata>();
   Map<Symbol, dynamic> instances = new Map<Symbol, dynamic>();
 
   List<Symbol> resolving = new List<Symbol>();
@@ -44,62 +43,122 @@ class Injector {
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceBySymbol(Symbol typeName) {
-    if (PRIMITIVE_TYPES.contains(typeName)) {
-      throw new NoProviderException(_error('Cannot inject a primitive type of ${formatSymbol(typeName)}!', typeName));
+  dynamic _getInstanceBySymbol(Symbol typeName, {bool cache: true,
+      bool direct: false, Map<Type, dynamic> locals, getInstanceBySymbol,
+      Injector requester}) {
+    _checkTypeConditions(typeName);
+
+    if (resolving.contains(typeName)) {
+      throw new CircularDependencyException(
+          _error('Cannot resolve a circular dependency!', typeName));
     }
 
-    if (instances.containsKey(typeName)) {
+    // TODO(pavelgj): Think of a simpler way.
+    if (!direct) {
+      getInstanceBySymbol =
+          _wrapGetInstanceBySymbol(_getInstanceBySymbol, requester);
+    }
+
+    var provider = _getProviderForSymbol(typeName);
+    var metadata = provider.first;
+    var visible = metadata.visibility(requester, provider.second);
+
+    if (visible && instances.containsKey(typeName)) {
       return instances[typeName];
     }
 
-    if (resolving.contains(typeName)) {
-      throw new CircularDependencyException(_error('Cannot resolve a circular dependency!', typeName));
+    if (provider.second != this || !visible) {
+      var injector = provider.second;
+      if (!visible) {
+        injector = provider.second.parent.
+            _getProviderForSymbol(typeName).second;
+      }
+      return injector._getInstanceBySymbol(typeName, cache: cache,
+          direct: direct, getInstanceBySymbol: getInstanceBySymbol,
+          requester: requester);
     }
 
-    if (providers.containsKey(typeName)) {
-      resolving.add(typeName);
-      instances[typeName] = providers[typeName].get(_getInstanceBySymbol, null);
-      resolving.removeLast();
-    } else if (parent != null) {
-      return parent._getInstanceBySymbol(typeName);
-    } else {
-      // implicit type provider, only root injector does that
-      resolving.add(typeName);
-      Provider provider = new _TypeProvider.fromString(typeName);
-      instances[typeName] = provider.get(_getInstanceBySymbol, _error);
-      resolving.removeLast();
+    var value;
+    try {
+      value = metadata.creation(typeName, requester, provider.second, direct, () {
+        resolving.add(typeName);
+        var val = metadata.provider.get(getInstanceBySymbol, _error);
+        resolving.removeLast();
+        return val;
+      });
+    } catch(e) {
+      resolving.clear();
+      throw e;
     }
-
-    return instances[typeName];
+    if (cache) {
+      provider.second.instances[typeName] = value;
+    }
+    return value;
   }
 
-  Provider _getProviderForType(Type type) {
-    Symbol typeName = reflectClass(type).simpleName;
+  /**
+   *  Wraps getInstanceBySymbol function with a requster value to be easily
+   *  down to the providers.
+   */
+  Function _wrapGetInstanceBySymbol(Function getInstanceBySymbol,
+                                    Injector requster) {
+    return (Symbol typeName) {
+      return getInstanceBySymbol(typeName, requester: requster);
+    };
+  }
 
+  /// Returns a pair for provider and the injector where it's defined.
+  _Pair<_ProviderMetadata, Injector> _getProviderForSymbol(Symbol typeName) {
     if (providers.containsKey(typeName)) {
-      return providers[typeName];
+      return new _Pair.of(providers[typeName], this);
     }
 
     if (parent != null) {
-      return parent._getProviderForType(type);
+      return parent._getProviderForSymbol(typeName);
+    }
+
     if (!allowImplicitInjection) {
       throw new NoProviderException(_error('No provider found for '
                                            '${formatSymbol(typeName)}!', typeName));
     }
 
     // create a provider for implicit types
-    return new _TypeProvider(type);
+    return new _Pair.of(
+        new _ProviderMetadata(new _TypeProvider(typeName)), this);
+  }
+
+  void _checkTypeConditions(Symbol typeName) {
+    if (_PRIMITIVE_TYPES.contains(typeName)) {
+      throw new NoProviderException(_error('Cannot inject a primitive type '
+          'of ${formatSymbol(typeName)}!', typeName));
+    }
   }
 
 
   // PUBLIC API
   dynamic get(Type type) {
-    return _getInstanceBySymbol(reflectClass(type).simpleName);
+    return _getInstanceBySymbol(reflectClass(type).simpleName, requester: this);
   }
 
-  dynamic getBySymbol(Symbol name) {
-    return _getInstanceBySymbol(name);
+  dynamic instantiate(Type type, [Map<Type, dynamic> locals]) {
+    Injector injector = this;
+
+    if (locals != null && locals.isNotEmpty) {
+      Module localsModule = new Module();
+      for (Type key in locals.keys) {
+        localsModule.value(key, locals[key]);
+      }
+      injector = createChild([localsModule]);
+    }
+    var symbol = reflectClass(type).simpleName;
+    var wrappedGetInstance =
+        _wrapGetInstanceBySymbol(injector._getInstanceBySymbol, this);
+    var value = injector._getInstanceBySymbol(symbol, cache: false,
+        direct: true,
+        getInstanceBySymbol: wrappedGetInstance,
+        requester: this);
+    instances[symbol] = value;
+    return value;
   }
 
   dynamic invoke(Function fn) {
@@ -115,13 +174,21 @@ class Injector {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
       forceNewInstances.forEach((type) {
-        forceNew.provider(type, _getProviderForType(type));
+        forceNew.provider(type,
+            _getProviderForSymbol(
+                  reflectClass(type).simpleName).first.provider);
       });
 
       modules = modules.toList(); // clone
       modules.add(forceNew);
     }
 
-    return new Injector(modules, this);
+    return new Injector._fromParent(modules, this);
   }
+}
+
+class _Pair<V1, V2> {
+  final V1 first;
+  final V2 second;
+  _Pair.of(this.first, this.second);
 }
