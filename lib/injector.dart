@@ -140,6 +140,8 @@ class Injector {
     return _getInstanceBySymbol(reflectClass(type).simpleName, requester: this);
   }
 
+  dynamic getBySymbol(Symbol symbol) => _getInstanceBySymbol(symbol);
+
   dynamic instantiate(Type type, [Map<Type, dynamic> locals]) {
     Injector injector = this;
 
