@@ -1,8 +1,10 @@
 part of di;
 
-
 class Injector {
-  final List<Symbol> PRIMITIVE_TYPES = <Symbol>[new Symbol('dynamic'), new Symbol('num'), new Symbol('int'), new Symbol('double'), new Symbol('String'), new Symbol('bool')];
+
+  final List<Symbol> _PRIMITIVE_TYPES = <Symbol>[new Symbol('dynamic'),
+      new Symbol('num'), new Symbol('int'), new Symbol('double'),
+      new Symbol('String'), new Symbol('bool')];
 
   final Injector parent;
 
@@ -26,7 +28,7 @@ class Injector {
   }
 
   String _error(message, [appendDependency]) {
-    if (?appendDependency) {
+    if (appendDependency != null) {
       resolving.add(appendDependency);
     }
 
@@ -95,14 +97,14 @@ class Injector {
   dynamic invoke(Function fn) {
     ClosureMirror cm = reflect(fn);
     MethodMirror mm = cm.function;
-    List args = mm.parameters.map((parameter) {
+    List args = mm.parameters.map((ParameterMirror parameter) {
       return _getInstanceBySymbol(parameter.type.simpleName);
     }).toList();
     return cm.apply(args, null).reflectee;
   }
 
   Injector createChild(List<Module> modules, [List<Type> forceNewInstances]) {
-    if (?forceNewInstances) {
+    if (forceNewInstances != null) {
       Module forceNew = new Module();
       forceNewInstances.forEach((type) {
         forceNew.provider(type, _getProviderForType(type));

@@ -20,3 +20,4 @@ ClassMirror getClassMirrorBySymbol (Symbol id) {
 String formatSymbol(Symbol symbol) {
   return MirrorSystem.getName(symbol);
 }
+

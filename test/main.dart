@@ -1,5 +1,5 @@
 import 'fixed-unittest.dart';
-import '../lib/di.dart';
+import 'package:di/di.dart';
 
 // just some classes for testing
 class Engine {
