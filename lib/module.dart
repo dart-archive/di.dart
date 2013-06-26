@@ -44,6 +44,11 @@ class Module {
     return symbol;
   }
 
+  /**
+   * Register binding to a concrete value.
+   *
+   * The [value] is what actually will be injected.
+   */
   void value(Type id, value, {
       CreationStrategy creation, Visibility visibility}) {
     _mappings[_idFromType(id)] =
@@ -51,6 +56,11 @@ class Module {
             creation, visibility);
   }
 
+  /**
+   * Register binding to a [Type].
+   *
+   * The [type] will be instantiated using [new] operator and the resulting instance will be injected.
+   */
   void type(Type id, Type type, {
       CreationStrategy creation, Visibility visibility}) {
     _mappings[_idFromType(id)] =
@@ -58,12 +68,24 @@ class Module {
             creation, visibility);
   }
 
+  /**
+   * Register binding to a provider.
+   *
+   * The [provider] has to implement [get] method which returns the actual
+   * value that will be injected.
+   */
   void provider(Type id, Provider provider, {
       CreationStrategy creation, Visibility visibility}) {
     _mappings[_idFromType(id)] =
         new _ProviderMetadata(provider, creation, visibility);
   }
 
+  /**
+   * Register binding to a factory function.abstract
+   *
+   * The [factoryFn] will be called and all its arguments will get injected.
+   * The result of that function is the value that will be injected.
+   */
   void factory(Type id, Function factoryFn, {
       CreationStrategy creation, Visibility visibility}) {
     _mappings[_idFromType(id)] =
