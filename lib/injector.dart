@@ -16,7 +16,8 @@ class Injector {
   List<Symbol> resolving = new List<Symbol>();
 
   Injector([List<Module> modules, bool allowImplicitInjection = true])
-      : this._fromParent(modules, null, allowImplicitInjection: allowImplicitInjection);
+      : this._fromParent(modules, null,
+                         allowImplicitInjection: allowImplicitInjection);
 
   Injector._fromParent(List<Module> modules, Injector this.parent,
       {bool this.allowImplicitInjection: true}) {
@@ -80,7 +81,8 @@ class Injector {
 
     var value;
     try {
-      value = metadata.creation(typeName, requester, provider.second, direct, () {
+      value = metadata.creation(typeName, requester, provider.second, direct,
+          () {
         resolving.add(typeName);
         var val = metadata.provider.get(getInstanceBySymbol, _error);
         resolving.removeLast();
@@ -119,7 +121,7 @@ class Injector {
 
     if (!allowImplicitInjection) {
       throw new NoProviderException(_error('No provider found for '
-                                           '${formatSymbol(typeName)}!', typeName));
+          '${formatSymbol(typeName)}!', typeName));
     }
 
     // create a provider for implicit types
@@ -172,8 +174,9 @@ class Injector {
     return cm.apply(args, null).reflectee;
   }
 
-// TODO(vojta): fix this hackery of passing list of Symbol or Type
-  Injector createChild(List<Module> modules, [List<dynamic> forceNewInstances]) {
+  // TODO(vojta): fix this hackery of passing list of Symbol or Type
+  Injector createChild(List<Module> modules,
+      [List<dynamic> forceNewInstances]) {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
       forceNewInstances.forEach((typeOrSymbol) {
@@ -181,7 +184,8 @@ class Injector {
           typeOrSymbol = reflectClass(typeOrSymbol).simpleName;
         }
 
-        forceNew.symbolMetaProvider(typeOrSymbol, _getProviderForSymbol(typeOrSymbol).first);
+        forceNew.symbolMetaProvider(typeOrSymbol,
+            _getProviderForSymbol(typeOrSymbol).first);
       });
 
       modules = modules.toList(); // clone
