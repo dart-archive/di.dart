@@ -1,7 +1,7 @@
 {
   "name": "dart-di",
   "version": "0.0.0",
-  "description": "ERROR: No README.md file found!",
+  "description": "A prototype of Dependency Injection framework.",
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
@@ -11,7 +11,13 @@
   "scripts": {
     "test": "grunt dart:test"
   },
-  "repository": "",
+  "bugs": {
+    "url": "https://github.com/angular/di.dart/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/angular/di.dart.git"
+  },
   "author": "Vojta Jina <vojta.jina@gmail.com>",
   "license": "MIT"
 }
