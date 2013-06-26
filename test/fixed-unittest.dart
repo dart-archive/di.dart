@@ -97,7 +97,6 @@ class ComplexExceptionMatcher extends BaseMatcher {
   }
 }
 
-// Welcome to Dart ;-)
 class IsInstanceOfTypeMatcher extends BaseMatcher {
   Type t;
 
