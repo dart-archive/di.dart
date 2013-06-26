@@ -41,7 +41,14 @@ class _TypeProvider implements Provider {
     var positionalArgs = ctor.parameters.map(resolveArgument).toList();
     var namedArgs = null;
 
-    return classMirror.newInstance(ctor.constructorName, positionalArgs, namedArgs).reflectee;
+    try {
+      return classMirror.newInstance(ctor.constructorName, positionalArgs, namedArgs).reflectee;
+    } catch (e) {
+      if (e is MirroredUncaughtExceptionError) {
+        throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
+      }
+      throw;
+    }
   }
 }
 
@@ -62,6 +69,13 @@ class _FactoryProvider implements Provider {
     var positionalArgs = mm.parameters.map(resolveArgument).toList();
     var namedArgs = null;
 
-    return cm.apply(positionalArgs, namedArgs).reflectee;
+    try {
+      return cm.apply(positionalArgs, namedArgs).reflectee;
+    } catch (e) {
+      if (e is MirroredUncaughtExceptionError) {
+        throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
+      }
+      throw;
+    }
   }
 }

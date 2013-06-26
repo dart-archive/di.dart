@@ -88,7 +88,7 @@ class Injector {
       });
     } catch(e) {
       resolving.clear();
-      throw e;
+      throw;
     }
     if (cache) {
       provider.second.instances[typeName] = value;
