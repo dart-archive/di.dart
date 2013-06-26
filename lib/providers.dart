@@ -62,6 +62,13 @@ class _FactoryProvider implements Provider {
     var positionalArgs = mm.parameters.map(resolveArgument).toList();
     var namedArgs = null;
 
-    return cm.apply(positionalArgs, namedArgs).reflectee;
+    try {
+      return cm.apply(positionalArgs, namedArgs).reflectee;
+    } catch (e) {
+      if (e is MirroredUncaughtExceptionError) {
+        throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
+      }
+      throw;
+    }
   }
 }
