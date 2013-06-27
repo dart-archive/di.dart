@@ -27,7 +27,7 @@ typedef bool Visibility(Injector requesting, Injector defining);
 
 /**
  * A collection of type bindings. Once the module is passed into the injector,
- * the injector created a copy of the module and all subsequent changes to the
+ * the injector creates a copy of the module and all subsequent changes to the
  * module have no effect.
  */
 class Module {
