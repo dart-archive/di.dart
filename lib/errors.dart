@@ -1,10 +1,10 @@
 part of di;
 
 
-class NoProviderException extends ArgumentError {
-  NoProviderException(message) : super(message);
+class NoProviderError extends ArgumentError {
+  NoProviderError(message) : super(message);
 }
 
-class CircularDependencyException extends ArgumentError {
-  CircularDependencyException(message) : super(message);
+class CircularDependencyError extends ArgumentError {
+  CircularDependencyError(message) : super(message);
 }

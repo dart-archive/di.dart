@@ -87,7 +87,7 @@ it('should fail if implicit injection is disabled', () {
   var injector = new Injector([], false);
   expect(() {
     injector.get(Engine);
-  }, toThrow(NoProviderException, 'No provider found for Engine! '
+  }, toThrow(NoProviderError, 'No provider found for Engine! '
                                   '(resolving Engine)'));
 });
 
@@ -170,27 +170,27 @@ it('should throw an exception when injecting a primitive type', () {
 
   expect(() {
     injector.get(NumDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of num! ' +
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of num! ' +
                                   '(resolving NumDependency -> num)'));
 
   expect(() {
     injector.get(IntDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of int! ' +
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of int! ' +
                                   '(resolving IntDependency -> int)'));
 
   expect(() {
     injector.get(DoubleDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of double! ' +
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of double! ' +
                                   '(resolving DoubleDependency -> double)'));
 
   expect(() {
     injector.get(BoolDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of bool! ' +
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of bool! ' +
                                   '(resolving BoolDependency -> bool)'));
 
   expect(() {
     injector.get(StringDependency);
-  }, toThrow(NoProviderException, 'Cannot inject a primitive type of String! ' +
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of String! ' +
                                   '(resolving StringDependency -> String)'));
 });
 
@@ -200,7 +200,7 @@ it('should throw an exception when circular dependency', () {
 
   expect(() {
     injector.get(CircularA);
-  }, toThrow(CircularDependencyException, 'Cannot resolve a circular dependency! ' +
+  }, toThrow(CircularDependencyError, 'Cannot resolve a circular dependency! ' +
                                           '(resolving CircularA -> CircularB -> CircularA)'));
 });
 
@@ -229,7 +229,7 @@ it('should throw an exception when injecting typedef without providing it', () {
 
   expect(() {
     injector.get(WithTypeDefDependency);
-  }, toThrow(NoProviderException, 'No implementation provided for CompareInt typedef! ' +
+  }, toThrow(NoProviderError, 'No implementation provided for CompareInt typedef! ' +
                                   '(resolving WithTypeDefDependency -> CompareInt)'));
 });
 
