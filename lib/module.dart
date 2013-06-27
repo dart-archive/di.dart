@@ -22,27 +22,17 @@ typedef dynamic CreationStrategy(
  * defining injector is provided. If false is returned, the injector keeps
  * walking up the tree to find another visible instance.
  */
-typedef bool Visibility(
-  Injector requesting,
-  Injector defining
-);
+typedef bool Visibility(Injector requesting, Injector defining);
 
 
+/**
+ * A collection of type bindings. Once the module is passed into the injector,
+ * the injector created a copy of the module and all subsequent changes to the
+ * module have no effect.
+ */
 class Module {
   Map<Symbol, _ProviderMetadata> _mappings =
       new HashMap<Symbol, _ProviderMetadata>();
-
-  static Map<Type, Symbol> _symbolNameCache = new Map<Type, Symbol>();
-
-  Symbol _idFromType(Type type) {
-    // A hack/workaround for reflectClass performance issue (dartbug.com/11108).
-    var symbol = _symbolNameCache[type];
-    if (symbol == null) {
-      symbol = reflectClass(type).simpleName;
-      _symbolNameCache[type] = symbol;
-    }
-    return symbol;
-  }
 
   /**
    * Register binding to a concrete value.
@@ -51,7 +41,7 @@ class Module {
    */
   void value(Type id, value, {
       CreationStrategy creation, Visibility visibility}) {
-    _mappings[_idFromType(id)] =
+    _mappings[getTypeSymbol(id)] =
         new _ProviderMetadata(new _ValueProvider(value),
             creation, visibility);
   }
@@ -59,12 +49,13 @@ class Module {
   /**
    * Register binding to a [Type].
    *
-   * The [type] will be instantiated using [new] operator and the resulting instance will be injected.
+   * The [type] will be instantiated using [new] operator and the resulting
+   * instance will be injected.
    */
   void type(Type id, Type type, {
       CreationStrategy creation, Visibility visibility}) {
-    _mappings[_idFromType(id)] =
-        new _ProviderMetadata(new _TypeProvider(_idFromType(type)),
+    _mappings[getTypeSymbol(id)] =
+        new _ProviderMetadata(new _TypeProvider(getTypeSymbol(type)),
             creation, visibility);
   }
 
@@ -76,7 +67,7 @@ class Module {
    */
   void provider(Type id, Provider provider, {
       CreationStrategy creation, Visibility visibility}) {
-    _mappings[_idFromType(id)] =
+    _mappings[getTypeSymbol(id)] =
         new _ProviderMetadata(provider, creation, visibility);
   }
 
@@ -88,18 +79,18 @@ class Module {
    */
   void factory(Type id, Function factoryFn, {
       CreationStrategy creation, Visibility visibility}) {
-    _mappings[_idFromType(id)] =
+    _mappings[getTypeSymbol(id)] =
         new _ProviderMetadata(new _FactoryProvider(factoryFn),
                               creation, visibility);
   }
 
   // TODO(vojta): another hacky backdoor, clean this up
-  void symbolMetaProvider(Symbol id, _ProviderMetadata metaData) {
+  void _symbolMetaProvider(Symbol id, _ProviderMetadata metaData) {
     _mappings[id] = metaData;
   }
 }
 
-/** Deafault create stratrategy is to instantiate on the defining injector. */
+/** Deafault creation strategy is to instantiate on the defining injector. */
 dynamic _defaultCreationStrategy(Symbol type, Injector requesting,
     Injector defining, bool direct, Factory factory) => factory();
 

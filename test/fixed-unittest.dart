@@ -6,7 +6,7 @@ import 'dart:async';
 
 export 'package:unittest/unittest.dart';
 
-// fix the testing framework ;-)
+// Jasmine-like syntax for unittest.
 void describe(String spec, TestFunction body) => group(spec, body);
 void it(String spec, TestFunction body) => test(spec, body);
 void xit(String spec, TestFunction body) {}
@@ -17,7 +17,8 @@ Matcher toBe(expected) => same(expected);
 Matcher instanceOf(Type t) => new IsInstanceOfTypeMatcher(t);
 
 Matcher toThrow(Type exceptionClass, String message) =>
-  new ThrowsMatcher(new ComplexExceptionMatcher(instanceOf(exceptionClass), toEqual(message)));
+  new ThrowsMatcher(new ComplexExceptionMatcher(
+      instanceOf(exceptionClass), toEqual(message)));
 
 Matcher not(Matcher matcher) => new NegateMatcher(matcher);
 
@@ -36,9 +37,10 @@ class NegateMatcher extends BaseMatcher {
     return _matcher.describe(description);
   }
 
-  Description describeMismatch(item, Description mismatchDescription, Map matchState,
-                               bool verbose) {
-    return _matcher.describeMismatch(item, mismatchDescription, matchState, verbose);
+  Description describeMismatch(item, Description mismatchDescription,
+      Map matchState, bool verbose) {
+    return _matcher.describeMismatch(
+        item, mismatchDescription, matchState, verbose);
   }
 }
 
@@ -59,7 +61,8 @@ class ThrowsMatcher extends Throws {
       return mismatchDescription.add(' did not throw any exception');
     }
 
-    return _matcher.describeMismatch(item, mismatchDescription, matchState, verbose);
+    return _matcher.describeMismatch(item, mismatchDescription,
+        matchState, verbose);
   }
 }
 
@@ -84,8 +87,8 @@ class ComplexExceptionMatcher extends BaseMatcher {
     messageMatcher.describe(description);
   }
 
-  Description describeMismatch(item, Description mismatchDescription, Map matchState,
-                               bool verbose) {
+  Description describeMismatch(item, Description mismatchDescription,
+      Map matchState, bool verbose) {
     var e = matchState['exception'];
 
     mismatchDescription.add('threw ').addDescriptionOf(e);
