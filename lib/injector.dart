@@ -3,9 +3,9 @@ part of di;
 class Injector {
   final bool allowImplicitInjection;
 
-  static final List<Symbol> _PRIMITIVE_TYPES = <Symbol>[
-    new Symbol('dynamic'), new Symbol('num'), new Symbol('int'),
-    new Symbol('double'), new Symbol('String'), new Symbol('bool')
+  static const List<Symbol> _PRIMITIVE_TYPES = const <Symbol>[
+    const Symbol('dynamic'), const Symbol('num'), const Symbol('int'),
+    const Symbol('double'), const Symbol('String'), const Symbol('bool')
   ];
 
   final Injector parent;
