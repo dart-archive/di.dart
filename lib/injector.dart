@@ -3,17 +3,18 @@ part of di;
 class Injector {
   final bool allowImplicitInjection;
 
-  final List<Symbol> _PRIMITIVE_TYPES = <Symbol>[new Symbol('dynamic'),
-      new Symbol('num'), new Symbol('int'), new Symbol('double'),
-      new Symbol('String'), new Symbol('bool')];
+  static const List<Symbol> _PRIMITIVE_TYPES = const <Symbol>[
+    const Symbol('dynamic'), const Symbol('num'), const Symbol('int'),
+    const Symbol('double'), const Symbol('String'), const Symbol('bool')
+  ];
 
   final Injector parent;
 
-  Map<Symbol, _ProviderMetadata> providers =
+  final Map<Symbol, _ProviderMetadata> providers =
       new Map<Symbol, _ProviderMetadata>();
-  Map<Symbol, dynamic> instances = new Map<Symbol, dynamic>();
+  final Map<Symbol, Object> instances = new Map<Symbol, Object>();
 
-  List<Symbol> resolving = new List<Symbol>();
+  final List<Symbol> resolving = new List<Symbol>();
 
   Injector([List<Module> modules, bool allowImplicitInjection = true])
       : this._fromParent(modules, null,
@@ -24,12 +25,12 @@ class Injector {
     if (modules == null) {
       modules = <Module>[];
     }
-    Module injectorModule = new Module();
-    injectorModule.value(Injector, this);
-    modules.add(injectorModule);
     modules.forEach((module) {
       providers.addAll(module._mappings);
     });
+    Module injectorModule = new Module();
+    injectorModule.value(Injector, this);
+    providers.addAll(injectorModule._mappings);
   }
 
   String _error(message, [appendDependency]) {
@@ -37,7 +38,7 @@ class Injector {
       resolving.add(appendDependency);
     }
 
-    String graph = resolving.map(formatSymbol).join(' -> ');
+    String graph = resolving.map(getSymbolName).join(' -> ');
 
     resolving.clear();
 
@@ -50,7 +51,7 @@ class Injector {
     _checkTypeConditions(typeName);
 
     if (resolving.contains(typeName)) {
-      throw new CircularDependencyException(
+      throw new CircularDependencyError(
           _error('Cannot resolve a circular dependency!', typeName));
     }
 
@@ -60,19 +61,19 @@ class Injector {
           _wrapGetInstanceBySymbol(_getInstanceBySymbol, requester);
     }
 
-    var provider = _getProviderForSymbol(typeName);
-    var metadata = provider.first;
-    var visible = metadata.visibility(requester, provider.second);
+    var providerWithInjector = _getProviderForSymbol(typeName);
+    var metadata = providerWithInjector.provider;
+    var visible = metadata.visibility(requester, providerWithInjector.injector);
 
     if (visible && instances.containsKey(typeName)) {
       return instances[typeName];
     }
 
-    if (provider.second != this || !visible) {
-      var injector = provider.second;
+    if (providerWithInjector.injector != this || !visible) {
+      var injector = providerWithInjector.injector;
       if (!visible) {
-        injector = provider.second.parent.
-            _getProviderForSymbol(typeName).second;
+        injector = providerWithInjector.injector.parent.
+            _getProviderForSymbol(typeName).injector;
       }
       return injector._getInstanceBySymbol(typeName, cache: cache,
           direct: direct, getInstanceBySymbol: getInstanceBySymbol,
@@ -81,8 +82,8 @@ class Injector {
 
     var value;
     try {
-      value = metadata.creation(typeName, requester, provider.second, direct,
-          () {
+      value = metadata.creation(typeName, requester,
+          providerWithInjector.injector, direct, () {
         resolving.add(typeName);
         var val = metadata.provider.get(getInstanceBySymbol, _error);
         resolving.removeLast();
@@ -93,7 +94,7 @@ class Injector {
       throw e;
     }
     if (cache) {
-      provider.second.instances[typeName] = value;
+      providerWithInjector.injector.instances[typeName] = value;
     }
     return value;
   }
@@ -110,9 +111,9 @@ class Injector {
   }
 
   /// Returns a pair for provider and the injector where it's defined.
-  _Pair<_ProviderMetadata, Injector> _getProviderForSymbol(Symbol typeName) {
+  _ProviderWithDefiningInjector _getProviderForSymbol(Symbol typeName) {
     if (providers.containsKey(typeName)) {
-      return new _Pair.of(providers[typeName], this);
+      return new _ProviderWithDefiningInjector(providers[typeName], this);
     }
 
     if (parent != null) {
@@ -120,19 +121,19 @@ class Injector {
     }
 
     if (!allowImplicitInjection) {
-      throw new NoProviderException(_error('No provider found for '
-          '${formatSymbol(typeName)}!', typeName));
+      throw new NoProviderError(_error('No provider found for '
+          '${getSymbolName(typeName)}!', typeName));
     }
 
     // create a provider for implicit types
-    return new _Pair.of(
+    return new _ProviderWithDefiningInjector(
         new _ProviderMetadata(new _TypeProvider(typeName)), this);
   }
 
   void _checkTypeConditions(Symbol typeName) {
     if (_PRIMITIVE_TYPES.contains(typeName)) {
-      throw new NoProviderException(_error('Cannot inject a primitive type '
-          'of ${formatSymbol(typeName)}!', typeName));
+      throw new NoProviderError(_error('Cannot inject a primitive type '
+          'of ${getSymbolName(typeName)}!', typeName));
     }
   }
 
@@ -152,7 +153,7 @@ class Injector {
    * the token ([Type]) is instantiated.
    */
   dynamic get(Type type) {
-    return _getInstanceBySymbol(reflectClass(type).simpleName, requester: this);
+    return _getInstanceBySymbol(getTypeSymbol(type), requester: this);
   }
 
   /**
@@ -180,7 +181,7 @@ class Injector {
       }
       injector = createChild([localsModule]);
     }
-    var symbol = reflectClass(type).simpleName;
+    var symbol = getTypeSymbol(type);
     var wrappedGetInstance =
         _wrapGetInstanceBySymbol(injector._getInstanceBySymbol, this);
     var value = injector._getInstanceBySymbol(symbol, cache: false,
@@ -221,11 +222,11 @@ class Injector {
       Module forceNew = new Module();
       forceNewInstances.forEach((typeOrSymbol) {
         if (typeOrSymbol is Type) {
-          typeOrSymbol = reflectClass(typeOrSymbol).simpleName;
+          typeOrSymbol = getTypeSymbol(typeOrSymbol);
         }
 
-        forceNew.symbolMetaProvider(typeOrSymbol,
-            _getProviderForSymbol(typeOrSymbol).first);
+        forceNew._symbolMetaProvider(typeOrSymbol,
+            _getProviderForSymbol(typeOrSymbol).provider);
       });
 
       modules = modules.toList(); // clone
@@ -236,8 +237,8 @@ class Injector {
   }
 }
 
-class _Pair<V1, V2> {
-  final V1 first;
-  final V2 second;
-  _Pair.of(this.first, this.second);
+class _ProviderWithDefiningInjector {
+  final _ProviderMetadata provider;
+  final Injector injector;
+  _ProviderWithDefiningInjector(this.provider, this.injector);
 }
