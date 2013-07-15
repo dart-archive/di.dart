@@ -72,6 +72,12 @@ class WithTypeDefDependency {
   }
 }
 
+class MultipleConstructors {
+  String instantiatedVia;
+  MultipleConstructors() : instantiatedVia = 'default';
+  MultipleConstructors.named() : instantiatedVia = 'named';
+}
+
 // pretend, you don't see this main method
 void main() {
 
@@ -233,6 +239,12 @@ it('should throw an exception when injecting typedef without providing it', () {
                                   '(resolving WithTypeDefDependency -> CompareInt)'));
 });
 
+
+it('should instantiate via the default/unnamed constructor', () {
+  var injector = new Injector();
+  MultipleConstructors instance = injector.get(MultipleConstructors);
+  expect(instance.instantiatedVia, 'default');
+});
 
 // CHILD INJECTORS
 it('should inject from child', () {

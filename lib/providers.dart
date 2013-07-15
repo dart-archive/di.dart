@@ -21,9 +21,11 @@ class _ValueProvider implements Provider {
 
 class _TypeProvider implements Provider {
   final ClassMirror classMirror;
+  final Symbol typeName;
 
   _TypeProvider(Symbol typeName)
-      : this.classMirror = getClassMirrorBySymbol(typeName);
+      : this.typeName = typeName,
+        this.classMirror = getClassMirrorBySymbol(typeName);
 
   dynamic get(getInstanceBySymbol, error) {
 
@@ -32,7 +34,7 @@ class _TypeProvider implements Provider {
           'for ${getSymbolName(classMirror.simpleName)} typedef!'));
     }
 
-    MethodMirror ctor = classMirror.constructors.values.first;
+    MethodMirror ctor = classMirror.constructors[typeName];
 
     resolveArgument(ParameterMirror p) {
       return getInstanceBySymbol(p.type.simpleName);
