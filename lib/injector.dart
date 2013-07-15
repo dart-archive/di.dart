@@ -203,7 +203,16 @@ class Injector {
     List args = mm.parameters.map((ParameterMirror parameter) {
       return _getInstanceBySymbol(parameter.type.simpleName);
     }).toList();
-    return cm.apply(args, null).reflectee;
+
+    try {
+      return cm.apply(args, null).reflectee;
+    } catch (e) {
+      if (e is MirroredUncaughtExceptionError) {
+        throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
+      }
+      throw;
+    }
+
   }
 
   /**
