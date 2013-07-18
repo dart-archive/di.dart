@@ -10,8 +10,11 @@ ClassMirror getClassMirrorBySymbol(Symbol id) {
   var mirror = _classMirrorCache[id];
   if (mirror == null) {
     for (var lib in currentMirrorSystem().libraries.values) {
-      if (lib.classes.containsKey(id)) {
-        mirror = lib.classes[id];
+      for (ClassMirror cls in lib.classes.values) {
+        if (cls.qualifiedName == id) {
+          mirror = cls;
+          break;
+        }
       }
     }
     _classMirrorCache[id] = mirror;
@@ -33,4 +36,4 @@ ClassMirror cachedReflectClass(Type type) {
   return mirror;
 }
 
-Symbol getTypeSymbol(Type type) => cachedReflectClass(type).simpleName;
+Symbol getTypeSymbol(Type type) => cachedReflectClass(type).qualifiedName;
