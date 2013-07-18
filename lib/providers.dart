@@ -31,13 +31,13 @@ class _TypeProvider implements Provider {
 
     if (classMirror is TypedefMirror) {
       throw new NoProviderError(error('No implementation provided '
-          'for ${getSymbolName(classMirror.simpleName)} typedef!'));
+          'for ${getSymbolName(classMirror.qualifiedName)} typedef!'));
     }
 
-    MethodMirror ctor = classMirror.constructors[typeName];
+    MethodMirror ctor = classMirror.constructors[classMirror.simpleName];
 
     resolveArgument(ParameterMirror p) {
-      return getInstanceBySymbol(p.type.simpleName);
+      return getInstanceBySymbol(p.type.qualifiedName);
     }
 
     var positionalArgs = ctor.parameters.map(resolveArgument).toList();
@@ -66,7 +66,7 @@ class _FactoryProvider implements Provider {
     MethodMirror mm = cm.function;
 
     resolveArgument(p) {
-      return getInstanceBySymbol(p.type.simpleName);
+      return getInstanceBySymbol(p.type.qualifiedName);
     }
 
     var positionalArgs = mm.parameters.map(resolveArgument).toList();

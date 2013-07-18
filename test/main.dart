@@ -1,3 +1,5 @@
+library di.tests;
+
 import 'dart:collection';
 import 'dart:mirrors';
 import 'fixed-unittest.dart';
@@ -93,8 +95,8 @@ it('should fail if implicit injection is disabled', () {
   var injector = new Injector([], false);
   expect(() {
     injector.get(Engine);
-  }, toThrow(NoProviderError, 'No provider found for Engine! '
-                                  '(resolving Engine)'));
+  }, toThrow(NoProviderError, 'No provider found for di.tests.Engine! '
+                                  '(resolving di.tests.Engine)'));
 });
 
 
@@ -176,28 +178,28 @@ it('should throw an exception when injecting a primitive type', () {
 
   expect(() {
     injector.get(NumDependency);
-  }, toThrow(NoProviderError, 'Cannot inject a primitive type of num! ' +
-                                  '(resolving NumDependency -> num)'));
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of dart.core.num! '
+                              '(resolving di.tests.NumDependency -> dart.core.num)'));
 
   expect(() {
     injector.get(IntDependency);
-  }, toThrow(NoProviderError, 'Cannot inject a primitive type of int! ' +
-                                  '(resolving IntDependency -> int)'));
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of dart.core.int! '
+                              '(resolving di.tests.IntDependency -> dart.core.int)'));
 
   expect(() {
     injector.get(DoubleDependency);
-  }, toThrow(NoProviderError, 'Cannot inject a primitive type of double! ' +
-                                  '(resolving DoubleDependency -> double)'));
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of dart.core.double! '
+                              '(resolving di.tests.DoubleDependency -> dart.core.double)'));
 
   expect(() {
     injector.get(BoolDependency);
-  }, toThrow(NoProviderError, 'Cannot inject a primitive type of bool! ' +
-                                  '(resolving BoolDependency -> bool)'));
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of dart.core.bool! '
+                              '(resolving di.tests.BoolDependency -> dart.core.bool)'));
 
   expect(() {
     injector.get(StringDependency);
-  }, toThrow(NoProviderError, 'Cannot inject a primitive type of String! ' +
-                                  '(resolving StringDependency -> String)'));
+  }, toThrow(NoProviderError, 'Cannot inject a primitive type of dart.core.String! '
+                              '(resolving di.tests.StringDependency -> dart.core.String)'));
 });
 
 
@@ -206,8 +208,9 @@ it('should throw an exception when circular dependency', () {
 
   expect(() {
     injector.get(CircularA);
-  }, toThrow(CircularDependencyError, 'Cannot resolve a circular dependency! ' +
-                                          '(resolving CircularA -> CircularB -> CircularA)'));
+  }, toThrow(CircularDependencyError, 'Cannot resolve a circular dependency! '
+                                      '(resolving di.tests.CircularA -> '
+                                      'di.tests.CircularB -> di.tests.CircularA)'));
 });
 
 
@@ -235,8 +238,8 @@ it('should throw an exception when injecting typedef without providing it', () {
 
   expect(() {
     injector.get(WithTypeDefDependency);
-  }, toThrow(NoProviderError, 'No implementation provided for CompareInt typedef! ' +
-                                  '(resolving WithTypeDefDependency -> CompareInt)'));
+  }, toThrow(NoProviderError, 'No implementation provided for di.tests.CompareInt typedef! '
+                              '(resolving di.tests.WithTypeDefDependency -> di.tests.CompareInt)'));
 });
 
 
@@ -419,8 +422,8 @@ describe('creation strategy', () {
     var childInjector = parentInjector.createChild([]);
     childInjector.instantiate(Car);
     expect(creationLog, [
-      [reflectClass(Car).simpleName, childInjector, parentInjector, true],
-      [reflectClass(Engine).simpleName, childInjector, parentInjector, false]
+      [reflectClass(Car).qualifiedName, childInjector, parentInjector, true],
+      [reflectClass(Engine).qualifiedName, childInjector, parentInjector, false]
     ]);
   });
 
@@ -441,7 +444,7 @@ describe('creation strategy', () {
     var injector = new Injector([module]);
     expect(() {
       injector.get(Engine);
-    }, throwsA('not allowing Symbol("Engine") unless called injector.intantiate on'));
+    }, throwsA('not allowing Symbol("di.tests.Engine") unless called injector.intantiate on'));
     expect(injector.instantiate(Engine), instanceOf(MockEngine));
   });
 
