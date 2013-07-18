@@ -4,8 +4,9 @@ class Injector {
   final bool allowImplicitInjection;
 
   static const List<Symbol> _PRIMITIVE_TYPES = const <Symbol>[
-    const Symbol('dynamic'), const Symbol('num'), const Symbol('int'),
-    const Symbol('double'), const Symbol('String'), const Symbol('bool')
+    const Symbol('dart.core.dynamic'), const Symbol('dart.core.num'),
+    const Symbol('dart.core.int'), const Symbol('dart.core.double'),
+    const Symbol('dart.core.String'), const Symbol('dart.core.bool')
   ];
 
   final Injector parent;
@@ -201,7 +202,7 @@ class Injector {
     ClosureMirror cm = reflect(fn);
     MethodMirror mm = cm.function;
     List args = mm.parameters.map((ParameterMirror parameter) {
-      return _getInstanceBySymbol(parameter.type.simpleName);
+      return _getInstanceBySymbol(parameter.type.qualifiedName);
     }).toList();
 
     try {
