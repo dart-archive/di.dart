@@ -50,7 +50,7 @@ class _TypeProvider implements Provider {
       if (e is MirroredUncaughtExceptionError) {
         throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
       }
-      throw;
+      rethrow;
     }
   }
 }
@@ -78,7 +78,7 @@ class _FactoryProvider implements Provider {
       if (e is MirroredUncaughtExceptionError) {
         throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
       }
-      throw;
+      rethrow;
     }
   }
 }

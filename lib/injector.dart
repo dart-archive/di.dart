@@ -92,7 +92,7 @@ class Injector {
       });
     } catch(e) {
       resolving.clear();
-      throw;
+      rethrow;
     }
     if (cache) {
       providerWithInjector.injector.instances[typeName] = value;
@@ -211,7 +211,7 @@ class Injector {
       if (e is MirroredUncaughtExceptionError) {
         throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
       }
-      throw;
+      rethrow;
     }
 
   }
