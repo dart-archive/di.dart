@@ -36,49 +36,40 @@ class _TypeProvider implements Provider {
 
     MethodMirror ctor = classMirror.constructors[classMirror.simpleName];
 
-    resolveArgument(ParameterMirror p) {
+    resolveArgument(int pos) {
+      ParameterMirror p = ctor.parameters[pos];
       return getInstanceBySymbol(p.type.qualifiedName);
     }
 
-    var positionalArgs = ctor.parameters.map(resolveArgument).toList();
-    var namedArgs = null;
-
-    try {
-      return classMirror.newInstance(ctor.constructorName, positionalArgs,
-          namedArgs).reflectee;
-    } catch (e) {
-      if (e is MirroredUncaughtExceptionError) {
-        throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
-      }
-      rethrow;
-    }
+    var args = new List.generate(ctor.parameters.length, resolveArgument,
+        growable: false);
+    return classMirror.newInstance(ctor.constructorName, args).reflectee;
   }
 }
 
 
 class _FactoryProvider implements Provider {
+  static final Map<Type, MethodMirror> _cachedMirrors = new HashMap();
   final Function factoryFn;
 
   _FactoryProvider(Function this.factoryFn);
 
   dynamic get(getInstanceBySymbol, error) {
-    ClosureMirror cm = reflect(factoryFn);
-    MethodMirror mm = cm.function;
-
-    resolveArgument(p) {
+    var parameters = _methodMirror.parameters;
+    resolveArgument(int pos) {
+      ParameterMirror p = parameters[pos];
       return getInstanceBySymbol(p.type.qualifiedName);
     }
 
-    var positionalArgs = mm.parameters.map(resolveArgument).toList();
-    var namedArgs = null;
+    var args = new List.generate(parameters.length, resolveArgument,
+        growable: false);
+    return Function.apply(factoryFn, args);
+  }
 
-    try {
-      return cm.apply(positionalArgs, namedArgs).reflectee;
-    } catch (e) {
-      if (e is MirroredUncaughtExceptionError) {
-        throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
-      }
-      rethrow;
-    }
+  MethodMirror get _methodMirror {
+    _cachedMirrors.putIfAbsent(factoryFn.runtimeType, () {
+      return reflect(factoryFn).function;
+    });
+    return _cachedMirrors[factoryFn.runtimeType];
   }
 }
