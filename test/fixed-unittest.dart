@@ -23,7 +23,7 @@ Matcher toThrow(Type exceptionClass, String message) =>
 Matcher not(Matcher matcher) => new NegateMatcher(matcher);
 
 
-class NegateMatcher extends BaseMatcher {
+class NegateMatcher extends Matcher {
   final Matcher _matcher;
 
   const NegateMatcher(Matcher matcher) : _matcher = matcher;
@@ -66,7 +66,7 @@ class ThrowsMatcher extends Throws {
   }
 }
 
-class ComplexExceptionMatcher extends BaseMatcher {
+class ComplexExceptionMatcher extends Matcher {
   Matcher classMatcher;
   Matcher messageMatcher;
 
@@ -100,7 +100,7 @@ class ComplexExceptionMatcher extends BaseMatcher {
   }
 }
 
-class IsInstanceOfTypeMatcher extends BaseMatcher {
+class IsInstanceOfTypeMatcher extends Matcher {
   Type t;
 
   IsInstanceOfTypeMatcher(Type t) {
