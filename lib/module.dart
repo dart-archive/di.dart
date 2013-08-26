@@ -12,7 +12,6 @@ typedef dynamic CreationStrategy(
   Symbol type,
   Injector requesting,
   Injector defining,
-  bool directInstantation,
   Factory factory
 );
 
@@ -92,7 +91,7 @@ class Module {
 
 /** Deafault creation strategy is to instantiate on the defining injector. */
 dynamic _defaultCreationStrategy(Symbol type, Injector requesting,
-    Injector defining, bool direct, Factory factory) => factory();
+    Injector defining, Factory factory) => factory();
 
 /** By default all values are visible to child injectors. */
 bool _defaultVisibility(_, __) => true;

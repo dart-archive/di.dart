@@ -46,20 +46,12 @@ class Injector {
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceBySymbol(Symbol typeName, {bool cache: true,
-      bool direct: false, Map<Type, dynamic> locals, getInstanceBySymbol,
-      Injector requester}) {
+  dynamic _getInstanceBySymbol(Symbol typeName, {Injector requester}) {
     _checkTypeConditions(typeName);
 
     if (resolving.contains(typeName)) {
       throw new CircularDependencyError(
           _error('Cannot resolve a circular dependency!', typeName));
-    }
-
-    // TODO(pavelgj): Think of a simpler way.
-    if (!direct) {
-      getInstanceBySymbol =
-          _wrapGetInstanceBySymbol(_getInstanceBySymbol, requester);
     }
 
     var providerWithInjector = _getProviderForSymbol(typeName);
@@ -76,15 +68,16 @@ class Injector {
         injector = providerWithInjector.injector.parent.
             _getProviderForSymbol(typeName).injector;
       }
-      return injector._getInstanceBySymbol(typeName, cache: cache,
-          direct: direct, getInstanceBySymbol: getInstanceBySymbol,
+      return injector._getInstanceBySymbol(typeName,
           requester: requester);
     }
 
+    var getInstanceBySymbol =
+        _wrapGetInstanceBySymbol(_getInstanceBySymbol, requester);
     var value;
     try {
       value = metadata.creation(typeName, requester,
-          providerWithInjector.injector, direct, () {
+          providerWithInjector.injector, () {
         resolving.add(typeName);
         var val = metadata.provider.get(getInstanceBySymbol, _error);
         resolving.removeLast();
@@ -94,9 +87,7 @@ class Injector {
       resolving.clear();
       rethrow;
     }
-    if (cache) {
-      providerWithInjector.injector.instances[typeName] = value;
-    }
+    providerWithInjector.injector.instances[typeName] = value;
     return value;
   }
 
@@ -105,9 +96,9 @@ class Injector {
    *  down to the providers.
    */
   Function _wrapGetInstanceBySymbol(Function getInstanceBySymbol,
-                                    Injector requster) {
+                                    Injector requester) {
     return (Symbol typeName) {
-      return getInstanceBySymbol(typeName, requester: requster);
+      return getInstanceBySymbol(typeName, requester: requester);
     };
   }
 
@@ -153,45 +144,8 @@ class Injector {
    * If there is no parent injector, an implicit binding is used. That is,
    * the token ([Type]) is instantiated.
    */
-  dynamic get(Type type) {
-    return _getInstanceBySymbol(getTypeSymbol(type), requester: this);
-  }
-
-  /**
-   * Get an instance for given token ([Symbol]).
-   *
-   * See [Injector.get] for more.
-   */
-  dynamic getBySymbol(Symbol symbol) => _getInstanceBySymbol(symbol);
-
-  /**
-   * Create an instance for given token ([Type]).
-   *
-   * This method behaves similarly to [Injector.get], but it ALWAYS creates
-   * a new instance, which is not cached.
-   *
-   * It also allows passing map of locals to override any bindings.
-   */
-  dynamic instantiate(Type type, [Map<Type, dynamic> locals]) {
-    Injector injector = this;
-
-    if (locals != null && locals.isNotEmpty) {
-      Module localsModule = new Module();
-      for (Type key in locals.keys) {
-        localsModule.value(key, locals[key]);
-      }
-      injector = createChild([localsModule]);
-    }
-    var symbol = getTypeSymbol(type);
-    var wrappedGetInstance =
-        _wrapGetInstanceBySymbol(injector._getInstanceBySymbol, this);
-    var value = injector._getInstanceBySymbol(symbol, cache: false,
-        direct: true,
-        getInstanceBySymbol: wrappedGetInstance,
-        requester: this);
-    instances[symbol] = value;
-    return value;
-  }
+  dynamic get(Type type) =>
+      _getInstanceBySymbol(getTypeSymbol(type), requester: this);
 
   /**
    * Invoke given function and inject all its arguments.
@@ -213,7 +167,6 @@ class Injector {
       }
       rethrow;
     }
-
   }
 
   /**
