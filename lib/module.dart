@@ -1,6 +1,10 @@
-part of di;
+library di.module;
 
-typedef dynamic Factory();
+import 'dart:collection';
+
+import 'injector.dart';
+
+typedef dynamic FactoryFn(Injector injector);
 
 /**
  * Creation strategy is asked to return an instance of the type after
@@ -9,11 +13,9 @@ typedef dynamic Factory();
  * [Injector.instantiate].
  */
 typedef dynamic CreationStrategy(
-  Symbol type,
   Injector requesting,
   Injector defining,
-  bool directInstantation,
-  Factory factory
+  dynamic factory()
 );
 
 /**
@@ -31,44 +33,29 @@ typedef bool Visibility(Injector requesting, Injector defining);
  * module have no effect.
  */
 class Module {
-  Map<Symbol, _ProviderMetadata> _mappings =
-      new HashMap<Symbol, _ProviderMetadata>();
+  final Map<Type, Binding> bindings = new HashMap<Type, Binding>();
 
   /**
    * Register binding to a concrete value.
    *
    * The [value] is what actually will be injected.
    */
-  void value(Type id, value, {
-      CreationStrategy creation, Visibility visibility}) {
-    _mappings[getTypeSymbol(id)] =
-        new _ProviderMetadata(new _ValueProvider(value),
-            creation, visibility);
+  void value(Type id, value,
+      {CreationStrategy creation, Visibility visibility}) {
+    bindings[id] = new ValueBinding(value, creation, visibility);
   }
 
   /**
    * Register binding to a [Type].
    *
-   * The [type] will be instantiated using [new] operator and the resulting
-   * instance will be injected.
+   * The [implementedBy] will be instantiated using [new] operator and the
+   * resulting instance will be injected. If no type is provided, then it's
+   * implied that [id] should be instantiated.
    */
-  void type(Type id, Type type, {
-      CreationStrategy creation, Visibility visibility}) {
-    _mappings[getTypeSymbol(id)] =
-        new _ProviderMetadata(new _TypeProvider(getTypeSymbol(type)),
-            creation, visibility);
-  }
-
-  /**
-   * Register binding to a provider.
-   *
-   * The [provider] has to implement [get] method which returns the actual
-   * value that will be injected.
-   */
-  void provider(Type id, Provider provider, {
-      CreationStrategy creation, Visibility visibility}) {
-    _mappings[getTypeSymbol(id)] =
-        new _ProviderMetadata(provider, creation, visibility);
+  void type(Type id, {Type implementedBy, CreationStrategy creation,
+      Visibility visibility}) {
+    bindings[id] = new TypeBinding(implementedBy == null ? id : implementedBy,
+        creation, visibility);
   }
 
   /**
@@ -77,38 +64,51 @@ class Module {
    * The [factoryFn] will be called and all its arguments will get injected.
    * The result of that function is the value that will be injected.
    */
-  void factory(Type id, Function factoryFn, {
-      CreationStrategy creation, Visibility visibility}) {
-    _mappings[getTypeSymbol(id)] =
-        new _ProviderMetadata(new _FactoryProvider(factoryFn),
-                              creation, visibility);
-  }
-
-  // TODO(vojta): another hacky backdoor, clean this up
-  void _symbolMetaProvider(Symbol id, _ProviderMetadata metaData) {
-    _mappings[id] = metaData;
+  void factory(Type id, FactoryFn factoryFn,
+      {CreationStrategy creation, Visibility visibility}) {
+    bindings[id] = new FactoryBinding(factoryFn, creation, visibility);
   }
 }
 
 /** Deafault creation strategy is to instantiate on the defining injector. */
-dynamic _defaultCreationStrategy(Symbol type, Injector requesting,
-    Injector defining, bool direct, Factory factory) => factory();
+dynamic _defaultCreationStrategy(Injector requesting, Injector defining,
+    dynamic factory()) => factory();
 
 /** By default all values are visible to child injectors. */
 bool _defaultVisibility(_, __) => true;
 
-class _ProviderMetadata {
-  Provider provider;
-  CreationStrategy creation;
-  Visibility visibility;
 
-  _ProviderMetadata(this.provider,
-      [CreationStrategy this.creation, Visibility this.visibility]) {
-    if (creation == null) {
-      creation = _defaultCreationStrategy;
-    }
-    if (visibility == null) {
-      visibility = _defaultVisibility;
-    }
-  }
+abstract class Binding {
+  final CreationStrategy creationStrategy;
+  final Visibility visibility;
+
+  Binding(_creationStrategy, _visibility)
+      : creationStrategy = _creationStrategy == null ?
+            _defaultCreationStrategy : _creationStrategy,
+        visibility = _visibility == null ?
+            _defaultVisibility : _visibility;
+}
+
+class ValueBinding extends Binding {
+  final Object value;
+
+  ValueBinding(this.value, [CreationStrategy creationStrategy,
+                            Visibility visibility])
+      : super(creationStrategy, visibility);
+}
+
+class TypeBinding extends Binding {
+  final Type type;
+
+  TypeBinding(this.type, [CreationStrategy creationStrategy,
+                          Visibility visibility])
+      : super(creationStrategy, visibility);
+}
+
+class FactoryBinding extends Binding {
+  final FactoryFn factoryFn;
+
+  FactoryBinding(this.factoryFn, [CreationStrategy creationStrategy,
+                                  Visibility visibility])
+      : super(creationStrategy, visibility);
 }
