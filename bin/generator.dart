@@ -43,12 +43,15 @@ main() {
   new File(output).writeAsStringSync(code);
 }
 
-void printLibraryCode(Map<String, String> typeToImport, List<String> imports,
+String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
                       List<ClassElement> typeFactoryTypes) {
   List<String> requiredImports = <String>[];
   StringBuffer factories = new StringBuffer();
 
   String resolveClassIdentifier(InterfaceType type) {
+    if ((type.element as ClassElement).library.isDartCore) {
+      return type.name;
+    }
     String import = typeToImport[getCanonicalName(type)];
     if (!requiredImports.contains(import)) {
       requiredImports.add(import);
