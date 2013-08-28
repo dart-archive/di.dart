@@ -4,5 +4,8 @@ version: 0.0.19
 author: "Vojta Jina <vojta.jina@gmail.com>"
 homepage: https://github.com/angular/di.dart
 
+dependencies:
+  analyzer_experimental: any
+
 dev_dependencies:
   unittest: any
