@@ -26,7 +26,7 @@ main() {
 
   print('pathToSdk: $pathToSdk');
   print('entryPoint: $entryPoint');
-  print('classAnnotations: $classAnnotations');
+  print('classAnnotations: ${classAnnotations.join(', ')}');
   print('output: $output');
   print('packageRoots: $packageRoots');
 
@@ -34,10 +34,9 @@ main() {
   List<String> imports = <String>[];
   List<ClassElement> typeFactoryTypes = <ClassElement>[];
   Map<String, String> typeToImport = new Map<String, String>();
-  c.crawl(entryPoint, (CompilationUnit compilationUnit, SourceFile source) {
-    compilationUnit.accept(
-        new CompilationUnitVisitor(source, classAnnotations, imports,
-            typeToImport, typeFactoryTypes));
+  c.crawl(entryPoint, (CompilationUnitElement compilationUnit, SourceFile source) {
+      new CompilationUnitVisitor(c.context, source, classAnnotations, imports,
+          typeToImport, typeFactoryTypes).visit(compilationUnit);
   });
   var code = printLibraryCode(typeToImport, imports, typeFactoryTypes);
   new File(output).writeAsStringSync(code);
@@ -60,7 +59,8 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
   }
 
   typeFactoryTypes.forEach((ClassElement clazz) {
-    factories.write('typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ');
+    factories.write(
+        'typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ');
     factories.write('new ${resolveClassIdentifier(clazz.type)}(');
     ConstructorElement constr =
         clazz.constructors.firstWhere((c) => c.name.isEmpty);
@@ -81,57 +81,75 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
   return code.toString();
 }
 
-class CompilationUnitVisitor extends GeneralizingASTVisitor {
+class CompilationUnitVisitor {
   List<String> imports;
   Map<String, String> typeToImport;
   List<ClassElement> typeFactoryTypes;
   List<String> classAnnotations;
   SourceFile source;
+  AnalysisContext context;
 
-  CompilationUnitVisitor(this.source, this.classAnnotations, this.imports,
-      this.typeToImport, this.typeFactoryTypes);
+  CompilationUnitVisitor(AnalysisContext this.context, this.source,
+      this.classAnnotations, this.imports, this.typeToImport,
+      this.typeFactoryTypes);
 
-  visitLibraryDirective(LibraryDirective library) {
-    LibraryElement libElement = library.element;
-    int annotationIdx = 0;
-    for (ElementAnnotation ann in libElement.metadata) {
-      if (ann.element is ConstructorElement) {
-        ConstructorElement con = ann.element;
-        if (getQualifiedName(con.enclosingElement.type) == 'di.annotations.Injectables') {
-          var listLiteral =
-              library.metadata[annotationIdx].arguments.arguments.first;
-          for (Expression element in listLiteral.elements) {
-            typeFactoryTypes
-                .add((element as SimpleIdentifier).element as ClassElement);
-          }
-        }
-      }
-      annotationIdx++;
+  visit(CompilationUnitElement compilationUnit) {
+    visitLibrary(compilationUnit.enclosingElement);
+
+    List<ClassElement> types = <ClassElement>[];
+    types.addAll(compilationUnit.types);
+
+    for (CompilationUnitElement part in compilationUnit.enclosingElement.parts) {
+      types.addAll(part.types);
     }
-    return super.visitLibraryDirective(library);
+
+    types.forEach(visitClassElement);
   }
 
-  visitClassDeclaration(ClassDeclaration classDecl) {
-    if (classDecl.name.name.startsWith('_')) {
+  visitLibrary(LibraryElement libElement) {
+    CompilationUnit resolvedUnit = context
+        .resolveCompilationUnit(libElement.source, libElement);
+
+    resolvedUnit.directives.forEach((Directive directive) {
+      if (directive is LibraryDirective) {
+        LibraryDirective library = directive;
+        int annotationIdx = 0;
+        library.metadata.forEach((Annotation ann) {
+          if (ann.element is ConstructorElement &&
+              getQualifiedName(
+                  (ann.element as ConstructorElement).enclosingElement.type) ==
+                  'di.annotations.Injectables') {
+            var listLiteral =
+                library.metadata[annotationIdx].arguments.arguments.first;
+            for (Expression element in listLiteral.elements) {
+              typeFactoryTypes
+                 .add((element as SimpleIdentifier).element as ClassElement);
+            }
+          }
+          annotationIdx++;
+        });
+      }
+    });
+  }
+
+  visitClassElement(ClassElement classElement) {
+    if (classElement.name.startsWith('_')) {
       return; // ignore private classes.
     }
-    typeToImport[getCanonicalName(classDecl.element.type)] =
+    typeToImport[getCanonicalName(classElement.type)] =
         source.entryPointImport;
     if (!imports.contains(source.entryPointImport)) {
       imports.add(source.entryPointImport);
     }
-
-    for (ElementAnnotation ann in classDecl.element.metadata) {
+    for (ElementAnnotation ann in classElement.metadata) {
       if (ann.element is ConstructorElement) {
         ConstructorElement con = ann.element;
         if (classAnnotations
             .contains(getQualifiedName(con.enclosingElement.type))) {
-          typeFactoryTypes.add(classDecl.element);
+          typeFactoryTypes.add(classElement);
         }
       }
     }
-
-    return super.visitCompilationUnitMember(classDecl);
   }
 }
 
@@ -147,12 +165,13 @@ String getCanonicalName(InterfaceType type) {
   return '$source:$name';
 }
 
-typedef CompilationUnitCrawler(CompilationUnit compilationUnit,
+typedef CompilationUnitCrawler(CompilationUnitElement compilationUnit,
                                SourceFile source);
 
 class SourceCrawler {
   final List<String> packageRoots;
   final String sdkPath;
+  AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
 
   SourceCrawler(this.sdkPath, this.packageRoots);
 
@@ -160,9 +179,9 @@ class SourceCrawler {
     JavaSystemIO.setProperty("com.google.dart.sdk", sdkPath);
     DartSdk sdk = DirectoryBasedDartSdk.defaultSdk;
 
-    AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
-    var packageUriResolver = new PackageUriResolver(packageRoots.map((pr) =>
-          new JavaFile.fromUri(new Uri.file(pr))));
+    var packageUriResolver =
+        new PackageUriResolver(packageRoots.map(
+            (pr) => new JavaFile.fromUri(new Uri.file(pr))).toList());
     context.sourceFactory = new SourceFactory.con2([
       new DartUriResolver(sdk),
       new FileUriResolver(),
@@ -193,7 +212,7 @@ class SourceCrawler {
     var sourceFile = new SourceFile(
         entryPointFile.getAbsolutePath(),
         entryPointImport,
-        resolvedUnit);
+        resolvedUnit.element);
     List<SourceFile> visited = <SourceFile>[];
     List<SourceFile> toVisit = <SourceFile>[sourceFile];
 
@@ -202,7 +221,7 @@ class SourceCrawler {
       visited.add(currentFile);
       _visitor(currentFile.compilationUnit, currentFile);
       var visitor = new CrawlerVisitor(currentFile, context);
-      currentFile.compilationUnit.accept(visitor);
+      visitor.accept(currentFile.compilationUnit);
       visitor.toVisit.forEach((SourceFile todo) {
         if (!toVisit.contains(todo) && !visited.contains(todo)) {
           toVisit.add(todo);
@@ -212,7 +231,7 @@ class SourceCrawler {
   }
 }
 
-class CrawlerVisitor extends GeneralizingASTVisitor {
+class CrawlerVisitor {
   List<SourceFile> toVisit = <SourceFile>[];
   SourceFile currentFile;
   AnalysisContext context;
@@ -220,30 +239,18 @@ class CrawlerVisitor extends GeneralizingASTVisitor {
 
   CrawlerVisitor(this.currentFile, this.context);
 
-  visitImportDirective(ImportDirective node) {
-    _doImport(node);
-    super.visitImportDirective(node);
+  void accept(CompilationUnitElement cu) {
+    cu.enclosingElement.imports.forEach((ImportElement import) =>
+        visitImportElement(import.uri, import.importedLibrary.source));
+    cu.enclosingElement.exports.forEach((ExportElement import) =>
+        visitImportElement(import.uri, import.exportedLibrary.source));
   }
 
-  visitPartDirective(PartDirective node) {
-    _doImport(node);
-    super.visitPartDirective(node);
-  }
+  visitImportElement(String uri, Source source) {
+    if (uri == null) return; // dart:core
 
-  _doImport(UriBasedDirective node) {
-    Source source;
-    bool isPart = false;
-    if (node.uriElement is LibraryElement) { // import
-      var libElement = node.uriElement as LibraryElement;
-      source = libElement.definingCompilationUnit.source;
-    } else if (node.uriElement is CompilationUnitElement) { // part
-      isPart = true;
-      source = (node.uriElement as CompilationUnitElement).source;
-    }
-
-    bool isSystem = false;
     String systemImport;
-    String uri = node.uri.stringValue;
+    bool isSystem = false;
     if (uri.startsWith(DART_PACKAGE_PREFIX)) {
       isSystem = true;
       systemImport = uri;
@@ -259,14 +266,13 @@ class CrawlerVisitor extends GeneralizingASTVisitor {
 
     var nextCompilationUnit = context
         .resolveCompilationUnit(source, context.computeLibraryElement(source));
+
     if (uri.startsWith(PACKAGE_PREFIX)) {
-      toVisit.add(new SourceFile(source.toString(), uri, nextCompilationUnit));
+      toVisit.add(new SourceFile(source.toString(), uri, nextCompilationUnit.element));
     } else { // relative import.
       var newImport;
       if (isSystem) {
         newImport = systemImport; // original uri
-      } else if (isPart) {
-        newImport = currentFile.entryPointImport;
       } else {
         // relative import
         String import = currentFile.entryPointImport.
@@ -281,8 +287,8 @@ class CrawlerVisitor extends GeneralizingASTVisitor {
         }
         newImport = '$import/$uri';
       }
-      toVisit.add(
-          new SourceFile(source.toString(), newImport, nextCompilationUnit));
+      toVisit.add(new SourceFile(
+          source.toString(), newImport, nextCompilationUnit.element));
     }
   }
 }
@@ -290,7 +296,7 @@ class CrawlerVisitor extends GeneralizingASTVisitor {
 class SourceFile {
   String canonicalPath;
   String entryPointImport;
-  CompilationUnit compilationUnit;
+  CompilationUnitElement compilationUnit;
 
   SourceFile(this.canonicalPath, this.entryPointImport, this.compilationUnit);
 
