@@ -73,7 +73,7 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
   requiredImports.forEach((import) {
     code.write ('import "$import" as import_${imports.indexOf(import)};\n');
   });
-  code.write('var typeFactories = new Map<Type, Function>();\n');
+  code.write('var typeFactories = new Map();\n');
   code.write('main() {\n');
   code.write(factories);
   code.write('}\n');
