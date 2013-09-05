@@ -123,7 +123,7 @@ class CompilationUnitVisitor {
                 library.metadata[annotationIdx].arguments.arguments.first;
             for (Expression element in listLiteral.elements) {
               typeFactoryTypes
-                 .add((element as SimpleIdentifier).element as ClassElement);
+                 .add((element as SimpleIdentifier).bestElement as ClassElement);
             }
           }
           annotationIdx++;
