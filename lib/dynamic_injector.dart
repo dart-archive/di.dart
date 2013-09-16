@@ -174,7 +174,13 @@ class DynamicInjector implements Injector {
     ClosureMirror cm = reflect(fn);
     MethodMirror mm = cm.function;
     List args = mm.parameters.map((ParameterMirror parameter) {
-      return _getInstanceBySymbol(parameter.type.qualifiedName, this);
+      try {
+        return _getInstanceBySymbol(parameter.type.qualifiedName, this);
+      } on NoProviderError catch (e) {
+        throw new NoProviderError(e.message + ' at position $position source:\n ${mm.source}.');
+      } finally {
+        position++;
+      }
     }).toList();
 
     try {
@@ -263,7 +269,11 @@ class _TypeProvider implements _Provider {
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      return getInstanceBySymbol(p.type.qualifiedName);
+      try {
+        return getInstanceBySymbol(p.type.qualifiedName);
+      } on NoProviderError catch (e) {
+        throw new NoProviderError(e.message + ' at position $pos source:\n ${ctor.source}.');
+      }
     }
 
     var args = new List.generate(ctor.parameters.length, resolveArgument,
