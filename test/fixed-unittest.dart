@@ -13,12 +13,13 @@ void xit(String spec, TestFunction body) {}
 void iit(String spec, TestFunction body) => solo_test(spec, body);
 
 Matcher toEqual(expected) => equals(expected);
+Matcher toContain(expected) => contains(expected);
 Matcher toBe(expected) => same(expected);
 Matcher instanceOf(Type t) => new IsInstanceOfTypeMatcher(t);
 
 Matcher toThrow(Type exceptionClass, String message) =>
   new ThrowsMatcher(new ComplexExceptionMatcher(
-      instanceOf(exceptionClass), toEqual(message)));
+      instanceOf(exceptionClass), toContain(message)));
 
 Matcher not(Matcher matcher) => new NegateMatcher(matcher);
 
