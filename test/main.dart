@@ -328,8 +328,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       var parent = injectorFactory([new Module()..type(Engine)]);
       var child = parent.createChild([new Module()..type(MockEngine)]);
 
-      expect(parent.types, toEqual(new Set.from([Engine, Injector])));
-      expect(child.types, toEqual(new Set.from([Engine, MockEngine, Injector])));
+      expect(parent.types, unorderedEquals(new Set.from([Engine, Injector])));
+      expect(child.types, unorderedEquals(new Set.from([Engine, MockEngine, Injector])));
     });
 
 
