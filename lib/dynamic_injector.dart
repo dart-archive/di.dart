@@ -189,6 +189,7 @@ class DynamicInjector implements Injector {
   dynamic invoke(Function fn) {
     ClosureMirror cm = reflect(fn);
     MethodMirror mm = cm.function;
+    num position = 0;
     List args = mm.parameters.map((ParameterMirror parameter) {
       try {
         return _getInstanceBySymbol(parameter.type.qualifiedName, this);
@@ -203,7 +204,7 @@ class DynamicInjector implements Injector {
       return cm.apply(args, null).reflectee;
     } catch (e) {
       if (e is MirroredUncaughtExceptionError) {
-        throw "${e}\nORIGINAL STACKTRACE\n${e.stacktrace}";
+        throw "${e}\nORIGINAL STACKTRACE\n${(e as MirroredUncaughtExceptionError).stacktrace}";
       }
       rethrow;
     }
