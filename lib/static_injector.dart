@@ -28,6 +28,8 @@ class StaticInjector implements Injector {
 
   final List<Type> resolving = new List<Type>();
 
+  final List<Type> _types = [];
+
   StaticInjector({List<Module> modules, String name,
                   bool allowImplicitInjection: false,
                   Map<Type, TypeFactory> typeFactories})
@@ -44,13 +46,13 @@ class StaticInjector implements Injector {
       modules = <Module>[];
     }
     modules.forEach((module) {
-      module.bindings.forEach((type, binding) =>
-          _registerBinding(type, binding));
+      module.bindings.forEach(_registerBinding);
     });
     _registerBinding(Injector, new ValueBinding(this));
   }
 
   _registerBinding(Type type, Binding binding) {
+    this._types.add(type);
     if (binding is ValueBinding) {
       providers[type] = new _ProviderMetadata.forValue(binding);
     } else if (binding is TypeBinding) {
@@ -60,6 +62,20 @@ class StaticInjector implements Injector {
     } else {
       throw 'Unknown binding type ${binding.runtimeType}';
     }
+  }
+
+  Set<Type> get types {
+    var types = new Set.from(_types);
+    var parent = this.parent;
+    while (parent != null) {
+      for(var type in parent._types) {
+        if (!types.contains(type)) {
+          types.add(type);
+        }
+      }
+      parent = parent.parent;
+    }
+    return types;
   }
 
   String _error(message, [appendDependency]) {

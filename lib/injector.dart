@@ -29,6 +29,11 @@ abstract class Injector {
   dynamic get(Type type);
 
   /**
+   * Return a list of all types which the injector can return
+   */
+  Set<Type> get types;
+
+  /**
    * Create a child injector.
    *
    * Child injector can override any bindings by adding additional modules.

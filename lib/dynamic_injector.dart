@@ -20,6 +20,8 @@ class DynamicInjector implements Injector {
 
   final List<Symbol> resolving = new List<Symbol>();
 
+  final List<Type> _types = [];
+
   DynamicInjector({List<Module> modules, String name,
                    bool allowImplicitInjection: false})
       : this._fromParent(modules, null, name: name,
@@ -31,13 +33,13 @@ class DynamicInjector implements Injector {
       modules = <Module>[];
     }
     modules.forEach((module) {
-      module.bindings.forEach((type, binding) =>
-          _registerBinding(type, binding));
+      module.bindings.forEach(_registerBinding);
     });
     _registerBinding(Injector, new ValueBinding(this));
   }
 
   _registerBinding(Type type, Binding binding) {
+    this._types.add(type);
     var symbol = getTypeSymbol(type);
     if (binding is ValueBinding) {
       providers[symbol] = new _ProviderMetadata.forValue(binding);
@@ -48,6 +50,20 @@ class DynamicInjector implements Injector {
     } else {
       throw 'Unknown binding type ${binding.runtimeType}';
     }
+  }
+
+  Set<Type> get types {
+    var types = new Set.from(_types);
+    var parent = this.parent;
+    while (parent != null) {
+      for(var type in parent._types) {
+        if (!types.contains(type)) {
+          types.add(type);
+        }
+      }
+      parent = parent.parent;
+    }
+    return types;
   }
 
   String _error(message, [appendDependency]) {

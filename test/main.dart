@@ -324,6 +324,15 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
+    it('should enumerate across children', () {
+      var parent = injectorFactory([new Module()..type(Engine)]);
+      var child = parent.createChild([new Module()..type(MockEngine)]);
+
+      expect(parent.types, toEqual(new Set.from([Engine, Injector])));
+      expect(child.types, toEqual(new Set.from([Engine, MockEngine, Injector])));
+    });
+
+
     it('should inject instance from parent if not provided in child', () {
       var module = new Module();
       module.type(Car);
