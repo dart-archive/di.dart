@@ -81,6 +81,8 @@ class MultipleConstructors {
 }
 
 void main() {
+  testModule();
+
   createInjectorSpec('DynamicInjector',
       (modules, [name]) => new DynamicInjector(modules: modules, name: name));
 
@@ -125,6 +127,89 @@ void main() {
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
           typeFactories: typeFactories));
 }
+
+testModule() => describe('Module', () {
+
+  it('should do basic type binding', () {
+    var module = new Module()
+      ..type(Engine);
+
+    var binding = module.bindings[Engine];
+    expect(binding, isNotNull);
+    expect(binding, new isInstanceOf<TypeBinding>());
+    expect(binding.type, Engine);
+  });
+
+
+  it('should do type implementedBy binding', () {
+    var module = new Module()
+      ..type(Engine, implementedBy: MockEngine);
+
+    var binding = module.bindings[Engine];
+    expect(binding, isNotNull);
+    expect(binding, new isInstanceOf<TypeBinding>());
+    expect(binding.type, MockEngine);
+  });
+
+
+  it('should do value binding', () {
+    var engine = new MockEngine();
+    var module = new Module()
+      ..value(Engine, engine);
+
+    var binding = module.bindings[Engine];
+    expect(binding, isNotNull);
+    expect(binding, new isInstanceOf<ValueBinding>());
+    expect(binding.value, same(engine));
+  });
+
+
+  it('should do factory binding', () {
+    var factory = (Injector i) => new MockEngine();
+    var module = new Module()
+      ..factory(Engine, factory);
+
+    var binding = module.bindings[Engine];
+    expect(binding, isNotNull);
+    expect(binding, new isInstanceOf<FactoryBinding>());
+    expect(binding.factoryFn, same(factory));
+  });
+
+
+  it('should install modules', () {
+    var parentModule = new Module()
+      ..type(Engine);
+
+    var childModule = new Module()
+      ..type(Car);
+
+    expect(parentModule.bindings.keys, [Engine]);
+    parentModule.install(childModule);
+    expect(parentModule.bindings.keys, unorderedEquals([Car, Engine]));
+  });
+
+
+  it('should use parent binding instead of child', () {
+    var parentModule = new Module()
+      ..type(Car)
+      ..type(Engine, implementedBy: MockEngine);
+
+    var childModule = new Module()
+      ..type(Engine, implementedBy: MockEngine2);
+
+    var parentBinding = parentModule.bindings[Engine];
+    expect(parentBinding, isNotNull);
+    expect(parentBinding, new isInstanceOf<TypeBinding>());
+    expect(parentBinding.type, MockEngine);
+
+    parentModule.install(childModule);
+
+    parentBinding = parentModule.bindings[Engine];
+    expect(parentBinding, isNotNull);
+    expect(parentBinding, new isInstanceOf<TypeBinding>());
+    expect(parentBinding.type, MockEngine);
+  });
+});
 
 typedef Injector InjectorFactory(List<Module> modules, [String name]);
 
