@@ -33,7 +33,19 @@ typedef bool Visibility(Injector requesting, Injector defining);
  * module have no effect.
  */
 class Module {
-  final Map<Type, Binding> bindings = new HashMap<Type, Binding>();
+  final Map<Type, Binding> _bindings = new HashMap<Type, Binding>();
+  final List<Module> _childModules = <Module>[];
+
+  /**
+   * Compiles and returs bindings map by performing depth-first traversal of the
+   * child (installed) modules.
+   */
+  Map<Type, Binding> get bindings {
+    Map<Type, Binding> res = new HashMap<Type, Binding>();
+    _childModules.forEach((child) => res.addAll(child.bindings));
+    res.addAll(_bindings);
+    return res;
+  }
 
   /**
    * Register binding to a concrete value.
@@ -42,7 +54,7 @@ class Module {
    */
   void value(Type id, value,
       {CreationStrategy creation, Visibility visibility}) {
-    bindings[id] = new ValueBinding(value, creation, visibility);
+    _bindings[id] = new ValueBinding(value, creation, visibility);
   }
 
   /**
@@ -54,7 +66,7 @@ class Module {
    */
   void type(Type id, {Type implementedBy, CreationStrategy creation,
       Visibility visibility}) {
-    bindings[id] = new TypeBinding(implementedBy == null ? id : implementedBy,
+    _bindings[id] = new TypeBinding(implementedBy == null ? id : implementedBy,
         creation, visibility);
   }
 
@@ -66,8 +78,14 @@ class Module {
    */
   void factory(Type id, FactoryFn factoryFn,
       {CreationStrategy creation, Visibility visibility}) {
-    bindings[id] = new FactoryBinding(factoryFn, creation, visibility);
+    _bindings[id] = new FactoryBinding(factoryFn, creation, visibility);
   }
+
+  /**
+   * Installs another module into this module. Bindings defined on this module
+   * take precidence over the installed module.
+   */
+  void install(Module module) => _childModules.add(module);
 }
 
 /** Deafault creation strategy is to instantiate on the defining injector. */
