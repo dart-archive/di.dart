@@ -80,6 +80,21 @@ class MultipleConstructors {
   MultipleConstructors.named() : instantiatedVia = 'named';
 }
 
+class InterfaceOne {
+}
+
+class ClassOne implements InterfaceOne {
+  ClassOne(Log log) {
+    log.add('ClassOne');
+  }
+}
+
+class Log {
+  var log = [];
+
+  add(String message) => log.add(message);
+}
+
 void main() {
   testModule();
 
@@ -122,6 +137,12 @@ void main() {
   };
   typeFactories[MultipleConstructors] = (ObjectFactory factory) {
     return new MultipleConstructors();
+  };
+  typeFactories[ClassOne] = (ObjectFactory factory) {
+    return new ClassOne(factory(Log));
+  };
+  typeFactories[Log] = (ObjectFactory factory) {
+    return new Log();
   };
   createInjectorSpec('StaticInjector',
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
@@ -498,6 +519,19 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       var injector = injectorFactory([], 'foo');
       var childInjector = injector.createChild(null, name: 'bar');
       expect(childInjector.name, 'bar');
+    });
+
+
+    it('should instantiate class only once (Issue #18)', () {
+      var injector = injectorFactory([
+          new Module()
+            ..type(Log)
+            ..type(ClassOne)
+            ..factory(InterfaceOne, (i) => i.get(ClassOne))
+      ]);
+
+      expect(injector.get(InterfaceOne), same(injector.get(ClassOne)));
+      expect(injector.get(Log).log.join(' '), 'ClassOne');
     });
 
 
