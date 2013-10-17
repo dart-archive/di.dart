@@ -122,6 +122,9 @@ class CompilationUnitVisitor {
             var listLiteral =
                 library.metadata[annotationIdx].arguments.arguments.first;
             for (Expression element in listLiteral.elements) {
+	      if ((element as SimpleIdentifier).bestElement == null) {
+	        throw "Unresolved symbol [$element] in library [$libElement]";
+	      }
               typeFactoryTypes
                  .add((element as SimpleIdentifier).bestElement as ClassElement);
             }
@@ -133,6 +136,7 @@ class CompilationUnitVisitor {
   }
 
   visitClassElement(ClassElement classElement) {
+    assert(classElement != null);
     if (classElement.name.startsWith('_')) {
       return; // ignore private classes.
     }
