@@ -200,14 +200,7 @@ class DynamicInjector implements Injector {
       }
     }).toList();
 
-    try {
-      return cm.apply(args, null).reflectee;
-    } catch (e) {
-      if (e is MirroredUncaughtExceptionError) {
-        throw "${e}\nORIGINAL STACKTRACE\n${(e as MirroredUncaughtExceptionError).stacktrace}";
-      }
-      rethrow;
-    }
+    return cm.apply(args, null).reflectee;
   }
 
   /**
@@ -282,7 +275,7 @@ class _TypeProvider implements _Provider {
           'for ${getSymbolName(classMirror.qualifiedName)} typedef!'));
     }
 
-    MethodMirror ctor = classMirror.constructors[classMirror.simpleName];
+    MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
