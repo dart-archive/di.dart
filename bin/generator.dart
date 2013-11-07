@@ -1,18 +1,17 @@
-import 'package:analyzer_experimental/src/generated/java_io.dart';
-import 'package:analyzer_experimental/src/generated/source_io.dart';
-import 'package:analyzer_experimental/src/generated/ast.dart';
-import 'package:analyzer_experimental/src/generated/sdk.dart' show DartSdk;
-import 'package:analyzer_experimental/src/generated/sdk_io.dart' show DirectoryBasedDartSdk;
-import 'package:analyzer_experimental/src/generated/element.dart';
-import 'package:analyzer_experimental/src/generated/engine.dart';
+import 'package:analyzer/src/generated/java_io.dart';
+import 'package:analyzer/src/generated/source_io.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/sdk.dart' show DartSdk;
+import 'package:analyzer/src/generated/sdk_io.dart' show DirectoryBasedDartSdk;
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/engine.dart';
 
 import 'dart:io';
 
 const String PACKAGE_PREFIX = 'package:';
 const String DART_PACKAGE_PREFIX = 'dart:';
 
-main() {
-  var args = new Options().arguments;
+main(args) {
   if (args.length < 5) {
     print('Usage: generator path_to_sdk file_to_resolve annotations output package_roots+');
     exit(0);
@@ -277,7 +276,7 @@ class CrawlerVisitor {
         // relative import
         String import = currentFile.entryPointImport.
             substring(0, currentFile.entryPointImport.lastIndexOf('/'));
-        var currentDir = new File(currentFile.canonicalPath).directory.path;
+        var currentDir = new File(currentFile.canonicalPath).parent.path;
         if (uri.startsWith('../')) {
           while (uri.startsWith('../')) {
             uri = uri.substring('../'.length);
