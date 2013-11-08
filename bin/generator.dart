@@ -47,7 +47,7 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
   StringBuffer factories = new StringBuffer();
 
   String resolveClassIdentifier(InterfaceType type) {
-    if ((type.element as ClassElement).library.isDartCore) {
+    if (type.element.library.isDartCore) {
       return type.name;
     }
     String import = typeToImport[getCanonicalName(type)];
@@ -62,9 +62,17 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
         'typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ');
     factories.write('new ${resolveClassIdentifier(clazz.type)}(');
     ConstructorElement constr =
-        clazz.constructors.firstWhere((c) => c.name.isEmpty);
-    factories.write(constr.parameters.map((param) =>
-        'f(${resolveClassIdentifier(param.type)})').join(', '));
+        clazz.constructors.firstWhere((c) => c.name.isEmpty,
+        orElse: () {
+          throw 'Unable to find default constructor for $clazz in ${clazz.source}';
+        });
+    factories.write(constr.parameters.map((param) {
+      if (param.type.element is! ClassElement) {
+        throw 'Unable to resolve type for constructor parameter '
+              '"${param.name}" for type "$clazz" in ${clazz.source}';
+      }
+      return 'f(${resolveClassIdentifier(param.type)})';
+    }).join(', '));
     factories.write(');\n');
   });
   StringBuffer code = new StringBuffer();
@@ -115,14 +123,18 @@ class CompilationUnitVisitor {
         int annotationIdx = 0;
         library.metadata.forEach((Annotation ann) {
           if (ann.element is ConstructorElement &&
-              getQualifiedName(
-                  (ann.element as ConstructorElement).enclosingElement.type) ==
-                  'di.annotations.Injectables') {
+            getQualifiedName(
+                (ann.element as ConstructorElement).enclosingElement.type) ==
+                'di.annotations.Injectables') {
             var listLiteral =
                 library.metadata[annotationIdx].arguments.arguments.first;
-            for (Expression element in listLiteral.elements) {
-              typeFactoryTypes
-                 .add((element as SimpleIdentifier).bestElement as ClassElement);
+            for (Expression expr in listLiteral.elements) {
+              Element element = (expr as SimpleIdentifier).bestElement;
+              if (element == null) {
+                throw 'Unable to resolve type "$expr" from @Injectables '
+                      'in ${library.element.source}';
+              }
+              typeFactoryTypes.add(element as ClassElement);
             }
           }
           annotationIdx++;
