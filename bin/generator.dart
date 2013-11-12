@@ -130,7 +130,7 @@ class CompilationUnitVisitor {
                 library.metadata[annotationIdx].arguments.arguments.first;
             for (Expression expr in listLiteral.elements) {
               Element element = (expr as SimpleIdentifier).bestElement;
-              if (element == null) {
+              if (element == null || element is! ClassElement) {
                 throw 'Unable to resolve type "$expr" from @Injectables '
                       'in ${library.element.source}';
               }
