@@ -2,3 +2,4 @@ node_modules
 packages
 pubspec.lock
 .idea
+test/type_factories_gen.dart

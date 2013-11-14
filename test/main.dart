@@ -1,23 +1,51 @@
+@Injectables(const [
+  ClassOne,
+  CircularA,
+  CircularB,
+  MultipleConstructors,
+  NumDependency,
+  IntDependency,
+  DoubleDependency,
+  BoolDependency,
+  StringDependency
+])
 library di.tests;
 
 import 'fixed-unittest.dart';
 import 'package:di/di.dart';
+import 'package:di/annotations.dart';
 import 'package:di/dynamic_injector.dart' hide ObjectFactory;
 import 'package:di/static_injector.dart';
 
+// Generated file. Run ../test_tf_gen.sh.
+import 'type_factories_gen.dart' as type_factories_gen;
+
+/**
+ * Annotation used to mark classes for which static type factory must be
+ * generated. For testing purposes not all classes are marked with this
+ * annotation, some classes are included in @Injectables at the top.
+ */
+class Injectable {
+  const Injectable();
+}
+
 // just some classes for testing
+@Injectable()
 class Engine {
   String id = 'v8-id';
 }
 
+@Injectable()
 class MockEngine implements Engine {
   String id = 'mock-id';
 }
 
+@Injectable()
 class MockEngine2 implements Engine {
   String id = 'mock-id-2';
 }
 
+@Injectable()
 class Car {
   Engine engine;
   Injector injector;
@@ -89,6 +117,7 @@ class ClassOne implements InterfaceOne {
   }
 }
 
+@Injectable()
 class Log {
   var log = [];
 
@@ -101,52 +130,12 @@ void main() {
   createInjectorSpec('DynamicInjector',
       (modules, [name]) => new DynamicInjector(modules: modules, name: name));
 
-  Map<Type, TypeFactory> typeFactories = new Map<Type, TypeFactory>();
-  typeFactories[Engine] = (ObjectFactory factory) {
-    return new Engine();
-  };
-  typeFactories[MockEngine] = (ObjectFactory factory) {
-    return new MockEngine();
-  };
-  typeFactories[MockEngine2] = (ObjectFactory factory) {
-    return new MockEngine2();
-  };
-  typeFactories[Car] = (ObjectFactory factory) {
-    return new Car(factory(Engine), factory(Injector));
-  };
-  typeFactories[NumDependency] = (ObjectFactory factory) {
-    return new NumDependency(factory(num));
-  };
-  typeFactories[IntDependency] = (ObjectFactory factory) {
-    return new IntDependency(factory(int));
-  };
-  typeFactories[DoubleDependency] = (ObjectFactory factory) {
-    return new DoubleDependency(factory(double));
-  };
-  typeFactories[StringDependency] = (ObjectFactory factory) {
-    return new StringDependency(factory(String));
-  };
-  typeFactories[BoolDependency] = (ObjectFactory factory) {
-    return new BoolDependency(factory(bool));
-  };
-  typeFactories[CircularA] = (ObjectFactory factory) {
-    return new CircularA(factory(CircularB));
-  };
-  typeFactories[CircularB] = (ObjectFactory factory) {
-    return new CircularB(factory(CircularA));
-  };
-  typeFactories[MultipleConstructors] = (ObjectFactory factory) {
-    return new MultipleConstructors();
-  };
-  typeFactories[ClassOne] = (ObjectFactory factory) {
-    return new ClassOne(factory(Log));
-  };
-  typeFactories[Log] = (ObjectFactory factory) {
-    return new Log();
-  };
+  // Initialize generated type factories.
+  type_factories_gen.main();
+
   createInjectorSpec('StaticInjector',
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
-          typeFactories: typeFactories));
+          typeFactories: type_factories_gen.typeFactories));
 }
 
 testModule() => describe('Module', () {
