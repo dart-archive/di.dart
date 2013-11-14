@@ -5,6 +5,9 @@ import 'errors.dart';
 import 'module.dart';
 import 'injector.dart';
 
+// A hack that tells us if we're running in dart2js.
+bool isJs = 1.0 is int;
+
 /**
  * Dynamic implementation of [Injector] that uses mirrors.
  */
@@ -194,7 +197,7 @@ class DynamicInjector implements Injector {
       try {
         return _getInstanceBySymbol(parameter.type.qualifiedName, this);
       } on NoProviderError catch (e) {
-        throw new NoProviderError(e.message + ' at position $position source:\n ${mm.source}.');
+        throw new NoProviderError(e.message + (isJs ? '' : ' at position $position source:\n ${mm.source}.'));
       } finally {
         position++;
       }
@@ -282,7 +285,7 @@ class _TypeProvider implements _Provider {
       try {
         return getInstanceBySymbol(p.type.qualifiedName);
       } on NoProviderError catch (e) {
-        throw new NoProviderError(e.message + ' at position $pos source:\n ${ctor.source}.');
+        throw new NoProviderError(e.message + (isJs ? '' : ' at position $pos source:\n ${ctor.source}.'));
       }
     }
 
