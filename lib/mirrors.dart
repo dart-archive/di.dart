@@ -25,9 +25,9 @@ ClassMirror getClassMirrorBySymbol(Symbol id) {
   var mirror = _classMirrorCache[id];
   if (mirror == null) {
     for (var lib in currentMirrorSystem().libraries.values) {
-      for (ClassMirror cls in lib.classes.values) {
-        if (cls.qualifiedName == id) {
-          mirror = cls;
+      for (DeclarationMirror decl in lib.declarations.values) {
+        if (decl is ClassMirror && decl.qualifiedName == id) {
+          mirror = decl;
           break;
         }
       }
