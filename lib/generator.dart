@@ -192,6 +192,13 @@ class SourceCrawler {
     JavaSystemIO.setProperty("com.google.dart.sdk", sdkPath);
     DartSdk sdk = DirectoryBasedDartSdk.defaultSdk;
 
+    AnalysisOptionsImpl contextOptions = new AnalysisOptionsImpl();
+    contextOptions.cacheSize = 256;
+    contextOptions.preserveComments = false;
+    contextOptions.analyzeFunctionBodies = false;
+    context.analysisOptions = contextOptions;
+    sdk.context.analysisOptions = contextOptions;
+
     var packageUriResolver =
         new PackageUriResolver(packageRoots.map(
             (pr) => new JavaFile.fromUri(new Uri.file(pr))).toList());
