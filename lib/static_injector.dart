@@ -9,7 +9,7 @@ typedef Object TypeFactory(ObjectFactory factory);
 
 
 /**
- * Dynamic implementation of [Injector] that uses mirrors.
+ * Static implementation of [Injector].
  */
 class StaticInjector implements Injector {
   final String name;
