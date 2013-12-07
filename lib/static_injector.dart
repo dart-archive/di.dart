@@ -37,11 +37,7 @@ class StaticInjector implements Injector {
 
   StaticInjector._fromParent(List<Module> modules,
       Injector this.parent, {this.name, this.typeFactories}) {
-    if (parent == null) {
-      root = this;
-    } else {
-      root = parent.root;
-    }
+    root = parent == null ? this : parent.root;
     if (modules == null) {
       modules = <Module>[];
     }
@@ -232,13 +228,9 @@ abstract class _Provider {
 class _ValueProvider implements _Provider {
   dynamic value;
 
-  _ValueProvider(value) {
-    this.value = value;
-  }
+  _ValueProvider(this.value);
 
-  dynamic get(getInstanceByType, error) {
-    return value;
-  }
+  dynamic get(getInstanceByType, error) => value;
 }
 
 
@@ -246,7 +238,7 @@ class _TypeProvider implements _Provider {
   final Type type;
   StaticInjector injector;
 
-  _TypeProvider(Type this.type, StaticInjector this.injector);
+  _TypeProvider(this.type, this.injector);
 
   dynamic get(getInstanceByType, error) {
     TypeFactory typeFactory = injector.root.typeFactories[type];
@@ -263,11 +255,10 @@ class _TypeProvider implements _Provider {
 class _FactoryProvider implements _Provider {
   final Function factoryFn;
 
-  _FactoryProvider(Function this.factoryFn);
+  _FactoryProvider(this.factoryFn);
 
-  dynamic get(getInstanceByType, error) {
-    return Function.apply(factoryFn, [getInstanceByType(Injector)]);
-  }
+  dynamic get(getInstanceByType, error) =>
+    Function.apply(factoryFn, [getInstanceByType(Injector)]);
 }
 
 class _ProviderMetadata {
