@@ -84,15 +84,7 @@ class CircularB {
 
 typedef int CompareInt(int a, int b);
 
-int compareIntAsc(int a, int b) {
-  if (a == b) {
-    return 0;
-  }
-  if (a < b) {
-    return 1;
-  }
-  return -1;
-}
+int compareIntAsc(int a, int b) => b.compareTo(a);
 
 class WithTypeDefDependency {
   CompareInt compare;
