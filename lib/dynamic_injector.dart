@@ -58,13 +58,8 @@ class DynamicInjector implements Injector {
   Set<Type> get types {
     var types = new Set.from(_types);
     var parent = this.parent;
-    while (parent != null) {
-      for(var type in parent._types) {
-        if (!types.contains(type)) {
-          types.add(type);
-        }
-      }
-      parent = parent.parent;
+    for (var parent = this.parent; parent != null; parent = parent.parent) {
+      types.addAll(parent._types);
     }
     return types;
   }
