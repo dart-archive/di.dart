@@ -33,7 +33,7 @@ class NegateMatcher extends Matcher {
   bool matches(obj, Map ms) => !_matcher.matches(obj, ms);
 
   Description describe(Description description) =>
-    _matcher.describe(description.add('NOT'));
+      _matcher.describe(description.add('NOT'));
 
   Description describeMismatch(item, Description mismatchDescription,
       Map matchState, bool verbose) {
@@ -79,7 +79,7 @@ class ComplexExceptionMatcher extends Matcher {
   }
 
   Description describe(Description description) =>
-    messageMatcher.describe(classMatcher.describe(description).add(' with message '));
+      messageMatcher.describe(classMatcher.describe(description).add(' with message '));
 
   Description describeMismatch(item, Description mismatchDescription,
       Map matchState, bool verbose) {
@@ -100,8 +100,8 @@ class IsInstanceOfTypeMatcher extends Matcher {
   IsInstanceOfTypeMatcher(this.t);
 
   bool matches(obj, Map matchState) =>
-    reflect(obj).type.qualifiedName == reflectClass(t).qualifiedName;
+      reflect(obj).type.qualifiedName == reflectClass(t).qualifiedName;
 
   Description describe(Description description) =>
-    description.add('an instance of ${t.toString()}');
+      description.add('an instance of ${t.toString()}');
 }
