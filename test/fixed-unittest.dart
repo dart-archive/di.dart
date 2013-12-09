@@ -28,16 +28,12 @@ Matcher not(Matcher matcher) => new NegateMatcher(matcher);
 class NegateMatcher extends Matcher {
   final Matcher _matcher;
 
-  const NegateMatcher(Matcher matcher) : _matcher = matcher;
+  const NegateMatcher(this._matcher);
 
-  bool matches(obj, Map ms) {
-    return !_matcher.matches(obj, ms);
-  }
+  bool matches(obj, Map ms) => !_matcher.matches(obj, ms);
 
-  Description describe(Description description) {
-    description.add('NOT ');
-    return _matcher.describe(description);
-  }
+  Description describe(Description description) =>
+      _matcher.describe(description.add('NOT'));
 
   Description describeMismatch(item, Description mismatchDescription,
       Map matchState, bool verbose) {
@@ -59,7 +55,7 @@ class ThrowsMatcher extends Throws {
       return mismatchDescription.add(' not a Function or Future');
     }
 
-    if (_matcher == null ||  matchState == null) {
+    if (_matcher == null || matchState == null) {
       return mismatchDescription.add(' did not throw any exception');
     }
 
@@ -82,12 +78,8 @@ class ComplexExceptionMatcher extends Matcher {
     return messageMatcher.matches(obj.message, ms);
   }
 
-  Description describe(Description description) {
-    classMatcher.describe(description);
-
-    description.add(' with message ');
-    messageMatcher.describe(description);
-  }
+  Description describe(Description description) =>
+      messageMatcher.describe(classMatcher.describe(description).add(' with message '));
 
   Description describeMismatch(item, Description mismatchDescription,
       Map matchState, bool verbose) {
@@ -105,14 +97,11 @@ class ComplexExceptionMatcher extends Matcher {
 class IsInstanceOfTypeMatcher extends Matcher {
   Type t;
 
-  IsInstanceOfTypeMatcher(Type t) {
-    this.t = t;
-  }
+  IsInstanceOfTypeMatcher(this.t);
 
-  bool matches(obj, Map matchState) {
-    return reflect(obj).type.qualifiedName == reflectClass(t).qualifiedName;
-  }
+  bool matches(obj, Map matchState) =>
+      reflect(obj).type.qualifiedName == reflectClass(t).qualifiedName;
 
   Description describe(Description description) =>
-    description.add('an instance of ${t.toString()}');
+      description.add('an instance of ${t.toString()}');
 }
