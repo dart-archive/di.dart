@@ -192,7 +192,7 @@ class DynamicInjector implements Injector {
   dynamic invoke(Function fn) {
     ClosureMirror cm = reflect(fn);
     MethodMirror mm = cm.function;
-    num position = 0;
+    int position = 0;
     List args = mm.parameters.map((ParameterMirror parameter) {
       try {
         return _getInstanceBySymbol(parameter.type.qualifiedName, this);
@@ -253,13 +253,9 @@ abstract class _Provider {
 class _ValueProvider implements _Provider {
   dynamic value;
 
-  _ValueProvider(value) {
-    this.value = value;
-  }
+  _ValueProvider(this.value);
 
-  dynamic get(getInstanceBySymbol, error) {
-    return value;
-  }
+  dynamic get(getInstanceBySymbol, error) => value;
 }
 
 
@@ -299,7 +295,7 @@ class _TypeProvider implements _Provider {
 class _FactoryProvider implements _Provider {
   final Function factoryFn;
 
-  _FactoryProvider(Function this.factoryFn);
+  _FactoryProvider(this.factoryFn);
 
   dynamic get(getInstanceBySymbol, error) {
     return Function.apply(factoryFn,
