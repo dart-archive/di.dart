@@ -116,6 +116,10 @@ class Log {
   add(String message) => log.add(message);
 }
 
+class EmulatedMockEngineFactory {
+  call(Injector i) => new MockEngine();
+}
+
 void main() {
   testModule();
 
@@ -292,6 +296,17 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       var instance = injector.get(Engine);
 
       expect(instance, toEqual('factory-product'));
+    });
+
+
+    it('should allow providing with emulated factory functions', () {
+      var module = new Module();
+      module.factory(Engine, new EmulatedMockEngineFactory());
+
+      var injector = injectorFactory([module]);
+      var instance = injector.get(Engine);
+
+      expect(instance, new isInstanceOf<MockEngine>());
     });
 
 
