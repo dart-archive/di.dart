@@ -1,4 +1,5 @@
 #!/bin/sh -v
+set -e
 
 # run type factories generator for tests
 ./test_tf_gen.sh
