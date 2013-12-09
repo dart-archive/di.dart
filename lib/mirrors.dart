@@ -22,19 +22,17 @@ const Map<String, String> _PRIMITIVE_TYPE_SIMPLE_NAMES = const {
 
 // Hack because we can't get a [ClassMirror] from a [Symbol].
 ClassMirror getClassMirrorBySymbol(Symbol id) {
-  var mirror = _classMirrorCache[id];
-  if (mirror == null) {
+  if (_classMirrorCache[id] == null) {
     for (var lib in currentMirrorSystem().libraries.values) {
       for (DeclarationMirror decl in lib.declarations.values) {
         if (decl is ClassMirror && decl.qualifiedName == id) {
-          mirror = decl;
+          _classMirrorCache[id] = decl;
           break;
         }
       }
     }
-    _classMirrorCache[id] = mirror;
   }
-  return mirror;
+  return _classMirrorCache[id];
 }
 
 String getSymbolName(Symbol symbol) => MirrorSystem.getName(symbol);
@@ -50,12 +48,10 @@ Map<Type, ClassMirror> _reflectionCache = new Map<Type, ClassMirror>();
 
 /// Cached version of [reflectClass].
 ClassMirror cachedReflectClass(Type type) {
-  ClassMirror mirror = _reflectionCache[type];
-  if (mirror == null) {
-    mirror = reflectClass(type);
-    _reflectionCache[type] = mirror;
+  if (_reflectionCache[type] == null) {
+    _reflectionCache[type] = reflectClass(type);
   }
-  return mirror;
+  return _reflectionCache[type];
 }
 
 Symbol getTypeSymbol(Type type) => cachedReflectClass(type).qualifiedName;
