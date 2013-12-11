@@ -1,4 +1,4 @@
-library mirrors;
+library di.mirrors;
 
 import 'dart:mirrors';
 export 'dart:mirrors';
