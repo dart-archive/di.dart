@@ -50,7 +50,7 @@ class Car {
   Engine engine;
   Injector injector;
 
-  Car(Engine this.engine, Injector this.injector);
+  Car(this.engine, this.injector);
 }
 
 class NumDependency {
@@ -141,8 +141,7 @@ void main() {
 testModule() => describe('Module', () {
 
   it('should do basic type binding', () {
-    var module = new Module()
-      ..type(Engine);
+    var module = new Module()..type(Engine);
 
     var binding = module.bindings[Engine];
     expect(binding, isNotNull);
@@ -152,8 +151,7 @@ testModule() => describe('Module', () {
 
 
   it('should do type implementedBy binding', () {
-    var module = new Module()
-      ..type(Engine, implementedBy: MockEngine);
+    var module = new Module()..type(Engine, implementedBy: MockEngine);
 
     var binding = module.bindings[Engine];
     expect(binding, isNotNull);
@@ -164,8 +162,7 @@ testModule() => describe('Module', () {
 
   it('should do value binding', () {
     var engine = new MockEngine();
-    var module = new Module()
-      ..value(Engine, engine);
+    var module = new Module()..value(Engine, engine);
 
     var binding = module.bindings[Engine];
     expect(binding, isNotNull);
@@ -176,8 +173,7 @@ testModule() => describe('Module', () {
 
   it('should do factory binding', () {
     var factory = (Injector i) => new MockEngine();
-    var module = new Module()
-      ..factory(Engine, factory);
+    var module = new Module()..factory(Engine, factory);
 
     var binding = module.bindings[Engine];
     expect(binding, isNotNull);
@@ -187,11 +183,9 @@ testModule() => describe('Module', () {
 
 
   it('should install modules', () {
-    var parentModule = new Module()
-      ..type(Engine);
+    var parentModule = new Module()..type(Engine);
 
-    var childModule = new Module()
-      ..type(Car);
+    var childModule = new Module()..type(Car);
 
     expect(parentModule.bindings.keys, [Engine]);
     parentModule.install(childModule);
@@ -204,8 +198,7 @@ testModule() => describe('Module', () {
       ..type(Car)
       ..type(Engine, implementedBy: MockEngine);
 
-    var childModule = new Module()
-      ..type(Engine, implementedBy: MockEngine2);
+    var childModule = new Module()..type(Engine, implementedBy: MockEngine2);
 
     var parentBinding = parentModule.bindings[Engine];
     expect(parentBinding, isNotNull);
@@ -254,8 +247,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should allow modules and overriding providers', () {
-      var module = new Module();
-      module.type(Engine, implementedBy: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
       // injector is immutable
       // you can't load more modules once it's instantiated
@@ -277,9 +269,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should allow providing values', () {
-      var module = new Module();
-      module.value(Engine, 'str value');
-      module.value(Car, 123);
+      var module = new Module()
+        ..value(Engine, 'str value')
+        ..value(Car, 123);
 
       var injector = injectorFactory([module]);
       var abcInstance = injector.get(Engine);
@@ -291,8 +283,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should allow providing factory functions', () {
-      var module = new Module();
-      module.factory(Engine, (Injector injector) {
+      var module = new Module()..factory(Engine, (Injector injector) {
         return 'factory-product';
       });
 
@@ -304,9 +295,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should inject injector into factory function', () {
-      var module = new Module();
-      module.type(Engine);
-      module.factory(Car, (Injector injector) {
+      var module = new Module()
+        ..type(Engine)
+        ..factory(Car, (Injector injector) {
         return new Car(injector.get(Engine), injector);
       });
 
@@ -375,8 +366,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     // Typedef injection is not supported in dart2js: http://dartbug.com/11612
     xit('should inject a typedef', () {
-      var module = new Module();
-      module.value(CompareInt, compareIntAsc);
+      var module = new Module()..value(CompareInt, compareIntAsc);
 
       var injector = injectorFactory([module]);
       var compare = injector.get(CompareInt);
@@ -405,8 +395,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     // CHILD INJECTORS
     it('should inject from child', () {
-      var module = new Module();
-      module.type(Engine, implementedBy: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
       var parent = injectorFactory([new Module()..type(Engine)]);
       var child = parent.createChild([module]);
@@ -429,8 +418,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should inject instance from parent if not provided in child', () {
-      var module = new Module();
-      module.type(Car);
+      var module = new Module()..type(Car);
 
       var parent = injectorFactory([new Module()..type(Car)..type(Engine)]);
       var child = parent.createChild([module]);
@@ -446,8 +434,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should inject instance from parent but never use dependency from child', () {
-      var module = new Module();
-      module.type(Engine, implementedBy: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
       var parent = injectorFactory([new Module()..type(Car)..type(Engine)]);
       var child = parent.createChild([module]);
@@ -475,8 +462,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should force new instance in child using provider from grand parent', () {
-      var module = new Module();
-      module.type(Engine, implementedBy: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
       var grandParent = injectorFactory([module]);
       var parent = grandParent.createChild([]);
