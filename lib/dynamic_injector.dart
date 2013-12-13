@@ -1,12 +1,18 @@
 library di.dynamic_injector;
 
-import 'mirrors.dart';
+import 'dart:mirrors';
+
 import 'errors.dart';
-import 'module.dart';
 import 'injector.dart';
+import 'module.dart';
+import 'reflected_type.dart';
 
 // A hack that tells us if we're running in dart2js.
 bool isJs = 1.0 is int;
+
+const List<Type> PRIMITIVE_TYPES = const <Type>[
+  num, int, double, String, bool
+];
 
 /**
  * Dynamic implementation of [Injector] that uses mirrors.
@@ -17,11 +23,11 @@ class DynamicInjector implements Injector {
 
   final DynamicInjector parent;
 
-  final Map<Symbol, _ProviderMetadata> providers =
-      new Map<Symbol, _ProviderMetadata>();
-  final Map<Symbol, Object> instances = new Map<Symbol, Object>();
+  final Map<Type, _ProviderMetadata> providers =
+      new Map<Type, _ProviderMetadata>();
+  final Map<Type, Object> instances = new Map<Type, Object>();
 
-  final List<Symbol> resolving = new List<Symbol>();
+  final List<Type> resolving = new List<Type>();
 
   final List<Type> _types = [];
 
@@ -43,13 +49,12 @@ class DynamicInjector implements Injector {
 
   _registerBinding(Type type, Binding binding) {
     this._types.add(type);
-    var symbol = getTypeSymbol(type);
     if (binding is ValueBinding) {
-      providers[symbol] = new _ProviderMetadata.forValue(binding);
+      providers[type] = new _ProviderMetadata.forValue(binding);
     } else if (binding is TypeBinding) {
-      providers[symbol] = new _ProviderMetadata.forType(binding);
+      providers[type] = new _ProviderMetadata.forTypeBinding(binding);
     } else if (binding is FactoryBinding) {
-      providers[symbol] = new _ProviderMetadata.forFactory(binding);
+      providers[type] = new _ProviderMetadata.forFactory(binding);
     } else {
       throw 'Unknown binding type ${binding.runtimeType}';
     }
@@ -74,47 +79,47 @@ class DynamicInjector implements Injector {
       resolving.add(appendDependency);
     }
 
-    String graph = resolving.map(getSymbolSimpleName).join(' -> ');
+    String graph = resolving.join(' -> ');
 
     resolving.clear();
 
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceBySymbol(Symbol typeName, Injector requester) {
-    _checkTypeConditions(typeName);
+  dynamic _getInstanceByType(Type type, Injector requester) {
+    _checkTypeConditions(type);
 
-    if (resolving.contains(typeName)) {
+    if (resolving.contains(type)) {
       throw new CircularDependencyError(
-          _error('Cannot resolve a circular dependency!', typeName));
+          _error('Cannot resolve a circular dependency!', type));
     }
 
-    var providerWithInjector = _getProviderForSymbol(typeName);
+    var providerWithInjector = _getProviderForType(type);
     var metadata = providerWithInjector.providerMetadata;
     var visible =
         metadata.binding.visibility(requester, providerWithInjector.injector);
 
-    if (visible && instances.containsKey(typeName)) {
-      return instances[typeName];
+    if (visible && instances.containsKey(type)) {
+      return instances[type];
     }
 
     if (providerWithInjector.injector != this || !visible) {
       var injector = providerWithInjector.injector;
       if (!visible) {
         injector = providerWithInjector.injector.parent.
-            _getProviderForSymbol(typeName).injector;
+            _getProviderForType(type).injector;
       }
-      return injector._getInstanceBySymbol(typeName, requester);
+      return injector._getInstanceByType(type, requester);
     }
 
-    var getInstanceBySymbol =
-        _wrapGetInstanceBySymbol(_getInstanceBySymbol, requester);
+    var getInstanceByType =
+        _wrapGetInstanceByType(_getInstanceByType, requester);
     var value;
     try {
       value = metadata.binding.creationStrategy(requester,
           providerWithInjector.injector, () {
-        resolving.add(typeName);
-        var val = metadata.provider.get(getInstanceBySymbol, _error);
+        resolving.add(type);
+        var val = metadata.provider.get(getInstanceByType, _error);
         resolving.removeLast();
         return val;
       });
@@ -124,45 +129,44 @@ class DynamicInjector implements Injector {
     }
 
     // cache the value.
-    providerWithInjector.injector.instances[typeName] = value;
+    providerWithInjector.injector.instances[type] = value;
     return value;
   }
 
   /**
-   *  Wraps getInstanceBySymbol function with a requster value to be easily
+   *  Wraps getInstanceByType function with a requester value to be easily
    *  down to the providers.
    */
-  ObjectFactory _wrapGetInstanceBySymbol(Function getInstanceBySymbol,
+  ObjectFactory _wrapGetInstanceByType(Function getInstanceByType,
                                     Injector requester) {
-    return (Symbol typeName) {
-      return getInstanceBySymbol(typeName, requester);
+    return (Type type) {
+      return getInstanceByType(type, requester);
     };
   }
 
   /// Returns a pair for provider and the injector where it's defined.
-  _ProviderWithDefiningInjector _getProviderForSymbol(Symbol typeName) {
-    if (providers.containsKey(typeName)) {
-      return new _ProviderWithDefiningInjector(providers[typeName], this);
+  _ProviderWithDefiningInjector _getProviderForType(Type type) {
+    if (providers.containsKey(type)) {
+      return new _ProviderWithDefiningInjector(providers[type], this);
     }
 
     if (parent != null) {
-      return parent._getProviderForSymbol(typeName);
+      return parent._getProviderForType(type);
     }
 
     if (!allowImplicitInjection) {
-      throw new NoProviderError(_error('No provider found for '
-          '${getSymbolSimpleName(typeName)}!', typeName));
+      throw new NoProviderError(_error('No provider found for $type!', type));
     }
 
     // create a provider for implicit types
     return new _ProviderWithDefiningInjector(
-        new _ProviderMetadata.forSymbol(typeName), this);
+        new _ProviderMetadata.forType(type), this);
   }
 
-  void _checkTypeConditions(Symbol typeName) {
-    if (PRIMITIVE_TYPES.contains(typeName)) {
+  void _checkTypeConditions(Type type) {
+    if (PRIMITIVE_TYPES.contains(type)) {
       throw new NoProviderError(_error('Cannot inject a primitive type '
-          'of ${getSymbolSimpleName(typeName)}!', typeName));
+          'of $type!', type));
     }
   }
 
@@ -181,8 +185,7 @@ class DynamicInjector implements Injector {
    * If there is no parent injector, an implicit binding is used. That is,
    * the token ([Type]) is instantiated.
    */
-  dynamic get(Type type) =>
-      _getInstanceBySymbol(getTypeSymbol(type), this);
+  dynamic get(Type type) => _getInstanceByType(type, this);
 
   /**
    * Invoke given function and inject all its arguments.
@@ -194,13 +197,21 @@ class DynamicInjector implements Injector {
     MethodMirror mm = cm.function;
     int position = 0;
     List args = mm.parameters.map((ParameterMirror parameter) {
-      try {
-        return _getInstanceBySymbol(parameter.type.qualifiedName, this);
-      } on NoProviderError catch (e) {
-        throw new NoProviderError(e.message + (isJs ? '' : ' at position $position source:\n ${mm.source}.'));
-      } finally {
-        position++;
+      if (parameter.type is ClassMirror) {
+        ClassMirror parameterClass = parameter.type;
+        try {
+          return _getInstanceByType(
+              getReflectedTypeWorkaround(parameterClass), this);
+        } on NoProviderError catch (e) {
+          throw new NoProviderError(e.message +
+              (isJs ? '' : ' at position $position source:\n ${mm.source}.'));
+        } finally {
+          position++;
+        }
       }
+      throw new NoProviderError(
+          'Parameter type ${parameter.type} is not a class!' +
+          (isJs ? '' : ' at position $position source:\n ${mm.source}.'));
     }).toList();
 
     return cm.apply(args, null).reflectee;
@@ -220,11 +231,11 @@ class DynamicInjector implements Injector {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
       forceNewInstances.forEach((Type type) {
-        var providerWithInjector = _getProviderForSymbol(getTypeSymbol(type));
+        var providerWithInjector = _getProviderForType(type);
         var metadata = providerWithInjector.providerMetadata;
         forceNew.factory(type,
             (DynamicInjector inj) => metadata.provider.get(
-                _wrapGetInstanceBySymbol(inj._getInstanceBySymbol, inj),
+                _wrapGetInstanceByType(inj._getInstanceByType, inj),
                 inj._error),
             creation: metadata.binding.creationStrategy,
             visibility: metadata.binding.visibility);
@@ -244,10 +255,10 @@ class _ProviderWithDefiningInjector {
   _ProviderWithDefiningInjector(this.providerMetadata, this.injector);
 }
 
-typedef Object ObjectFactory(Symbol symbol);
+typedef Object ObjectFactory(Type type);
 
 abstract class _Provider {
-  dynamic get(ObjectFactory getInstanceBySymbol, error);
+  dynamic get(ObjectFactory getInstanceByType, error);
 }
 
 class _ValueProvider implements _Provider {
@@ -255,34 +266,41 @@ class _ValueProvider implements _Provider {
 
   _ValueProvider(this.value);
 
-  dynamic get(getInstanceBySymbol, error) => value;
+  dynamic get(getInstanceByType, error) => value;
 }
 
 
 class _TypeProvider implements _Provider {
   final ClassMirror classMirror;
-  final Symbol typeName;
+  final Type type;
 
-  _TypeProvider(Symbol typeName)
-      : this.typeName = typeName,
-        this.classMirror = getClassMirrorBySymbol(typeName);
+  _TypeProvider(Type type)
+      : this.type = type,
+        this.classMirror = reflectClass(type);
 
-  dynamic get(getInstanceBySymbol, error) {
+  dynamic get(getInstanceByType, error) {
 
     if (classMirror is TypedefMirror) {
       throw new NoProviderError(error('No implementation provided '
-          'for ${getSymbolName(classMirror.qualifiedName)} typedef!'));
+          'for ${classMirror.qualifiedName} typedef!'));
     }
 
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      try {
-        return getInstanceBySymbol(p.type.qualifiedName);
-      } on NoProviderError catch (e) {
-        throw new NoProviderError(e.message + (isJs ? '' : ' at position $pos source:\n ${ctor.source}.'));
+      if (p.type is ClassMirror) {
+        ClassMirror parameterClass = p.type;
+        try {
+          return getInstanceByType(
+              getReflectedTypeWorkaround(parameterClass));
+        } on NoProviderError catch (e) {
+          throw new NoProviderError(e.message +
+              (isJs ? '' : ' at position $pos source:\n ${ctor.source}.'));
+        }
       }
+      throw new NoProviderError('Parameter type ${p.type} is not a class!' +
+          (isJs ? '' : ' at position $pos source:\n ${ctor.source}.'));
     }
 
     var args = new List.generate(ctor.parameters.length, resolveArgument,
@@ -297,33 +315,29 @@ class _FactoryProvider implements _Provider {
 
   _FactoryProvider(this.factoryFn);
 
-  dynamic get(getInstanceBySymbol, error) {
+  dynamic get(getInstanceByType, error) {
     return Function.apply(factoryFn,
-        [getInstanceBySymbol(getTypeSymbol(Injector))]);
+        [getInstanceByType(Injector)]);
   }
 }
 
 class _ProviderMetadata {
-  _Provider provider;
-  Binding binding;
+  final _Provider provider;
+  final Binding binding;
 
-  _ProviderMetadata.forValue(ValueBinding binding) {
-    provider = new _ValueProvider(binding.value);
-    this.binding = binding;
-  }
+  _ProviderMetadata.forValue(ValueBinding binding)
+      : this.provider = new _ValueProvider(binding.value),
+        this.binding = binding;
 
-  _ProviderMetadata.forType(TypeBinding binding) {
-    provider = new _TypeProvider(getTypeSymbol(binding.type));
-    this.binding = binding;
-  }
+  _ProviderMetadata.forTypeBinding(TypeBinding binding)
+      : this.provider = new _TypeProvider(binding.type),
+        this.binding = binding;
 
-  _ProviderMetadata.forSymbol(Symbol symbol) {
-    provider = new _TypeProvider(symbol);
-    this.binding = new TypeBinding(null);
-  }
+  _ProviderMetadata.forType(Type type)
+      : this.provider = new _TypeProvider(type),
+        this.binding = new TypeBinding(type);
 
-  _ProviderMetadata.forFactory(FactoryBinding binding) {
-    provider = new _FactoryProvider(binding.factoryFn);
-    this.binding = binding;
-  }
+  _ProviderMetadata.forFactory(FactoryBinding binding)
+      : provider = new _FactoryProvider(binding.factoryFn),
+        this.binding = binding;
 }
