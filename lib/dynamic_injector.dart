@@ -278,11 +278,7 @@ class _TypeProvider implements _Provider {
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      try {
-        return getInstanceBySymbol(p.type.qualifiedName);
-      } on NoProviderError catch (e) {
-        throw new NoProviderError(e.message + (isJs ? '' : ' at position $pos source:\n ${ctor.source}.'));
-      }
+      return getInstanceBySymbol(p.type.qualifiedName);
     }
 
     var args = new List.generate(ctor.parameters.length, resolveArgument,
