@@ -295,9 +295,11 @@ class CrawlerVisitor {
         newImport = systemImport; // original uri
       } else {
         // relative import
-        String import = currentFile.entryPointImport.
-            substring(0, currentFile.entryPointImport.lastIndexOf('/'));
+        String import = currentFile.entryPointImport;
+        import = import.replaceAll('\\', '/'); // if at all needed, on Windows
+        import = import.substring(0, import.lastIndexOf('/'));
         var currentDir = new File(currentFile.canonicalPath).parent.path;
+        currentDir = currentDir.replaceAll('\\', '/'); // if at all needed, on Windows
         if (uri.startsWith('../')) {
           while (uri.startsWith('../')) {
             uri = uri.substring('../'.length);
