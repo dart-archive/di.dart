@@ -14,8 +14,8 @@ const String PACKAGE_PREFIX = 'package:';
 const String DART_PACKAGE_PREFIX = 'dart:';
 
 main(args) {
-  if (args.length < 5) {
-    print('Usage: generator path_to_sdk file_to_resolve annotations output package_roots+');
+  if (args.length < 4) {
+    print('Usage: generator path_to_sdk file_to_resolve annotations output [package_roots+]');
     exit(0);
   }
 
@@ -23,7 +23,7 @@ main(args) {
   var entryPoint = args[1];
   var classAnnotations = args[2].split(',');
   var output = args[3];
-  var packageRoots = args.sublist(4);
+  var packageRoots = (args.length < 5) ? [Platform.packageRoot] : args.sublist(4);
 
   print('pathToSdk: $pathToSdk');
   print('entryPoint: $entryPoint');
