@@ -12,6 +12,11 @@ class InjectorBenchmark extends BenchmarkBase {
   void run() {
     Injector injector = injectorFactory([module]);
     injector.get(A);
+    injector.get(B);
+
+    var childInjector = injector.createChild([module]);
+    childInjector.get(A);
+    childInjector.get(B);
   }
 
   setup() {

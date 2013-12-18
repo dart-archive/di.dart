@@ -18,18 +18,25 @@ class Injector {
 
   Injector _root;
 
-  final Map<Type, _Provider> _providers =
-      new Map<Type, _Provider>();
-  final Map<Type, Object> instances = new Map<Type, Object>();
+  Map<Type, _Provider> _providers = <Type, _Provider>{};
 
-  final List<Type> resolving = new List<Type>();
+  final Map<Type, Object> instances = <Type, Object>{};
+
+  final List<Type> resolving = <Type>[];
 
   final bool allowImplicitInjection;
+
+  Iterable<Type> _typesCache;
 
   /**
    * List of all types which the injector can return
    */
-  final List<Type> _types = [];
+  Iterable<Type> get _types {
+    if (_typesCache == null) {
+      _typesCache = _providers.keys;
+    }
+    return _typesCache;
+  }
 
   Injector({List<Module> modules, String name,
                   bool allowImplicitInjection: false})
@@ -43,18 +50,12 @@ class Injector {
     } else {
       _root = parent._root;
     }
-    if (modules == null) {
-      modules = <Module>[];
+    if (modules != null) {
+      modules.forEach((module) {
+        _providers.addAll(module._bindings);
+      });
     }
-    modules.forEach((module) {
-      module._bindings.forEach(_registerBinding);
-    });
-    _registerBinding(Injector, new _ValueProvider(this));
-  }
-
-  _registerBinding(Type type, _Provider provider) {
-    this._types.add(type);
-    _providers[type] = provider;
+    _providers[Injector] = new _ValueProvider(this);
   }
 
   Injector get root => _root;
@@ -95,7 +96,9 @@ class Injector {
 
     var providerWithInjector = _getProviderForType(typeName);
     var provider = providerWithInjector.provider;
-    var visible = provider.visibility(requester, providerWithInjector.injector);
+    var visible = provider.visibility != null ?
+        provider.visibility(requester, providerWithInjector.injector) :
+        _defaultVisibility(requester, providerWithInjector.injector);
 
     if (visible && instances.containsKey(typeName)) {
       return instances[typeName];
@@ -110,14 +113,13 @@ class Injector {
       return injector._getInstanceByType(typeName, requester);
     }
 
-    var getInstanceByType =
-        _wrapGetInstanceByType(_getInstanceByType, requester);
     var value;
     try {
-      value = provider.creationStrategy(requester,
-          providerWithInjector.injector, () {
+      var strategy = provider.creationStrategy != null ?
+          provider.creationStrategy : _defaultCreationStrategy;
+      value = strategy(requester, providerWithInjector.injector, () {
         resolving.add(typeName);
-        var val = provider.get(this, getInstanceByType, _error);
+        var val = provider.get(this, requester, _getInstanceByType, _error);
         resolving.removeLast();
         return val;
       });
@@ -129,17 +131,6 @@ class Injector {
     // cache the value.
     providerWithInjector.injector.instances[typeName] = value;
     return value;
-  }
-
-  /**
-   *  Wraps getInstanceByType function with a requster value to be easily
-   *  down to the providers.
-   */
-  Function _wrapGetInstanceByType(Function getInstanceByType,
-                                    Injector requester) {
-    return (Type typeName) {
-      return getInstanceByType(typeName, requester);
-    };
   }
 
   /// Returns a pair for provider and the injector where it's defined.
@@ -182,8 +173,7 @@ class Injector {
    * If there is no parent injector, an implicit binding is used. That is,
    * the token ([Type]) is instantiated.
    */
-  dynamic get(Type type) =>
-      _getInstanceByType(type, this);
+  dynamic get(Type type) => _getInstanceByType(type, this);
 
   /**
    * Create a child injector.
@@ -202,8 +192,7 @@ class Injector {
         var providerWithInjector = _getProviderForType(type);
         var provider = providerWithInjector.provider;
         forceNew.factory(type,
-            (Injector inj) => provider.get(this,
-                _wrapGetInstanceByType(inj._getInstanceByType, inj),
+            (Injector inj) => provider.get(this, inj, inj._getInstanceByType,
                 inj._error),
             creation: provider.creationStrategy,
             visibility: provider.visibility);
@@ -220,7 +209,7 @@ class Injector {
     throw new UnimplementedError('This method must be overriden.');
   }
 
-  Object newInstanceOf(Type type, ObjectFactory factory,
+  Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
                        errorHandler(message, [appendDependency])) {
     throw new UnimplementedError('This method must be overriden.');
   }

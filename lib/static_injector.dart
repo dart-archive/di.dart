@@ -2,7 +2,7 @@ library di.static_injector;
 
 import 'di.dart';
 
-typedef Object TypeFactory(ObjectFactory factory);
+typedef Object TypeFactory(factory(Type));
 
 /**
  * Dynamic implementation of [Injector] that uses mirrors.
@@ -24,12 +24,12 @@ class StaticInjector extends Injector {
     return new StaticInjector._fromParent(modules, this, name: name);
   }
 
-  Object newInstanceOf(Type type, ObjectFactory getInstanceByType, error) {
+  Object newInstanceOf(Type type, ObjectFactory getInstanceByType, Injector requestor, error) {
     TypeFactory typeFactory = (root as StaticInjector).typeFactories[type];
     if (typeFactory == null) {
       throw new NoProviderError(error('No type factory provided for '
           'for $type!'));
     }
-    return typeFactory(getInstanceByType);
+    return typeFactory((type) => getInstanceByType(type, requestor));
   }
 }
