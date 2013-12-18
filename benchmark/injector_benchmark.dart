@@ -3,42 +3,39 @@ import 'package:di/di.dart';
 import 'package:di/dynamic_injector.dart';
 import 'package:di/static_injector.dart';
 
-class DynamicInjectorBenchmark extends BenchmarkBase {
-  DynamicInjectorBenchmark() : super("DynamicInjectorBenchmark");
+class InjectorBenchmark extends BenchmarkBase {
+  var injectorFactory;
+  var module;
+
+  InjectorBenchmark(name, this.injectorFactory) : super(name);
 
   void run() {
-    var m = new Module()
-      ..type(A)
-      ..type(B)
-      ..type(C)
-      ..type(D)
-      ..type(E);
-    Injector injector = new DynamicInjector(modules: [m]);
-    injector.get(A);
-  }
-}
-
-class StaticInjectorBenchmark extends BenchmarkBase {
-  StaticInjectorBenchmark() : super("StaticInjectorBenchmark");
-  var typeFactories = new Map();
-
-  void run() {
-    var m = new Module()
-      ..type(A)
-      ..type(B)
-      ..type(C)
-      ..type(D)
-      ..type(E);
-    Injector injector = new StaticInjector(modules: [m], typeFactories: typeFactories);
+    Injector injector = injectorFactory([module]);
     injector.get(A);
   }
 
   setup() {
-    typeFactories[A] = (f) => new A(f(B), f(C));
-    typeFactories[B] = (f) => new B(f(D), f(E));
-    typeFactories[C] = (f) => new C();
-    typeFactories[D] = (f) => new D();
-    typeFactories[E] = (f) => new E();
+    module = new Module()
+      ..type(A)
+      ..type(B)
+      ..type(C)
+      ..type(D)
+      ..type(E);
+  }
+}
+
+class ModuleBenchmark extends BenchmarkBase {
+  var injectorFactory;
+
+  ModuleBenchmark() : super('ModuleBenchmark');
+
+  void run() {
+    var m = new Module()
+      ..type(A)
+      ..type(B)
+      ..type(C)
+      ..type(D)
+      ..type(E);
   }
 }
 
@@ -60,6 +57,20 @@ class E {
 }
 
 main() {
-  new DynamicInjectorBenchmark().report();
-  new StaticInjectorBenchmark().report();
+  new ModuleBenchmark().report();
+
+
+  new InjectorBenchmark('DynamicInjectorBenchmark',
+      (m) => new DynamicInjector(modules: m)).report();
+
+  var typeFactories = new Map();
+  typeFactories[A] = (f) => new A(f(B), f(C));
+  typeFactories[B] = (f) => new B(f(D), f(E));
+  typeFactories[C] = (f) => new C();
+  typeFactories[D] = (f) => new D();
+  typeFactories[E] = (f) => new E();
+
+  new InjectorBenchmark('StaticInjectorBenchmark',
+      (m) => new StaticInjector(modules: m, typeFactories: typeFactories)
+  ).report();
 }
