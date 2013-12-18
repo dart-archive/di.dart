@@ -32,11 +32,7 @@ class DynamicInjector extends Injector {
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      try {
-        return getInstanceByType(getReflectedTypeWorkaround(p.type), requestor);
-      } on NoProviderError catch (e) {
-        throw new NoProviderError(e.message);
-      }
+      return getInstanceByType(getReflectedTypeWorkaround(p.type), requestor);
     }
 
     var args = new List.generate(ctor.parameters.length, resolveArgument,
