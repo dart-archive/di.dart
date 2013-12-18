@@ -8,7 +8,8 @@ set -e
 dart --checked test/main.dart
 
 # run dart2js on tests
-dart2js -c test/main.dart -o test/main.dart.js
+mkdir -p out
+dart2js -c test/main.dart -o out/main.dart.js
 
 # run tests in node
-node test/main.dart.js
+node out/main.dart.js

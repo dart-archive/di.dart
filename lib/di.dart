@@ -1,5 +1,8 @@
 library di;
 
-export 'module.dart';
-export 'injector.dart';
-export 'errors.dart';
+import 'dart:collection';
+
+part 'injector.dart';
+part 'module.dart';
+part 'errors.dart';
+

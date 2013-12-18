@@ -1,5 +1,4 @@
-library di.errors;
-
+part of di;
 
 class NoProviderError extends ArgumentError {
   NoProviderError(message) : super(message);

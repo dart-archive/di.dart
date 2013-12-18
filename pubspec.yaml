@@ -10,4 +10,6 @@ environment:
 dependencies:
   analyzer: '>=0.10.0 <0.11.0'
 dev_dependencies:
+  benchmark_harness: any
   unittest: any
+  browser: any
