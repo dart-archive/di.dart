@@ -64,11 +64,7 @@ class Injector {
     var types = new Set.from(_types);
     var parent = this.parent;
     while (parent != null) {
-      for(var type in parent._types) {
-        if (!types.contains(type)) {
-          types.add(type);
-        }
-      }
+      types.addAll(parent._types);
       parent = parent.parent;
     }
     return types;
