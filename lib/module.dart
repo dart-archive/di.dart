@@ -120,31 +120,29 @@ class _ValueProvider extends _Provider {
                               Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, getInstanceByType, error) {
-    return value;
-  }
+  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+      value;
 }
 
 class _TypeProvider extends _Provider {
   final Type type;
 
-  _TypeProvider(Type this.type, [CreationStrategy creationStrategy,
-                                 Visibility visibility])
+  _TypeProvider(this.type, [CreationStrategy creationStrategy,
+                            Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, getInstanceByType, error) {
-    return injector.newInstanceOf(type, getInstanceByType, requestor, error);
-  }
+  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+      injector.newInstanceOf(type, getInstanceByType, requestor, error);
+
 }
 
 class _FactoryProvider extends _Provider {
   final Function factoryFn;
 
-  _FactoryProvider(Function this.factoryFn, [CreationStrategy creationStrategy,
-                                             Visibility visibility])
+  _FactoryProvider(this.factoryFn, [CreationStrategy creationStrategy,
+                                    Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, getInstanceByType, error) {
-    return factoryFn(injector);
-  }
+  dynamic get(Injector injector, Injector requestor, getInstanceByType, error) =>
+      factoryFn(injector);
 }
