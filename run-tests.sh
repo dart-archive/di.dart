@@ -14,5 +14,3 @@ dart2js -c test/main.dart -o out/main.dart.js
 
 echo "run tests in node"
 node out/main.dart.js
-
-./run-benchmarks.sh
