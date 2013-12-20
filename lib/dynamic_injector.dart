@@ -61,4 +61,6 @@ class DynamicInjector extends Injector {
 
     return cm.apply(args, null).reflectee;
   }
+
+  dynamic call(Function fn) => this.invoke(fn);
 }
