@@ -99,6 +99,10 @@ class Injector {
 
     if (providerWithInjector.injector != this || !visible) {
       if (!visible) {
+        if (injector.parent == null) {
+          throw new NoProviderError(_error('No provider found for '
+          '${typeName}!', typeName));
+        }
         injector = injector.parent._getProviderWithInjectorForType(typeName).injector;
       }
       return injector._getInstanceByType(typeName, requester);
