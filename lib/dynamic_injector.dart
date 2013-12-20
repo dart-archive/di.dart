@@ -13,15 +13,15 @@ class DynamicInjector extends Injector {
       : super(modules: modules, name: name,
           allowImplicitInjection: allowImplicitInjection);
 
-  DynamicInjector._fromParent(List<Module> modules,
-      Injector parent, {name})
+  DynamicInjector._fromParent(List<Module> modules, Injector parent, {name})
       : super.fromParent(modules, parent, name: name);
 
   newFromParent(List<Module> modules, String name) {
     return new DynamicInjector._fromParent(modules, this, name: name);
   }
 
-  Object newInstanceOf(Type type, ObjectFactory getInstanceByType, Injector requestor, error) {
+  Object newInstanceOf(Type type, ObjectFactory getInstanceByType,
+                       Injector requestor, error) {
     var classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
       throw new NoProviderError(error('No implementation provided '
@@ -59,6 +59,6 @@ class DynamicInjector extends Injector {
       }
     }).toList();
 
-    return cm.apply(args, null).reflectee;
+    return cm.apply(args).reflectee;
   }
 }

@@ -498,6 +498,20 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
         expect(val, same(rootMock));
       });
 
+      it('should throw when an instance in not visible in the root injector', () {
+        var module = new Module()
+          ..value(Car, 'Invisible', visibility: (_, __) => false);
+
+        var injector = injectorFactory([module]);
+
+        expect(() {
+          injector.get(Car);
+        }, toThrow(
+            NoProviderError,
+            'No provider found for Car! (resolving Car)'
+        ));
+      });
+
     });
 
   });
