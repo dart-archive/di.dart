@@ -39,17 +39,13 @@ class Injector {
   }
 
   Injector({List<Module> modules, String name,
-                  bool allowImplicitInjection: false})
+           bool allowImplicitInjection: false})
       : this.fromParent(modules, null,
           name: name, allowImplicitInjection: allowImplicitInjection);
 
   Injector.fromParent(List<Module> modules,
       Injector this.parent, {this.name, this.allowImplicitInjection}) {
-    if (parent == null) {
-      _root = this;
-    } else {
-      _root = parent._root;
-    }
+    _root = parent == null ? this : parent._root;
     if (modules != null) {
       modules.forEach((module) {
         _providers.addAll(module._bindings);
@@ -90,21 +86,25 @@ class Injector {
           _error('Cannot resolve a circular dependency!', typeName));
     }
 
-    var providerWithInjector = _getProviderForType(typeName);
+    var providerWithInjector = _getProviderWithInjectorForType(typeName);
     var provider = providerWithInjector.provider;
+    var injector = providerWithInjector.injector;
     var visible = provider.visibility != null ?
-        provider.visibility(requester, providerWithInjector.injector) :
-        _defaultVisibility(requester, providerWithInjector.injector);
+        provider.visibility(requester, injector) :
+        _defaultVisibility(requester, injector);
 
     if (visible && instances.containsKey(typeName)) {
       return instances[typeName];
     }
 
     if (providerWithInjector.injector != this || !visible) {
-      var injector = providerWithInjector.injector;
       if (!visible) {
-        injector = providerWithInjector.injector.parent.
-            _getProviderForType(typeName).injector;
+        if (injector.parent == null) {
+          throw new NoProviderError(
+              _error('No provider found for ${typeName}!', typeName));
+        }
+        injector =
+            injector.parent._getProviderWithInjectorForType(typeName).injector;
       }
       return injector._getInstanceByType(typeName, requester);
     }
@@ -113,7 +113,7 @@ class Injector {
     try {
       var strategy = provider.creationStrategy != null ?
           provider.creationStrategy : _defaultCreationStrategy;
-      value = strategy(requester, providerWithInjector.injector, () {
+      value = strategy(requester, injector, () {
         resolving.add(typeName);
         var val = provider.get(this, requester, _getInstanceByType, _error);
         resolving.removeLast();
@@ -130,17 +130,18 @@ class Injector {
   }
 
   /// Returns a pair for provider and the injector where it's defined.
-  _ProviderWithDefiningInjector _getProviderForType(Type typeName) {
+  _ProviderWithDefiningInjector _getProviderWithInjectorForType(Type typeName) {
     if (_providers.containsKey(typeName)) {
       return new _ProviderWithDefiningInjector(_providers[typeName], this);
     }
 
     if (parent != null) {
-      return parent._getProviderForType(typeName);
+      return parent._getProviderWithInjectorForType(typeName);
     }
 
     if (allowImplicitInjection) {
-      return new _ProviderWithDefiningInjector(new _TypeProvider(typeName), this);
+      return new _ProviderWithDefiningInjector(
+          new _TypeProvider(typeName), this);
     }
 
     throw new NoProviderError(_error('No provider found for '
@@ -185,7 +186,7 @@ class Injector {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
       forceNewInstances.forEach((type) {
-        var providerWithInjector = _getProviderForType(type);
+        var providerWithInjector = _getProviderWithInjectorForType(type);
         var provider = providerWithInjector.provider;
         forceNew.factory(type,
             (Injector inj) => provider.get(this, inj, inj._getInstanceByType,
