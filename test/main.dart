@@ -109,6 +109,16 @@ class ClassOne implements InterfaceOne {
   }
 }
 
+class ParameterizedType<T> {
+  ParameterizedType();
+}
+
+@Injectable()
+class ParameterizedDependency {
+  ParameterizedType<bool> _p;
+  ParameterizedDependency(this._p);
+}
+
 @Injectable()
 class Log {
   var log = [];
@@ -161,6 +171,16 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       expect(instance, instanceOf(Car));
       expect(instance.engine.id, toEqual('v8-id'));
+    });
+
+
+    it('should resolve parameterized types', () {
+      var value = new ParameterizedType<bool>();
+      var injector = injectorFactory([new Module()
+            ..value(value.runtimeType, value)
+            ..type(ParameterizedDependency)
+      ]);
+      expect(injector.get(ParameterizedDependency), instanceOf(ParameterizedDependency));
     });
 
 
