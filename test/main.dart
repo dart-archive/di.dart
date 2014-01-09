@@ -109,6 +109,7 @@ class ClassOne implements InterfaceOne {
   }
 }
 
+@Injectable()
 class ParameterizedType<T> {
   ParameterizedType();
 }
@@ -174,13 +175,12 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
-    it('should resolve parameterized types', () {
-      var value = new ParameterizedType<bool>();
+    it('should error while resolving parameterized types', () {
       var injector = injectorFactory([new Module()
-            ..value(value.runtimeType, value)
+            ..type(ParameterizedType)
             ..type(ParameterizedDependency)
       ]);
-      expect(injector.get(ParameterizedDependency), instanceOf(ParameterizedDependency));
+      expect(() => injector.get(ParameterizedDependency), throws);
     });
 
 

@@ -60,6 +60,10 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
   }
 
   typeFactoryTypes.forEach((ClassElement clazz) {
+    if (clazz.typeParameters.isNotEmpty) {
+      print('WARNING: parameterized types are not supported: $clazz. Skipping!');
+      return;
+    }
     factories.write(
         'typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ');
     factories.write('new ${resolveClassIdentifier(clazz.type)}(');
