@@ -1,8 +1,4 @@
-library di.module;
-
-import 'dart:collection';
-
-import 'injector.dart';
+part of di;
 
 typedef dynamic FactoryFn(Injector injector);
 
@@ -33,18 +29,22 @@ typedef bool Visibility(Injector requesting, Injector defining);
  * module have no effect.
  */
 class Module {
-  final Map<Type, Binding> _bindings = new HashMap<Type, Binding>();
+  final Map<Type, _Provider> _providers = <Type, _Provider>{};
   final List<Module> _childModules = <Module>[];
+
+  Map<Type, _Provider> _providersCache;
 
   /**
    * Compiles and returs bindings map by performing depth-first traversal of the
    * child (installed) modules.
    */
-  Map<Type, Binding> get bindings {
-    Map<Type, Binding> res = new HashMap<Type, Binding>();
-    _childModules.forEach((child) => res.addAll(child.bindings));
-    res.addAll(_bindings);
-    return res;
+  Map<Type, _Provider> get _bindings {
+    if (_isDirty) {
+      _providersCache = <Type, _Provider>{};
+      _childModules.forEach((child) => _providersCache.addAll(child._bindings));
+      _providersCache.addAll(_providers);
+    }
+    return _providersCache;
   }
 
   /**
@@ -54,7 +54,8 @@ class Module {
    */
   void value(Type id, value,
       {CreationStrategy creation, Visibility visibility}) {
-    _bindings[id] = new ValueBinding(value, creation, visibility);
+    _dirty();
+    _providers[id] = new _ValueProvider(value, creation, visibility);
   }
 
   /**
@@ -66,8 +67,9 @@ class Module {
    */
   void type(Type id, {Type implementedBy, CreationStrategy creation,
       Visibility visibility}) {
-    _bindings[id] = new TypeBinding(implementedBy == null ? id : implementedBy,
-        creation, visibility);
+    _dirty();
+    _providers[id] = new _TypeProvider(
+        implementedBy == null ? id : implementedBy, creation, visibility);
   }
 
   /**
@@ -78,14 +80,25 @@ class Module {
    */
   void factory(Type id, FactoryFn factoryFn,
       {CreationStrategy creation, Visibility visibility}) {
-    _bindings[id] = new FactoryBinding(factoryFn, creation, visibility);
+    _dirty();
+    _providers[id] = new _FactoryProvider(factoryFn, creation, visibility);
   }
 
   /**
    * Installs another module into this module. Bindings defined on this module
    * take precidence over the installed module.
    */
-  void install(Module module) => _childModules.add(module);
+  void install(Module module) {
+    _childModules.add(module);
+    _dirty();
+  }
+
+  _dirty() {
+    _providersCache = null;
+  }
+
+  bool get _isDirty =>
+      _providersCache == null || _childModules.any((m) => m._isDirty);
 }
 
 /** Deafault creation strategy is to instantiate on the defining injector. */
@@ -96,37 +109,47 @@ dynamic _defaultCreationStrategy(Injector requesting, Injector defining,
 bool _defaultVisibility(_, __) => true;
 
 
-abstract class Binding {
+typedef Object ObjectFactory(Type type, Injector requestor);
+
+abstract class _Provider {
   final CreationStrategy creationStrategy;
   final Visibility visibility;
 
-  Binding(_creationStrategy, _visibility)
-      : creationStrategy = _creationStrategy == null ?
-            _defaultCreationStrategy : _creationStrategy,
-        visibility = _visibility == null ?
-            _defaultVisibility : _visibility;
+  _Provider(this.creationStrategy, this.visibility);
+
+  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error);
 }
 
-class ValueBinding extends Binding {
-  final Object value;
+class _ValueProvider extends _Provider {
+  dynamic value;
 
-  ValueBinding(this.value, [CreationStrategy creationStrategy,
-                            Visibility visibility])
+  _ValueProvider(this.value, [CreationStrategy creationStrategy,
+                              Visibility visibility])
       : super(creationStrategy, visibility);
+
+  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+      value;
 }
 
-class TypeBinding extends Binding {
+class _TypeProvider extends _Provider {
   final Type type;
 
-  TypeBinding(this.type, [CreationStrategy creationStrategy,
-                          Visibility visibility])
+  _TypeProvider(this.type, [CreationStrategy creationStrategy,
+                            Visibility visibility])
       : super(creationStrategy, visibility);
+
+  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+      injector.newInstanceOf(type, getInstanceByType, requestor, error);
+
 }
 
-class FactoryBinding extends Binding {
-  final FactoryFn factoryFn;
+class _FactoryProvider extends _Provider {
+  final Function factoryFn;
 
-  FactoryBinding(this.factoryFn, [CreationStrategy creationStrategy,
-                                  Visibility visibility])
+  _FactoryProvider(this.factoryFn, [CreationStrategy creationStrategy,
+                                    Visibility visibility])
       : super(creationStrategy, visibility);
+
+  dynamic get(Injector injector, Injector requestor, getInstanceByType, error) =>
+      factoryFn(injector);
 }

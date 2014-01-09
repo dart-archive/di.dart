@@ -1,5 +1,6 @@
 library di;
 
-export 'module.dart';
-export 'injector.dart';
-export 'errors.dart';
+part 'injector.dart';
+part 'module.dart';
+part 'errors.dart';
+
