@@ -113,7 +113,7 @@ class ParameterizedType<T> {
   ParameterizedType();
 }
 
-@Injectable
+@Injectable()
 class ParameterizedDependency {
   ParameterizedType<bool> _p;
   ParameterizedDependency(this._p);
@@ -175,8 +175,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should resolve parameterized types', () {
+      var value = new ParameterizedType<bool>();
       var injector = injectorFactory([new Module()
-            ..value(ParameterizedType, new ParameterizedType<bool>())
+            ..value(value.runtimeType, value)
             ..type(ParameterizedDependency)
       ]);
       expect(injector.get(ParameterizedDependency), instanceOf(ParameterizedDependency));
