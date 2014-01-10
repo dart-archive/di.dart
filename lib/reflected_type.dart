@@ -12,6 +12,9 @@ Map<ClassMirror, Type> _cache = <ClassMirror, Type>{};
 Type getReflectedTypeWorkaround(ClassMirror cls) {
   // On Dart VM, just return reflectedType.
   if (1.0 is! int) return cls.reflectedType;
+  if (!cls.isOriginalDeclaration) {
+    cls = cls.originalDeclaration;
+  }
   if (_cache[cls] == null) {
     var mangledName = reflect(cls).getField(_mangledNameField).reflectee;
     _cache[cls] = _jsHelper.invoke(#createRuntimeType, [mangledName]).reflectee;
