@@ -32,11 +32,6 @@ class DynamicInjector extends Injector {
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      if (!p.type.isOriginalDeclaration) {
-        throw new NoProviderError(
-            error('Parameterized types are not supported',
-                  getReflectedTypeWorkaround(p.type)));
-      }
       if (p.type is TypedefMirror) {
         throw new NoProviderError(
             error('Cannot create new instance of a typedef ${p.type}'));

@@ -60,26 +60,31 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
   }
 
   typeFactoryTypes.forEach((ClassElement clazz) {
-    if (clazz.typeParameters.isNotEmpty) {
-      print('WARNING: parameterized types are not supported: $clazz. Skipping!');
-      return;
-    }
-    factories.write(
+    StringBuffer factory = new StringBuffer();
+    bool skip = false;
+    factory.write(
         'typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ');
-    factories.write('new ${resolveClassIdentifier(clazz.type)}(');
+    factory.write('new ${resolveClassIdentifier(clazz.type)}(');
     ConstructorElement constr =
         clazz.constructors.firstWhere((c) => c.name.isEmpty,
         orElse: () {
           throw 'Unable to find default constructor for $clazz in ${clazz.source}';
         });
-    factories.write(constr.parameters.map((param) {
+    factory.write(constr.parameters.map((param) {
       if (param.type.element is! ClassElement) {
         throw 'Unable to resolve type for constructor parameter '
               '"${param.name}" for type "$clazz" in ${clazz.source}';
       }
+      if (_isParameterized(param)) {
+        print('WARNING: parameterized types are not supported: $param in $clazz in ${clazz.source}. Skipping!');
+        skip = true;
+      }
       return 'f(${resolveClassIdentifier(param.type)})';
     }).join(', '));
-    factories.write(');\n');
+    factory.write(');\n');
+    if (!skip) {
+      factories.write(factory);
+    }
   });
   StringBuffer code = new StringBuffer();
   code.write('library di.generated.type_factories;\n');
@@ -92,6 +97,17 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
     ..write('}\n');
 
   return code.toString();
+}
+
+_isParameterized(ParameterElement param) {
+  String typeName = param.type.toString();
+
+  if (typeName.indexOf('<') > -1) {
+    String parameters =
+        typeName.substring(typeName.indexOf('<') + 1, typeName.length - 1);
+    return parameters.split(', ').any((p) => p != 'dynamic');
+  }
+  return false;
 }
 
 class CompilationUnitVisitor {

@@ -110,14 +110,20 @@ class ClassOne implements InterfaceOne {
 }
 
 @Injectable()
-class ParameterizedType<T> {
+class ParameterizedType<T1, T2> {
   ParameterizedType();
 }
 
 @Injectable()
 class ParameterizedDependency {
-  ParameterizedType<bool> _p;
+  ParameterizedType<bool, int> _p;
   ParameterizedDependency(this._p);
+}
+
+@Injectable()
+class GenericParameterizedDependency {
+  ParameterizedType _p;
+  GenericParameterizedDependency(this._p);
 }
 
 @Injectable()
@@ -172,6 +178,16 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       expect(instance, instanceOf(Car));
       expect(instance.engine.id, toEqual('v8-id'));
+    });
+
+
+    it('should inject generic parameterized types', () {
+      var injector = injectorFactory([new Module()
+            ..type(ParameterizedType)
+            ..type(GenericParameterizedDependency)
+      ]);
+      expect(injector.get(GenericParameterizedDependency),
+          new isInstanceOf<GenericParameterizedDependency>());
     });
 
 
