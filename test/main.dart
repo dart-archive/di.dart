@@ -313,8 +313,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
-    // Typedef injection is not supported in dart2js: http://dartbug.com/11612
-    xit('should inject a typedef', () {
+    it('should inject a typedef', () {
       var module = new Module()..value(CompareInt, compareIntAsc);
 
       var injector = injectorFactory([module]);
@@ -325,14 +324,12 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
-    // Typedef injection is not supported in dart2js: http://dartbug.com/11612
-    xit('should throw an exception when injecting typedef without providing it', () {
+    it('should throw an exception when injecting typedef without providing it', () {
       var injector = injectorFactory([new Module()..type(WithTypeDefDependency)]);
 
       expect(() {
         injector.get(WithTypeDefDependency);
-      }, toThrow(NoProviderError, 'No provider found for CompareInt! '
-      '(resolving WithTypeDefDependency -> CompareInt)'));
+      }, throws);
     });
 
 

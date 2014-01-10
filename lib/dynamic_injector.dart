@@ -37,6 +37,10 @@ class DynamicInjector extends Injector {
             error('Parameterized types are not supported',
                   getReflectedTypeWorkaround(p.type)));
       }
+      if (p.type is TypedefMirror) {
+        throw new NoProviderError(
+            error('Cannot create new instance of a typedef ${p.type}'));
+      }
       return getInstanceByType(getReflectedTypeWorkaround(p.type), requestor);
     }
 
