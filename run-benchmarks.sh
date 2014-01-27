@@ -16,3 +16,4 @@ dart2js --minify benchmark/dynamic_injector_benchmark.dart   -o out/dynamic_inje
 node out/module_benchmark.dart.js
 node out/dynamic_injector_benchmark.dart.js
 node out/static_injector_benchmark.dart.js
+
