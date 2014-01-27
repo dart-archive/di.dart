@@ -20,7 +20,7 @@ class DynamicInjector extends Injector {
     return new DynamicInjector._fromParent(modules, this, name: name);
   }
 
-  Object newInstanceOf(Type type, ObjectFactory getInstanceByType,
+  Object newInstanceOf(Type type, ObjectFactory getInstanceByKey,
                        Injector requestor, error) {
     var classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
@@ -36,7 +36,11 @@ class DynamicInjector extends Injector {
         throw new NoProviderError(
             error('Cannot create new instance of a typedef ${p.type}'));
       }
-      return getInstanceByType(getReflectedTypeWorkaround(p.type), requestor);
+      if(p.metadata.length > 0) {
+        return getInstanceByKey(new Key.withAnnotation( getReflectedTypeWorkaround(p.type), p.metadata.first.type.reflectedType ), requestor);
+      } else {
+        return getInstanceByKey(new Key(getReflectedTypeWorkaround(p.type)), requestor);
+      }
     }
 
     var args = new List.generate(ctor.parameters.length, resolveArgument,

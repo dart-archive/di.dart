@@ -1,5 +1,7 @@
 part of di;
 
+int counter = 0;
+
 class Injector {
 
   /**
@@ -18,20 +20,20 @@ class Injector {
 
   Injector _root;
 
-  Map<Type, _Provider> _providers = <Type, _Provider>{};
+  Map<Key, _Provider> _providers = <Key, _Provider>{};
 
-  final Map<Type, Object> instances = <Type, Object>{};
+  final Map<Key, Object> instances = <Key, Object>{};
 
-  final List<Type> resolving = <Type>[];
+  final List<Key> resolving = <Key>[];
 
   final bool allowImplicitInjection;
 
-  Iterable<Type> _typesCache;
+  Iterable<Key> _typesCache;
 
   /**
    * List of all types which the injector can return
    */
-  Iterable<Type> get _types {
+  Iterable<Key> get _types {
     if (_typesCache == null) {
       _typesCache = _providers.keys;
     }
@@ -51,7 +53,7 @@ class Injector {
         _providers.addAll(module._bindings);
       });
     }
-    _providers[Injector] = new _ValueProvider(this);
+    _providers[new Key(Injector)] = new _ValueProvider(this);
   }
 
   Injector get root => _root;
@@ -78,35 +80,35 @@ class Injector {
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceByType(Type typeName, Injector requester) {
-    _checkTypeConditions(typeName);
+  dynamic _getInstanceByKey(Key key, Injector requester) {
+    _checkTypeConditions(key.type);
 
-    if (resolving.contains(typeName)) {
+    if (resolving.contains(key)) {
       throw new CircularDependencyError(
-          _error('Cannot resolve a circular dependency!', typeName));
+          _error('Cannot resolve a circular dependency!', key));
     }
 
-    var providerWithInjector = _getProviderWithInjectorForType(typeName);
+    var providerWithInjector = _getProviderWithInjectorForKey(key);
     var provider = providerWithInjector.provider;
     var injector = providerWithInjector.injector;
     var visible = provider.visibility != null ?
         provider.visibility(requester, injector) :
         _defaultVisibility(requester, injector);
 
-    if (visible && instances.containsKey(typeName)) {
-      return instances[typeName];
+    if (visible && instances.containsKey(key)) {
+      return instances[key];
     }
 
     if (providerWithInjector.injector != this || !visible) {
       if (!visible) {
         if (injector.parent == null) {
           throw new NoProviderError(
-              _error('No provider found for ${typeName}!', typeName));
+              _error('No provider found for ${key}!', key)); // TODO: should only pass key
         }
         injector =
-            injector.parent._getProviderWithInjectorForType(typeName).injector;
+            injector.parent._getProviderWithInjectorForKey(key).injector;
       }
-      return injector._getInstanceByType(typeName, requester);
+      return injector._getInstanceByKey(key, requester);
     }
 
     var value;
@@ -114,8 +116,8 @@ class Injector {
       var strategy = provider.creationStrategy != null ?
           provider.creationStrategy : _defaultCreationStrategy;
       value = strategy(requester, injector, () {
-        resolving.add(typeName);
-        var val = provider.get(this, requester, _getInstanceByType, _error);
+        resolving.add(key);
+        var val = provider.get(this, requester, _getInstanceByKey, _error);
         resolving.removeLast();
         return val;
       });
@@ -125,33 +127,33 @@ class Injector {
     }
 
     // cache the value.
-    providerWithInjector.injector.instances[typeName] = value;
+    providerWithInjector.injector.instances[key] = value;
     return value;
   }
 
   /// Returns a pair for provider and the injector where it's defined.
-  _ProviderWithDefiningInjector _getProviderWithInjectorForType(Type typeName) {
-    if (_providers.containsKey(typeName)) {
-      return new _ProviderWithDefiningInjector(_providers[typeName], this);
+  _ProviderWithDefiningInjector _getProviderWithInjectorForKey(Key key) {
+    if (_providers.containsKey(key)) {
+      return new _ProviderWithDefiningInjector(_providers[key], this);
     }
 
     if (parent != null) {
-      return parent._getProviderWithInjectorForType(typeName);
+      return parent._getProviderWithInjectorForKey(key);
     }
 
     if (allowImplicitInjection) {
       return new _ProviderWithDefiningInjector(
-          new _TypeProvider(typeName), this);
+          new _TypeProvider(key.type), this);
     }
 
     throw new NoProviderError(_error('No provider found for '
-        '${typeName}!', typeName));
+        '${key}!', key));
   }
 
   void _checkTypeConditions(Type typeName) {
     if (_PRIMITIVE_TYPES.contains(typeName)) {
       throw new NoProviderError(_error('Cannot inject a primitive type '
-          'of $typeName!', typeName));
+          'of $typeName!', new Key(typeName)));
     }
   }
 
@@ -170,7 +172,18 @@ class Injector {
    * If there is no parent injector, an implicit binding is used. That is,
    * the token ([Type]) is instantiated.
    */
-  dynamic get(Type type) => _getInstanceByType(type, this);
+  dynamic get(Type type) => _getInstanceByKey(new Key(type), this);
+
+  /**
+   * Get an instance for given token ([Key]).
+   *
+   * If the injector already has an instance for this token, it returns this
+   * instance. Otherwise, injector resolves all its dependencies, instantiate
+   * new instance and returns this instance.
+   *
+   * If there is no binding for given token, injector asks parent injector.
+   */
+  dynamic getByKey(Key key) => _getInstanceByKey(key, this);
 
   /**
    * Create a child injector.
@@ -182,14 +195,14 @@ class Injector {
    * token, there will be a new instance created in the child injector.
    */
   Injector createChild(List<Module> modules,
-                       {List<Type> forceNewInstances, String name}) {
+                       {List<Key> forceNewInstances, String name}) {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
-      forceNewInstances.forEach((type) {
-        var providerWithInjector = _getProviderWithInjectorForType(type);
+      forceNewInstances.forEach((key) {
+        var providerWithInjector = _getProviderWithInjectorForKey(key);
         var provider = providerWithInjector.provider;
-        forceNew.factory(type,
-            (Injector inj) => provider.get(this, inj, inj._getInstanceByType,
+        forceNew.factory(key.type, // TODO: should ony br key
+            (Injector inj) => provider.get(this, inj, inj._getInstanceByKey,
                 inj._error),
             creation: provider.creationStrategy,
             visibility: provider.visibility);
