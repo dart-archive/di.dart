@@ -1,7 +1,5 @@
 part of di;
 
-int counter = 0;
-
 class Injector {
 
   /**
@@ -103,7 +101,7 @@ class Injector {
       if (!visible) {
         if (injector.parent == null) {
           throw new NoProviderError(
-              _error('No provider found for ${key}!', key)); // TODO: should only pass key
+              _error('No provider found for ${key}!', key));
         }
         injector =
             injector.parent._getProviderWithInjectorForKey(key).injector;
@@ -175,13 +173,13 @@ class Injector {
   dynamic get(Type type) => _getInstanceByKey(new Key(type), this);
 
   /**
-   * Get an instance for given token ([Key]).
+   * Get an instance for given key ([Key]).
    *
-   * If the injector already has an instance for this token, it returns this
+   * If the injector already has an instance for this key, it returns this
    * instance. Otherwise, injector resolves all its dependencies, instantiate
    * new instance and returns this instance.
    *
-   * If there is no binding for given token, injector asks parent injector.
+   * If there is no binding for given key, injector asks parent injector.
    */
   dynamic getByKey(Key key) => _getInstanceByKey(key, this);
 

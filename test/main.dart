@@ -20,6 +20,11 @@ import 'package:di/annotations.dart';
 // Generated file. Run ../test_tf_gen.sh.
 import 'type_factories_gen.dart' as type_factories_gen;
 
+
+class Turbo {
+  const Turbo();
+}
+
 /**
  * Annotation used to mark classes for which static type factory must be
  * generated. For testing purposes not all classes are marked with this
@@ -48,10 +53,6 @@ class MockEngine2 implements Engine {
 @Injectable()
 class TurboEngine implements Engine {
   String id = 'turbo-engine-id';
-}
-
-class Turbo {
-  const Turbo();
 }
 
 @Injectable()
@@ -188,7 +189,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
             ..bind(Engine, annotatedWith: Turbo, toType: TurboEngine)
             ..bind(Car, toValue: new Engine())
       ]);
-      var instance = injector.getByKey(new Key.withAnnotation(Engine, Turbo));
+      var instance = injector.getByKey(new Key(Engine, annotation: Turbo));
 
       expect(instance, instanceOf(TurboEngine));
       expect(instance.id, toEqual('turbo-engine-id'));

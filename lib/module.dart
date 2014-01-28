@@ -60,7 +60,7 @@ class Module {
     CreationStrategy creation, Visibility visibility}) {
     // TODO: check that toValue and toType are not defined at the same time.
     _dirty();
-    Key key = new Key.withAnnotation(type, annotatedWith);
+    Key key = new Key(type, annotation: annotatedWith);
     if (toValue != null) {
       _providers[key] = new _ValueProvider(toValue, creation, visibility);
     } else {
@@ -106,31 +106,6 @@ dynamic _defaultCreationStrategy(Injector requesting, Injector defining,
 
 /** By default all values are visible to child injectors. */
 bool _defaultVisibility(_, __) => true;
-
-class _KeyBuilder {
-  _Key _key;
-
-  _KeyBuilder(this._key) {}
-
-  _KeyBuilder annotatedWith( Type annotation ) {
-    _key = new _Key.withAnnotation(_key.id, annotation);
-  }
-
-  void toValue( value ) {
-
-  }
-}
-
-class _Key {
-  Type id;
-  Type annotation;
-
-  _Key.create( this.id ) {}
-
-  _Key.withAnnotation( this.id, this.annotation) {}
-
-}
-
 
 typedef Object ObjectFactory(Key type, Injector requestor);
 

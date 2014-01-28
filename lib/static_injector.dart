@@ -2,7 +2,7 @@ library di.static_injector;
 
 import 'di.dart';
 
-typedef Object TypeFactory(factory(Type));
+typedef Object TypeFactory(factory(Type t1, Type annotation));
 
 /**
  * Static implementation of [Injector] that uses type factories
@@ -28,6 +28,6 @@ class StaticInjector extends Injector {
     if (typeFactory == null) {
       throw new NoProviderError(error('No type factory provided for $type!'));
     }
-    return typeFactory((type) => getInstanceByKey(new Key(type), requestor));
+    return typeFactory((type, annotation) => getInstanceByKey(new Key(type, annotation: annotation), requestor));
   }
 }

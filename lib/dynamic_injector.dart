@@ -37,9 +37,11 @@ class DynamicInjector extends Injector {
             error('Cannot create new instance of a typedef ${p.type}'));
       }
       if(p.metadata.length > 0) {
-        return getInstanceByKey(new Key.withAnnotation( getReflectedTypeWorkaround(p.type), p.metadata.first.type.reflectedType ), requestor);
+        return getInstanceByKey(new Key( getReflectedTypeWorkaround(p.type),
+            annotation: p.metadata.first.type.reflectedType ), requestor);
       } else {
-        return getInstanceByKey(new Key(getReflectedTypeWorkaround(p.type)), requestor);
+        return getInstanceByKey(new Key(getReflectedTypeWorkaround(p.type)),
+            requestor);
       }
     }
 
