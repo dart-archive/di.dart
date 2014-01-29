@@ -1,12 +1,11 @@
 part of di;
 
 class Key {
-  Type type;
-  Set<Type> annotations;
+  final Type type;
+  final Set<Type> annotations;
 
-  Key(this.type, {List<Type> annotations}) {
-    this.annotations = ( annotations != null ?
-        new HashSet.from(annotations) : new HashSet() );
+  Key(this.type, {List<Type> annotations}) : this.annotations =
+      (annotations != null ? new HashSet.from(annotations) : new HashSet()) {
   }
 
   // TODO: see if we can get a better hashCode algorithm.
