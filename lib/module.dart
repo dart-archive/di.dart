@@ -57,8 +57,10 @@ class Module {
    * implied that [id] should be instantiated.
    */
   void bind(Type type, {List<Type> withAnnotations, toValue, Type toType,
-    CreationStrategy creation, Visibility visibility}) {
-    // TODO: check that toValue and toType are not defined at the same time.
+    FactoryFn toFactory, CreationStrategy creation, Visibility visibility}) {
+    if ( [toType, toValue, toFactory].where((e) => e != null ).length > 1 )
+      throw new InvalidBindingError('There has to be at most one element to '
+          'which type is bound to.');
     _dirty();
     Key key = new Key(type, annotations: withAnnotations);
     if (toValue != null) {

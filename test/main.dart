@@ -271,6 +271,49 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       expect(instance.engine.id, toEqual('broken-old-engine-id'));
     });
 
+    it('should fail if type is bound to type and value at the same time', () {
+      expect(() {
+        new Module()
+        ..bind(Engine, withAnnotations: [ Old, Broken ],
+            toType: BrokenOldEngine, toValue: 1);
+      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
+          'which type is bound to.'));
+    });
+
+    it('should fail if type is bound to type and factory at the same time', () {
+      expect(() {
+        new Module()
+        ..bind(Engine, withAnnotations: [ Old, Broken ],
+            toType: BrokenOldEngine, toFactory: (Injector injector) {
+              return 'factory-product';
+            });
+      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
+          'which type is bound to.'));
+    });
+
+    it('should fail if type is bound to value and factory at the same time', () {
+      expect(() {
+        new Module()
+        ..bind(Engine, withAnnotations: [ Old, Broken ],
+            toType: BrokenOldEngine,toFactory: (Injector injector) {
+              return 'factory-product';
+            });
+      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
+          'which type is bound to.'));
+    });
+
+    it('should fail if type is bound to type, value and factory at the same time', () {
+      expect(() {
+        new Module()
+        ..bind(Engine, withAnnotations: [ Old, Broken ],
+            toType: BrokenOldEngine, toValue: 1,
+            toFactory: (Injector injector) {
+              return 'factory-product';
+            });
+      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
+          'which type is bound to.'));
+    });
+
 
     it('should inject generic parameterized types', () {
       var injector = injectorFactory([new Module()
