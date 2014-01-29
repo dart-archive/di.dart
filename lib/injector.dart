@@ -176,7 +176,7 @@ class Injector {
    * Get an instance for given key ([Key]).
    *
    * If the injector already has an instance for this key, it returns this
-   * instance. Otherwise, injector resolves all its dependencies, instantiate
+   * instance. Otherwise, injector resolves all its dependencies, instantiates
    * new instance and returns this instance.
    *
    * If there is no binding for given key, injector asks parent injector.
