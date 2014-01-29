@@ -28,6 +28,7 @@ class StaticInjector extends Injector {
     if (typeFactory == null) {
       throw new NoProviderError(error('No type factory provided for $type!'));
     }
-    return typeFactory((type, annotationsList) => getInstanceByKey(new Key(type, annotations: annotationsList), requestor));
+    return typeFactory((type, annotationsList) => getInstanceByKey(
+        new Key(type, annotations: annotationsList), requestor));
   }
 }

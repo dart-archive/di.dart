@@ -5,24 +5,22 @@ class Key {
   final Set<Type> annotations;
 
   Key(this.type, {List<Type> annotations}) : this.annotations =
-      (annotations != null ? new HashSet.from(annotations) : new HashSet()) {
+      (annotations != null ? annotations.toSet() : new HashSet()) {
   }
 
-  // TODO: see if we can get a better hashCode algorithm.
   int get hashCode {
-    int result = 17;
-    result = 37 * result + type.hashCode;
-    return result;
+    return 629 + type.hashCode;
   }
 
   bool operator==(other) {
     return other is Key && other.type == type &&
+        other.annotations.length == annotations.length &&
         other.annotations.containsAll(annotations);
   }
 
   String toString() {
     String asString = type.toString();
-    if (!annotations.isEmpty)
+    if (annotations.isNotEmpty)
       asString += " annotated with: [" + annotations.join(", ") + "]";
     return asString;
   }

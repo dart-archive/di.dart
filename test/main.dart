@@ -80,10 +80,7 @@ class OldTimer {
   Engine engine;
   Injector injector;
 
-  OldTimer(@Broken() @Old() Engine engine, Injector injector){
-    this.engine = engine;
-    this.injector = injector;
-  }
+  OldTimer(@Broken() @Old() this.engine, this.injector);
 }
 
 @Injectable()
@@ -91,10 +88,7 @@ class Porsche {
   Engine engine;
   Injector injector;
 
-  Porsche(@Turbo() Engine engine, Injector injector){
-    this.engine = engine;
-    this.injector = injector;
-  }
+  Porsche(@Turbo() this.engine, this.injector);
 }
 
 class NumDependency {
@@ -209,8 +203,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should instantiate an annotated type', () {
       var injector = injectorFactory([new Module()
-            ..bind(Engine, withAnnotations: [Turbo], toType: TurboEngine)
-            ..bind(Car, toValue: new Engine())
+          ..bind(Engine, withAnnotations: [Turbo], toType: TurboEngine)
+          ..bind(Car, toValue: new Engine())
       ]);
       var instance = injector.getByKey(new Key(Engine, annotations: [Turbo]));
 
@@ -282,8 +276,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should fail if type is bound to type and factory at the same time', () {
       expect(() {
-        new Module()
-        ..bind(Engine, withAnnotations: [ Old, Broken ],
+        new Module()..bind(Engine, withAnnotations: [ Old, Broken ],
             toType: BrokenOldEngine, toFactory: (Injector injector) {
               return 'factory-product';
             });
@@ -293,8 +286,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should fail if type is bound to value and factory at the same time', () {
       expect(() {
-        new Module()
-        ..bind(Engine, withAnnotations: [ Old, Broken ],
+        new Module()..bind(Engine, withAnnotations: [ Old, Broken ],
             toType: BrokenOldEngine,toFactory: (Injector injector) {
               return 'factory-product';
             });

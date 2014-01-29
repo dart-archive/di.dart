@@ -162,7 +162,7 @@ class Injector {
    * Get an instance for given token ([Type]).
    *
    * If the injector already has an instance for this token, it returns this
-   * instance. Otherwise, injector resolves all its dependencies, instantiate
+   * instance. Otherwise, injector resolves all its dependencies, instantiates
    * new instance and returns this instance.
    *
    * If there is no binding for given token, injector asks parent injector.

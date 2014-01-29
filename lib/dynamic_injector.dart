@@ -36,7 +36,7 @@ class DynamicInjector extends Injector {
         throw new NoProviderError(
             error('Cannot create new instance of a typedef ${p.type}'));
       }
-      if (p.metadata.length > 0) {
+      if (p.metadata.isNotEmpty) {
         return getInstanceByKey(new Key( getReflectedTypeWorkaround(p.type),
             annotations: p.metadata.map(
                 (item) => item.type.reflectedType).toList()), requestor);
