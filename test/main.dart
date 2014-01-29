@@ -194,7 +194,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
   describe(injectorName, () {
 
     it('should instantiate a type', () {
-      var injector = injectorFactory([new Module()..bind(Engine)]);
+      var injector = injectorFactory([new Module()..type(Engine)]);
       var instance = injector.get(Engine);
 
       expect(instance, instanceOf(Engine));
@@ -203,8 +203,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should instantiate an annotated type', () {
       var injector = injectorFactory([new Module()
-          ..bind(Engine, withAnnotations: [Turbo], toType: TurboEngine)
-          ..bind(Car, toValue: new Engine())
+          ..type(Engine, withAnnotations: [Turbo], implementedBy: TurboEngine)
+          ..value(Car, new Engine())
       ]);
       var instance = injector.getByKey(new Key(Engine, annotations: [Turbo]));
 
@@ -222,7 +222,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should resolve basic dependencies', () {
-      var injector = injectorFactory([new Module()..bind(Car)..bind(Engine)]);
+      var injector = injectorFactory([new Module()..type(Car)..type(Engine)]);
       var instance = injector.get(Car);
 
       expect(instance, instanceOf(Car));
@@ -231,9 +231,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should resolve complex dependencies', () {
       var injector = injectorFactory([new Module()
-            ..bind(Porsche)
-            ..bind(TurboEngine)
-            ..bind(Engine, withAnnotations: [Turbo], toType: TurboEngine)
+            ..type(Porsche)
+            ..type(TurboEngine)
+            ..type(Engine, withAnnotations: [Turbo], implementedBy: TurboEngine)
       ]);
       var instance = injector.get(Porsche);
 
@@ -243,9 +243,10 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should resolve dependencies with multiple annotations (in order)', () {
       var injector = injectorFactory([new Module()
-            ..bind(OldTimer)
-            ..bind(BrokenOldEngine)
-            ..bind(Engine, withAnnotations: [ Broken, Old ], toType: BrokenOldEngine)
+            ..type(OldTimer)
+            ..type(BrokenOldEngine)
+            ..type(Engine, withAnnotations: [ Broken, Old ],
+                implementedBy: BrokenOldEngine)
       ]);
       var instance = injector.get(OldTimer);
 
@@ -255,9 +256,10 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should resolve dependencies with multiple annotations (out of order)', () {
       var injector = injectorFactory([new Module()
-            ..bind(OldTimer)
-            ..bind(BrokenOldEngine)
-            ..bind(Engine, withAnnotations: [ Old, Broken ], toType: BrokenOldEngine)
+            ..type(OldTimer)
+            ..type(BrokenOldEngine)
+            ..type(Engine, withAnnotations: [ Old, Broken ],
+                implementedBy: BrokenOldEngine)
       ]);
       var instance = injector.get(OldTimer);
 
@@ -265,52 +267,10 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       expect(instance.engine.id, toEqual('broken-old-engine-id'));
     });
 
-    it('should fail if type is bound to type and value at the same time', () {
-      expect(() {
-        new Module()
-        ..bind(Engine, withAnnotations: [ Old, Broken ],
-            toType: BrokenOldEngine, toValue: 1);
-      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
-          'which type is bound to.'));
-    });
-
-    it('should fail if type is bound to type and factory at the same time', () {
-      expect(() {
-        new Module()..bind(Engine, withAnnotations: [ Old, Broken ],
-            toType: BrokenOldEngine, toFactory: (Injector injector) {
-              return 'factory-product';
-            });
-      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
-          'which type is bound to.'));
-    });
-
-    it('should fail if type is bound to value and factory at the same time', () {
-      expect(() {
-        new Module()..bind(Engine, withAnnotations: [ Old, Broken ],
-            toType: BrokenOldEngine,toFactory: (Injector injector) {
-              return 'factory-product';
-            });
-      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
-          'which type is bound to.'));
-    });
-
-    it('should fail if type is bound to type, value and factory at the same time', () {
-      expect(() {
-        new Module()
-        ..bind(Engine, withAnnotations: [ Old, Broken ],
-            toType: BrokenOldEngine, toValue: 1,
-            toFactory: (Injector injector) {
-              return 'factory-product';
-            });
-      }, toThrow(InvalidBindingError, 'There has to be at most one element to '
-          'which type is bound to.'));
-    });
-
-
     it('should inject generic parameterized types', () {
       var injector = injectorFactory([new Module()
-            ..bind(ParameterizedType)
-            ..bind(GenericParameterizedDependency)
+            ..type(ParameterizedType)
+            ..type(GenericParameterizedDependency)
       ]);
       expect(injector.get(GenericParameterizedDependency),
           new isInstanceOf<GenericParameterizedDependency>());
@@ -319,15 +279,15 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     xit('should error while resolving parameterized types', () {
       var injector = injectorFactory([new Module()
-            ..bind(ParameterizedType)
-            ..bind(ParameterizedDependency)
+            ..type(ParameterizedType)
+            ..type(ParameterizedDependency)
       ]);
       expect(() => injector.get(ParameterizedDependency), throws);
     });
 
 
     it('should allow modules and overriding providers', () {
-      var module = new Module()..bind(Engine, toType: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
       // injector is immutable
       // you can't load more modules once it's instantiated
@@ -340,7 +300,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should only create a single instance', () {
-      var injector = injectorFactory([new Module()..bind(Engine)]);
+      var injector = injectorFactory([new Module()..type(Engine)]);
       var first = injector.get(Engine);
       var second = injector.get(Engine);
 
@@ -350,8 +310,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should allow providing values', () {
       var module = new Module()
-        ..bind(Engine, toValue: 'str value')
-        ..bind(Car, toValue: 123);
+        ..value(Engine, 'str value')
+        ..value(Car, 123);
 
       var injector = injectorFactory([module]);
       var abcInstance = injector.get(Engine);
@@ -387,7 +347,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should inject injector into factory function', () {
       var module = new Module()
-        ..bind(Engine)
+        ..type(Engine)
         ..factory(Car, (Injector injector) {
         return new Car(injector.get(Engine), injector);
       });
@@ -403,11 +363,11 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     it('should throw an exception when injecting a primitive type', () {
       var injector = injectorFactory([
         new Module()
-          ..bind(NumDependency)
-          ..bind(IntDependency)
-          ..bind(DoubleDependency)
-          ..bind(BoolDependency)
-          ..bind(StringDependency)
+          ..type(NumDependency)
+          ..type(IntDependency)
+          ..type(DoubleDependency)
+          ..type(BoolDependency)
+          ..type(StringDependency)
       ]);
 
       expect(() {
@@ -438,7 +398,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should throw an exception when circular dependency', () {
-      var injector = injectorFactory([new Module()..bind(CircularA)..bind(CircularB)]);
+      var injector = injectorFactory([new Module()..type(CircularA)
+                                        ..type(CircularB)]);
 
       expect(() {
         injector.get(CircularA);
@@ -456,7 +417,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should inject a typedef', () {
-      var module = new Module()..bind(CompareInt, toValue: compareIntAsc);
+      var module = new Module()..value(CompareInt, compareIntAsc);
 
       var injector = injectorFactory([module]);
       var compare = injector.get(CompareInt);
@@ -467,7 +428,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should throw an exception when injecting typedef without providing it', () {
-      var injector = injectorFactory([new Module()..bind(WithTypeDefDependency)]);
+      var injector = injectorFactory([new Module()..type(WithTypeDefDependency)]);
 
       expect(() {
         injector.get(WithTypeDefDependency);
@@ -476,16 +437,16 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should instantiate via the default/unnamed constructor', () {
-      var injector = injectorFactory([new Module()..bind(MultipleConstructors)]);
+      var injector = injectorFactory([new Module()..type(MultipleConstructors)]);
       MultipleConstructors instance = injector.get(MultipleConstructors);
       expect(instance.instantiatedVia, 'default');
     });
 
     // CHILD INJECTORS
     it('should inject from child', () {
-      var module = new Module()..bind(Engine, toType: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
-      var parent = injectorFactory([new Module()..bind(Engine)]);
+      var parent = injectorFactory([new Module()..type(Engine)]);
       var child = parent.createChild([module]);
 
       var abcFromParent = parent.get(Engine);
@@ -497,18 +458,20 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should enumerate across children', () {
-      var parent = injectorFactory([new Module()..bind(Engine)]);
-      var child = parent.createChild([new Module()..bind(MockEngine)]);
+      var parent = injectorFactory([new Module()..type(Engine)]);
+      var child = parent.createChild([new Module()..type(MockEngine)]);
 
-      expect(parent.types, unorderedEquals(new Set.from([new Key(Engine), new Key(Injector)])));
-      expect(child.types, unorderedEquals(new Set.from([new Key(Engine), new Key(MockEngine), new Key(Injector)])));
+      expect(parent.types, unorderedEquals(new Set.from(
+          [new Key(Engine), new Key(Injector)])));
+      expect(child.types, unorderedEquals(new Set.from(
+          [new Key(Engine), new Key(MockEngine), new Key(Injector)])));
     });
 
 
     it('should inject instance from parent if not provided in child', () {
-      var module = new Module()..bind(Car);
+      var module = new Module()..type(Car);
 
-      var parent = injectorFactory([new Module()..bind(Car)..bind(Engine)]);
+      var parent = injectorFactory([new Module()..type(Car)..type(Engine)]);
       var child = parent.createChild([module]);
 
       var complexFromParent = parent.get(Car);
@@ -522,9 +485,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should inject instance from parent but never use dependency from child', () {
-      var module = new Module()..bind(Engine, toType: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
-      var parent = injectorFactory([new Module()..bind(Car)..bind(Engine)]);
+      var parent = injectorFactory([new Module()..type(Car)..type(Engine)]);
       var child = parent.createChild([module]);
 
       var complexFromParent = parent.get(Car);
@@ -539,7 +502,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should force new instance in child even if already instantiated in parent', () {
-      var parent = injectorFactory([new Module()..bind(Engine)]);
+      var parent = injectorFactory([new Module()..type(Engine)]);
       var abcAlreadyInParent = parent.get(Engine);
 
       var child = parent.createChild([], forceNewInstances: [new Key(Engine)]);
@@ -550,7 +513,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should force new instance in child using provider from grand parent', () {
-      var module = new Module()..bind(Engine, toType: MockEngine);
+      var module = new Module()..type(Engine, implementedBy: MockEngine);
 
       var grandParent = injectorFactory([module]);
       var parent = grandParent.createChild([]);
@@ -588,8 +551,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     it('should instantiate class only once (Issue #18)', () {
       var injector = injectorFactory([
           new Module()
-            ..bind(Log)
-            ..bind(ClassOne)
+            ..type(Log)
+            ..type(ClassOne)
             ..factory(InterfaceOne, (i) => i.get(ClassOne))
       ]);
 
@@ -609,8 +572,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
         }
 
         var parentModule = new Module()
-          ..bind(Engine, toType: MockEngine, creation: creation)
-          ..bind(Car, creation: creation);
+          ..type(Engine, implementedBy: MockEngine, creation: creation)
+          ..type(Car, creation: creation);
 
         var parentInjector = injectorFactory([parentModule]);
         var childInjector = parentInjector.createChild([]);
@@ -629,7 +592,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
         }
 
         var module = new Module()
-          ..bind(Engine, toType: MockEngine, creation: creation);
+          ..type(Engine, implementedBy: MockEngine, creation: creation);
         var injector = injectorFactory([module]);
         expect(() {
           injector.get(Engine);
@@ -646,9 +609,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
         var childMock = new MockEngine();
 
         var parentModule = new Module()
-          ..bind(Engine, toValue: rootMock);
+          ..value(Engine, rootMock);
         var childModule = new Module()
-          ..bind(Engine, toValue: childMock, visibility: (_, __) => false);
+          ..value(Engine, childMock, visibility: (_, __) => false);
 
         var parentInjector = injectorFactory([parentModule]);
         var childInjector = parentInjector.createChild([childModule]);
@@ -659,7 +622,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       it('should throw when an instance in not visible in the root injector', () {
         var module = new Module()
-          ..bind(Car, toValue: 'Invisible', visibility: (_, __) => false);
+          ..value(Car, 'Invisible', visibility: (_, __) => false);
 
         var injector = injectorFactory([module]);
 

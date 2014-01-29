@@ -48,41 +48,43 @@ class Module {
   }
 
   /**
-   * TODO Update docs
+   * Register binding to a concrete value.
    *
+   * The [value] is what actually will be injected.
+   */
+  void value(Type id, value, {List<Type> withAnnotations,
+    CreationStrategy creation, Visibility visibility}) {
+    _dirty();
+    Key key = new Key(id, annotations: withAnnotations);
+    _providers[key] = new _ValueProvider(value, creation, visibility);
+  }
+
+  /**
    * Register binding to a [Type].
    *
    * The [implementedBy] will be instantiated using [new] operator and the
    * resulting instance will be injected. If no type is provided, then it's
    * implied that [id] should be instantiated.
    */
-  void bind(Type type, {List<Type> withAnnotations, toValue, Type toType,
-    FactoryFn toFactory, CreationStrategy creation, Visibility visibility}) {
-    if ( [toType, toValue, toFactory].where((e) => e != null ).length > 1 )
-      throw new InvalidBindingError('There has to be at most one element to '
-          'which type is bound to.');
+  void type(Type id, {List<Type> withAnnotations, Type implementedBy,
+    CreationStrategy creation, Visibility visibility}) {
     _dirty();
-    Key key = new Key(type, annotations: withAnnotations);
-    if (toValue != null) {
-      _providers[key] = new _ValueProvider(toValue, creation, visibility);
-    } else {
-      _providers[key] = new _TypeProvider(
-          toType == null ? type : toType, creation, visibility);
-    }
+    Key key = new Key(id, annotations: withAnnotations);
+    _providers[key] = new _TypeProvider(
+        implementedBy == null ? id : implementedBy, creation, visibility);
   }
 
   /**
    * Register binding to a factory function.abstract
    *
-   * // TODO (@markovuksanovic) See what we can do with the factory.
-   *
    * The [factoryFn] will be called and all its arguments will get injected.
    * The result of that function is the value that will be injected.
    */
-  void factory(Type id, FactoryFn factoryFn,
-      {CreationStrategy creation, Visibility visibility}) {
+  void factory(Type id, FactoryFn factoryFn, {List<Type> withAnnotations,
+    CreationStrategy creation, Visibility visibility}) {
     _dirty();
-    _providers[new Key(id)] = new _FactoryProvider(factoryFn, creation, visibility);
+    Key key = new Key(id, annotations: withAnnotations);
+    _providers[key] = new _FactoryProvider(factoryFn, creation, visibility);
   }
 
   /**
