@@ -38,7 +38,8 @@ class DynamicInjector extends Injector {
       }
       if(p.metadata.length > 0) {
         return getInstanceByKey(new Key( getReflectedTypeWorkaround(p.type),
-            annotation: p.metadata.first.type.reflectedType ), requestor);
+            annotations: p.metadata.map(
+                (item) => item.type.reflectedType).toList()), requestor);
       } else {
         return getInstanceByKey(new Key(getReflectedTypeWorkaround(p.type)),
             requestor);

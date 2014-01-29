@@ -56,11 +56,11 @@ class Module {
    * resulting instance will be injected. If no type is provided, then it's
    * implied that [id] should be instantiated.
    */
-  void bind(Type type, {Type annotatedWith, toValue, Type toType,
+  void bind(Type type, {List<Type> withAnnotations, toValue, Type toType,
     CreationStrategy creation, Visibility visibility}) {
     // TODO: check that toValue and toType are not defined at the same time.
     _dirty();
-    Key key = new Key(type, annotation: annotatedWith);
+    Key key = new Key(type, annotations: withAnnotations);
     if (toValue != null) {
       _providers[key] = new _ValueProvider(toValue, creation, visibility);
     } else {

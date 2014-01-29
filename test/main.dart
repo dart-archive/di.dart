@@ -20,6 +20,13 @@ import 'package:di/annotations.dart';
 // Generated file. Run ../test_tf_gen.sh.
 import 'type_factories_gen.dart' as type_factories_gen;
 
+class Broken {
+  const Broken();
+}
+
+class Old {
+  const Old();
+}
 
 class Turbo {
   const Turbo();
@@ -56,11 +63,27 @@ class TurboEngine implements Engine {
 }
 
 @Injectable()
+class BrokenOldEngine implements Engine {
+  String id = 'broken-old-engine-id';
+}
+
+@Injectable()
 class Car {
   Engine engine;
   Injector injector;
 
   Car(this.engine, this.injector);
+}
+
+@Injectable()
+class OldTimer {
+  Engine engine;
+  Injector injector;
+
+  OldTimer(@Broken() @Old() Engine engine, Injector injector){
+    this.engine = engine;
+    this.injector = injector;
+  }
 }
 
 @Injectable()
@@ -186,10 +209,10 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     it('should instantiate an annotated type', () {
       var injector = injectorFactory([new Module()
-            ..bind(Engine, annotatedWith: Turbo, toType: TurboEngine)
+            ..bind(Engine, withAnnotations: [Turbo], toType: TurboEngine)
             ..bind(Car, toValue: new Engine())
       ]);
-      var instance = injector.getByKey(new Key(Engine, annotation: Turbo));
+      var instance = injector.getByKey(new Key(Engine, annotations: [Turbo]));
 
       expect(instance, instanceOf(TurboEngine));
       expect(instance.id, toEqual('turbo-engine-id'));
@@ -216,12 +239,36 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       var injector = injectorFactory([new Module()
             ..bind(Porsche)
             ..bind(TurboEngine)
-            ..bind(Engine, annotatedWith: Turbo, toType: TurboEngine)
+            ..bind(Engine, withAnnotations: [Turbo], toType: TurboEngine)
       ]);
       var instance = injector.get(Porsche);
 
       expect(instance, instanceOf(Porsche));
       expect(instance.engine.id, toEqual('turbo-engine-id'));
+    });
+
+    it('should resolve dependencies with multiple annotations (in order)', () {
+      var injector = injectorFactory([new Module()
+            ..bind(OldTimer)
+            ..bind(BrokenOldEngine)
+            ..bind(Engine, withAnnotations: [ Broken, Old ], toType: BrokenOldEngine)
+      ]);
+      var instance = injector.get(OldTimer);
+
+      expect(instance, instanceOf(OldTimer));
+      expect(instance.engine.id, toEqual('broken-old-engine-id'));
+    });
+
+    it('should resolve dependencies with multiple annotations (out of order)', () {
+      var injector = injectorFactory([new Module()
+            ..bind(OldTimer)
+            ..bind(BrokenOldEngine)
+            ..bind(Engine, withAnnotations: [ Old, Broken ], toType: BrokenOldEngine)
+      ]);
+      var instance = injector.get(OldTimer);
+
+      expect(instance, instanceOf(OldTimer));
+      expect(instance.engine.id, toEqual('broken-old-engine-id'));
     });
 
 

@@ -2,28 +2,29 @@ part of di;
 
 class Key {
   Type type;
-  Type annotation;
+  Set<Type> annotations;
 
-  Key(this.type, {this.annotation}) {}
+  Key(this.type, {List<Type> annotations}) {
+    this.annotations = ( annotations != null ?
+        new HashSet.from(annotations) : new HashSet() );
+  }
 
-  // Override hashCode using strategy from Effective Java, Chapter 11.
+  // TODO: see if we can get a better hashCode algorithm.
   int get hashCode {
     int result = 17;
     result = 37 * result + type.hashCode;
-    result = 37 * result + annotation.hashCode;
     return result;
   }
 
-  // You should generally implement operator== if you override hashCode.
   bool operator==(other) {
-    if (other is! Key) return false;
-    return (other.type == type && other.annotation == annotation);
+    return other is Key && other.type == type &&
+        other.annotations.containsAll(annotations);
   }
 
   String toString() {
     String asString = type.toString();
-    if (annotation != null)
-      asString += " annotated with: " + annotation.toString();
+    if (!annotations.isEmpty)
+      asString += " annotated with: [" + annotations.join(", ") + "]";
     return asString;
   }
 }
