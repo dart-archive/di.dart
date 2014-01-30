@@ -11,7 +11,6 @@ else
     echo "$DARTSDK: $DARTSDK"
 
     if [ -n "$DARTSDK" ]; then
-    else
         DARTSDK="`pwd`/dart-sdk"
     fi
 fi
