@@ -13,6 +13,7 @@ else
 fi
 
 export DART_SDK="$DARTSDK"
+echo "env.sh - DART_SDK: $DART_SDK"
 export DART=${DART:-"$DARTSDK/bin/dart"}
 export PUB=${PUB:-"$DARTSDK/bin/pub"}
 export DARTANALYZER=${DARTANALYZER:-"$DARTSDK/bin/dartanalyzer"}

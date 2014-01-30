@@ -24,4 +24,5 @@ rm $DART_SDK_ZIP
 echo =============================================================================
 . ./scripts/env.sh
 $DART --version
+echo "setup.sh - DART_SDK: $DART_SDK"
 $PUB install
