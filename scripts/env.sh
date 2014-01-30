@@ -7,10 +7,7 @@ else
     echo "sdk=== $DARTSDK"
     DART=`which dart|cat` # pipe to cat to ignore the exit code
     DARTSDK=`which dart | sed -e 's/\/bin\/dart$/\//'`
-
-    echo "$DARTSDK: $DARTSDK"
-
-    if [ -n "$DARTSDK" ]; then
+    if [ -z "$DARTSDK" ]; then
         DARTSDK="`pwd`/dart-sdk"
     fi
 fi
