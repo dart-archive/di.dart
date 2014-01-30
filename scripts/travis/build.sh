@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo ./run-tests.sh
+./run-tests.sh
