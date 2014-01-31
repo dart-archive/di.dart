@@ -45,6 +45,10 @@ class MockEngine2 implements Engine {
   String id = 'mock-id-2';
 }
 
+class HiddenConstructor {
+  HiddenConstructor._();
+}
+
 @Injectable()
 class Car {
   Engine engine;
@@ -553,6 +557,18 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
     });
 
+  });
+
+  describe('no default constructor', () {
+
+    it('should display a comprehensible error message', () {
+      var module = new Module()..type(HiddenConstructor);
+      var injector = new DynamicInjector(modules: [module]);
+
+      expect(() {
+        injector.get(HiddenConstructor);
+      }, toThrow(NoSuchMethodError));
+    });
   });
 
 }
