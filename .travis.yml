@@ -12,3 +12,6 @@ before_script:
 
 script:
   - ./scripts/travis/build.sh
+
+after_success:
+  - ./scripts/travis/benchmark.sh

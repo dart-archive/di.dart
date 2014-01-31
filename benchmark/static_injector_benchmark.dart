@@ -5,8 +5,8 @@ import 'injector_benchmark_common.dart';
 
 main() {
   var typeFactories = new Map();
-  typeFactories[A] = (f) => new A(f(B), f(C));
-  typeFactories[B] = (f) => new B(f(D), f(E));
+  typeFactories[A] = (f) => new A(f(B, []), f(C, []));
+  typeFactories[B] = (f) => new B(f(D, []), f(E, []));
   typeFactories[C] = (f) => new C();
   typeFactories[D] = (f) => new D();
   typeFactories[E] = (f) => new E();
