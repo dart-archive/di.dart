@@ -32,12 +32,12 @@ class Injectable {
 // just some classes for testing
 @Injectable()
 class Engine {
-  String id = 'v8-id';
+  final String id = 'v8-id';
 }
 
 @Injectable()
 class MockEngine implements Engine {
-  String id = 'mock-id';
+  final String id = 'mock-id';
 }
 
 @Injectable()
@@ -51,6 +51,13 @@ class Car {
   Injector injector;
 
   Car(this.engine, this.injector);
+}
+
+class Lemon {
+  final engine;
+  final Injector injector;
+
+  Lemon(this.engine, this.injector);
 }
 
 class NumDependency {
@@ -89,9 +96,7 @@ int compareIntAsc(int a, int b) => b.compareTo(a);
 class WithTypeDefDependency {
   CompareInt compare;
 
-  WithTypeDefDependency(CompareInt c) {
-    compare = c;
-  }
+  WithTypeDefDependency(this.compare);
 }
 
 class MultipleConstructors {
@@ -116,13 +121,13 @@ class ParameterizedType<T1, T2> {
 
 @Injectable()
 class ParameterizedDependency {
-  ParameterizedType<bool, int> _p;
+  final ParameterizedType<bool, int> _p;
   ParameterizedDependency(this._p);
 }
 
 @Injectable()
 class GenericParameterizedDependency {
-  ParameterizedType _p;
+  final ParameterizedType _p;
   GenericParameterizedDependency(this._p);
 }
 
@@ -147,6 +152,8 @@ void main() {
   createInjectorSpec('StaticInjector',
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
           typeFactories: type_factories_gen.typeFactories));
+
+  dynamicInjectorTest();
 }
 
 typedef Injector InjectorFactory(List<Module> modules, [String name]);
@@ -471,7 +478,6 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       expect(injector.get(Log).log.join(' '), 'ClassOne');
     });
 
-
     describe('creation strategy', () {
 
       it('should get called for instance creation', () {
@@ -549,4 +555,19 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
   });
 
+}
+
+void dynamicInjectorTest() {
+  describe('untyped argument', () {
+
+    it('should display a comprehensible error message', () {
+      var module = new Module()..type(Lemon)..type(Engine);
+      var injector = new DynamicInjector(modules : [module]);
+
+      expect(() {
+        injector.get(Lemon);
+      }, toThrow(NoProviderError, "The 'engine' parameter must be typed "
+          "(resolving Lemon)"));
+    });
+  });
 }
