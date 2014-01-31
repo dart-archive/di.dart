@@ -30,6 +30,10 @@ class DynamicInjector extends Injector {
 
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
 
+    if (ctor == null) {
+      throw new NoSuchMethodError(type, new Symbol('$type'), null, null);
+    }
+
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
       if (p.type is TypedefMirror) {
