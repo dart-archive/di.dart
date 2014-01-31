@@ -538,8 +538,58 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
             NoProviderError, 'No provider found for Car! (resolving Car)'
         ));
       });
-    });
 
+      describe('override', () {
+
+        it('should prevent overriding a provider by default', () {
+          expect(() {
+            new Module()
+              ..value(Engine, null)
+              ..value(Engine, new MockEngine());
+          }, toThrow(
+              OverrideError, "'Engine' is already registered as a value provider"
+          ));
+
+          expect(() {
+            new Module()
+              ..value(Engine, null)
+              ..type(Engine);
+          }, toThrow(
+              OverrideError, "'Engine' is already registered as a value provider"
+          ));
+
+          expect(() {
+            new Module()
+              ..value(Engine, null)
+              ..factory(Engine, (_) => null);
+          }, toThrow(
+              OverrideError, "'Engine' is already registered as a value provider"
+          ));
+        });
+      });
+
+      it('should allow overriding a provider', () {
+        var module;
+        var injector;
+
+        var value = new MockEngine2();
+        module = new Module()
+          ..value(Engine, null)
+          ..value(Engine, value, allowOverride: true);
+        expect(injectorFactory([module]).get(Engine), same(value));
+
+        module = new Module()
+          ..value(Engine, null)
+          ..type(Engine, allowOverride: true);
+        expect(injectorFactory([module]).get(Engine), instanceOf(Engine));
+
+        module = new Module()
+          ..value(Engine, null)
+          ..factory(Engine, (_) => new Engine(), allowOverride: true);
+        expect(injectorFactory([module]).get(Engine), instanceOf(Engine));
+      });
+
+    });
   });
 
 }
