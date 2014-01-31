@@ -30,6 +30,13 @@ class DynamicInjector extends Injector {
 
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
 
+    if (ctor == null) {
+      throw new NoProviderError('Unable to find default constructor for $type. '
+          'Make sure class has a default constructor.' +
+          (1.0 is int ?
+              ' Make sure you have correctly configured @MirrorsUsed.' : ''));
+    }
+
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
       if (MirrorSystem.getName(p.type.qualifiedName) == 'dynamic') {

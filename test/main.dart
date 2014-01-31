@@ -45,6 +45,10 @@ class MockEngine2 implements Engine {
   String id = 'mock-id-2';
 }
 
+class HiddenConstructor {
+  HiddenConstructor._();
+}
+
 @Injectable()
 class Car {
   Engine engine;
@@ -478,6 +482,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       expect(injector.get(Log).log.join(' '), 'ClassOne');
     });
 
+
     describe('creation strategy', () {
 
       it('should get called for instance creation', () {
@@ -568,6 +573,17 @@ void dynamicInjectorTest() {
         injector.get(Lemon);
       }, toThrow(NoProviderError, "The 'engine' parameter must be typed "
           "(resolving Lemon)"));
+    });
+
+    it('should throw a comprehensible error message when no default constructor found', () {
+      var module = new Module()..type(HiddenConstructor);
+      var injector = new DynamicInjector(modules: [module]);
+
+      expect(() {
+        injector.get(HiddenConstructor);
+      }, toThrow(NoProviderError, startsWith('Unable to find default '
+          'constructor for HiddenConstructor. Make sure class has a '
+          'default constructor.')));
     });
 
   });

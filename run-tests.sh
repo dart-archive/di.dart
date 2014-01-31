@@ -10,7 +10,7 @@ dart --checked test/main.dart
 
 echo "run dart2js on tests"
 mkdir -p out
-dart2js -c test/main.dart -o out/main.dart.js
+dart2js --minify -c test/main.dart -o out/main.dart.js
 
 echo "run tests in node"
 node out/main.dart.js
