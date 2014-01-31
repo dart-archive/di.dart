@@ -32,6 +32,10 @@ class DynamicInjector extends Injector {
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
+      if (MirrorSystem.getName(p.type.qualifiedName) == 'dynamic') {
+        var name = MirrorSystem.getName(p.simpleName);
+        throw new NoProviderError(error("The '$name' parameter must be typed"));
+      }
       if (p.type is TypedefMirror) {
         throw new NoProviderError(
             error('Cannot create new instance of a typedef ${p.type}'));
