@@ -39,7 +39,7 @@ class DynamicInjector extends Injector {
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      if (MirrorSystem.getName(p.type.qualifiedName) == 'dynamic') {
+      if (p.type.qualifiedName == #dynamic) {
         var name = MirrorSystem.getName(p.simpleName);
         throw new NoProviderError(error("The '$name' parameter must be typed"));
       }
@@ -48,11 +48,10 @@ class DynamicInjector extends Injector {
             error('Cannot create new instance of a typedef ${p.type}'));
       }
       if (p.metadata.isNotEmpty) {
-        var annotations = p.metadata.map(
-            (item) => item.type.reflectedType).toList();
-        assert(annotations.length == 1);
+        assert(p.metadata.length == 1);
+        var type = p.metadata.first.type.reflectedType;
         return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType,
-            annotations[0] ), requestor);
+            type), requestor);
       } else {
         return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType),
             requestor);
