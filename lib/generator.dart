@@ -165,20 +165,33 @@ class CompilationUnitVisitor {
     });
   }
 
-  visitClassElement(ClassElement classElement) {
+  void visitClassElement(ClassElement classElement) {
     if (classElement.name[0] == '_') return; // ignore private classes.
     typeToImport[getCanonicalName(classElement.type)] =
         source.entryPointImport;
     imports.add(source.entryPointImport);
-    for (ElementAnnotation ann in classElement.metadata) {
-      if (ann.element is ConstructorElement) {
-        ConstructorElement con = ann.element;
-        if (classAnnotations
-            .contains(getQualifiedName(con.enclosingElement.type))) {
-          typeFactoryTypes.add(classElement);
-        }
-      }
+
+    // Handle class metadata
+    _addTypeFactoryTypes(classElement, classElement.metadata);
+
+    // Handle constructor metadata
+    try {
+      var metadata = classElement.constructors.singleWhere((c) => c.name == "")
+          .metadata;
+      _addTypeFactoryTypes(classElement, metadata);
+    } on StateError catch (e) {
     }
+  }
+
+  void _addTypeFactoryTypes(ClassElement classElement,
+                            List<ElementAnnotation> metadata) {
+    metadata
+      .map((ann) => ann.element)
+      .where((el) => el is ConstructorElement)
+      .map((el) => getQualifiedName(el.enclosingElement.type))
+      .forEach((qn) {
+        if (classAnnotations.contains(qn)) typeFactoryTypes.add(classElement);
+      });
   }
 }
 
