@@ -22,19 +22,20 @@ main(args) {
 
   var pathToSdk = args[0];
   var entryPoint = args[1];
-  var classAnnotations = args[2].split(',');
+  var classAnnotations = args[2].split(',').toSet();
   var output = args[3];
-  var packageRoots = (args.length < 5) ? [Platform.packageRoot] : args.sublist(4);
+  var packageRoots = (args.length < 5 ?
+      [Platform.packageRoot] : args.sublist(4)).toSet();
 
-  print('pathToSdk: $pathToSdk');
-  print('entryPoint: $entryPoint');
-  print('classAnnotations: ${classAnnotations.join(', ')}');
-  print('output: $output');
-  print('packageRoots: $packageRoots');
+  print('''pathToSdk: $pathToSdk
+entryPoint: $entryPoint
+classAnnotations: ${classAnnotations.join(', ')}
+output: $output
+packageRoots: ${packageRoots.join(', ')}''');
 
   var c = new SourceCrawler(pathToSdk, packageRoots);
-  List<String> imports = <String>[];
-  List<ClassElement> typeFactoryTypes = <ClassElement>[];
+  var imports = new Set<String>();
+  var typeFactoryTypes = new Set<ClassElement>();
   Map<String, String> typeToImport = new Map<String, String>();
   c.crawl(entryPoint, (CompilationUnitElement compilationUnit, SourceFile source) {
       new CompilationUnitVisitor(c.context, source, classAnnotations, imports,
@@ -44,10 +45,11 @@ main(args) {
   new File(output).writeAsStringSync(code);
 }
 
-String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
-                        List<ClassElement> typeFactoryTypes) {
-  final requiredImports = <String>[];
+String printLibraryCode(Map<String, String> typeToImport, Set<String> _imports,
+                        Set<ClassElement> typeFactoryTypes) {
+  final requiredImports = new Set<String>();
   final factories = new StringBuffer();
+  final imports = _imports.toList();
 
   String resolveClassIdentifier(InterfaceType type) {
     if (type.element.library.isDartCore) return type.name;
@@ -110,10 +112,10 @@ bool _isParameterized(ParameterElement param) {
 }
 
 class CompilationUnitVisitor {
-  final List<String> imports;
+  final Set<String> imports;
   final Map<String, String> typeToImport;
-  final List<ClassElement> typeFactoryTypes;
-  final List<String> classAnnotations;
+  final Set<ClassElement> typeFactoryTypes;
+  final Set<String> classAnnotations;
   final SourceFile source;
   final AnalysisContext context;
 
@@ -124,7 +126,7 @@ class CompilationUnitVisitor {
   void visit(CompilationUnitElement compilationUnit) {
     visitLibrary(compilationUnit.enclosingElement);
 
-    var types = <ClassElement>[]..addAll(compilationUnit.types);
+    var types = new Set<ClassElement>()..addAll(compilationUnit.types);
 
     for (CompilationUnitElement part in compilationUnit.enclosingElement.parts) {
       types.addAll(part.types);
@@ -167,9 +169,7 @@ class CompilationUnitVisitor {
     if (classElement.name[0] == '_') return; // ignore private classes.
     typeToImport[getCanonicalName(classElement.type)] =
         source.entryPointImport;
-    if (!imports.contains(source.entryPointImport)) {
-      imports.add(source.entryPointImport);
-    }
+    imports.add(source.entryPointImport);
     for (ElementAnnotation ann in classElement.metadata) {
       if (ann.element is ConstructorElement) {
         ConstructorElement con = ann.element;
@@ -190,15 +190,14 @@ String getQualifiedName(InterfaceType type) {
 
 String getCanonicalName(InterfaceType type) {
   var source = type.element.source.toString();
-  var name = type.name;
-  return '$source:$name';
+  return '$source:${type.name}';
 }
 
 typedef CompilationUnitCrawler(CompilationUnitElement compilationUnit,
                                SourceFile source);
 
 class SourceCrawler {
-  final List<String> packageRoots;
+  final Set<String> packageRoots;
   final String sdkPath;
   var context = AnalysisEngine.instance.createAnalysisContext();
 
@@ -248,26 +247,23 @@ class SourceCrawler {
         entryPointFile.getAbsolutePath(),
         entryPointImport,
         resolvedUnit.element);
-    var visited = <SourceFile>[];
-    var toVisit = <SourceFile>[sourceFile];
+    var visited = new Set<SourceFile>();
+    var toVisit = new Set<SourceFile>()..add(sourceFile);
 
     while (toVisit.isNotEmpty) {
-      SourceFile currentFile = toVisit.removeAt(0);
+      var currentFile = toVisit.first;
+      toVisit.remove(currentFile);
       visited.add(currentFile);
       _visitor(currentFile.compilationUnit, currentFile);
       var visitor = new CrawlerVisitor(currentFile, context);
       visitor.accept(currentFile.compilationUnit);
-      visitor.toVisit.forEach((SourceFile todo) {
-        if (!toVisit.contains(todo) && !visited.contains(todo)) {
-          toVisit.add(todo);
-        }
-      });
+      toVisit.addAll(visitor.toVisit.where((todo) => !visited.contains(todo)));
     }
   }
 }
 
 class CrawlerVisitor {
-  final List<SourceFile> toVisit = <SourceFile>[];
+  final toVisit = new Set<SourceFile>();
   final SourceFile currentFile;
   final AnalysisContext context;
 
@@ -337,4 +333,8 @@ class SourceFile {
     if (o is String) return o == canonicalPath;
     return o is SourceFile ? o.canonicalPath == canonicalPath : false;
   }
+
+  int get hashCode => canonicalPath.hashCode;
+
+  String toString() => canonicalPath;
 }
