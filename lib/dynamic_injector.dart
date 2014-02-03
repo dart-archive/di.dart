@@ -39,7 +39,7 @@ class DynamicInjector extends Injector {
 
     resolveArgument(int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      if (MirrorSystem.getName(p.type.qualifiedName) == 'dynamic') {
+      if (p.type.qualifiedName == #dynamic) {
         var name = MirrorSystem.getName(p.simpleName);
         throw new NoProviderError(error("The '$name' parameter must be typed"));
       }
