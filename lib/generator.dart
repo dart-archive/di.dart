@@ -15,7 +15,8 @@ const String DART_PACKAGE_PREFIX = 'dart:';
 
 main(args) {
   if (args.length < 4) {
-    print('Usage: generator path_to_sdk file_to_resolve annotations output [package_roots+]');
+    print('Usage: generator path_to_sdk file_to_resolve annotations output '
+        '[package_roots+]');
     exit(0);
   }
 
@@ -44,14 +45,12 @@ main(args) {
 }
 
 String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
-                      List<ClassElement> typeFactoryTypes) {
-  List<String> requiredImports = <String>[];
-  StringBuffer factories = new StringBuffer();
+                        List<ClassElement> typeFactoryTypes) {
+  final requiredImports = <String>[];
+  final factories = new StringBuffer();
 
   String resolveClassIdentifier(InterfaceType type) {
-    if (type.element.library.isDartCore) {
-      return type.name;
-    }
+    if (type.element.library.isDartCore) return type.name;
     String import = typeToImport[getCanonicalName(type)];
     if (!requiredImports.contains(import)) {
       requiredImports.add(import);
@@ -60,47 +59,47 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
   }
 
   typeFactoryTypes.forEach((ClassElement clazz) {
-    StringBuffer factory = new StringBuffer();
     bool skip = false;
-    factory.write(
-        'typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ');
-    factory.write('new ${resolveClassIdentifier(clazz.type)}(');
     ConstructorElement constr =
         clazz.constructors.firstWhere((c) => c.name.isEmpty,
         orElse: () {
           throw 'Unable to find default constructor for $clazz in ${clazz.source}';
         });
-    factory.write(constr.parameters.map((param) {
-      if (param.type.element is! ClassElement) {
-        throw 'Unable to resolve type for constructor parameter '
-              '"${param.name}" for type "$clazz" in ${clazz.source}';
-      }
-      if (_isParameterized(param)) {
-        print('WARNING: parameterized types are not supported: $param in $clazz in ${clazz.source}. Skipping!');
-        skip = true;
-      }
-      return 'f(${resolveClassIdentifier(param.type)})';
-    }).join(', '));
-    factory.write(');\n');
-    if (!skip) {
-      factories.write(factory);
-    }
+
+    var factory = new StringBuffer()
+        ..write(
+            'typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ')
+        ..write('new ${resolveClassIdentifier(clazz.type)}(')
+        ..writeAll(constr.parameters.map((param) {
+          if (param.type.element is! ClassElement) {
+            throw 'Unable to resolve type for constructor parameter '
+                  '"${param.name}" for type "$clazz" in ${clazz.source}';
+          }
+          if (_isParameterized(param)) {
+            print('WARNING: parameterized types are not supported: $param in '
+                '$clazz in ${clazz.source}. Skipping!');
+            skip = true;
+          }
+          return 'f(${resolveClassIdentifier(param.type)})';
+        }), ", ")
+        ..write(');\n');
+    if (!skip) factories.write(factory);
   });
-  StringBuffer code = new StringBuffer();
-  code.write('library di.generated.type_factories;\n');
+  var code = new StringBuffer()
+      ..write('library di.generated.type_factories;\n');
   requiredImports.forEach((import) {
     code.write ('import "$import" as import_${imports.indexOf(import)};\n');
   });
   code..write('var typeFactories = new Map();\n')
-    ..write('main() {\n')
-    ..write(factories)
-    ..write('}\n');
+      ..write('main() {\n')
+      ..write(factories)
+      ..write('}\n');
 
   return code.toString();
 }
 
-_isParameterized(ParameterElement param) {
-  String typeName = param.type.toString();
+bool _isParameterized(ParameterElement param) {
+  var typeName = param.type.toString();
 
   if (typeName.indexOf('<') > -1) {
     String parameters =
@@ -111,22 +110,21 @@ _isParameterized(ParameterElement param) {
 }
 
 class CompilationUnitVisitor {
-  List<String> imports;
-  Map<String, String> typeToImport;
-  List<ClassElement> typeFactoryTypes;
-  List<String> classAnnotations;
-  SourceFile source;
-  AnalysisContext context;
+  final List<String> imports;
+  final Map<String, String> typeToImport;
+  final List<ClassElement> typeFactoryTypes;
+  final List<String> classAnnotations;
+  final SourceFile source;
+  final AnalysisContext context;
 
   CompilationUnitVisitor(this.context, this.source,
       this.classAnnotations, this.imports, this.typeToImport,
       this.typeFactoryTypes);
 
-  visit(CompilationUnitElement compilationUnit) {
+  void visit(CompilationUnitElement compilationUnit) {
     visitLibrary(compilationUnit.enclosingElement);
 
-    List<ClassElement> types = <ClassElement>[];
-    types.addAll(compilationUnit.types);
+    var types = <ClassElement>[]..addAll(compilationUnit.types);
 
     for (CompilationUnitElement part in compilationUnit.enclosingElement.parts) {
       types.addAll(part.types);
@@ -135,7 +133,7 @@ class CompilationUnitVisitor {
     types.forEach(visitClassElement);
   }
 
-  visitLibrary(LibraryElement libElement) {
+  void visitLibrary(LibraryElement libElement) {
     CompilationUnit resolvedUnit = context
         .resolveCompilationUnit(libElement.source, libElement);
 
@@ -166,9 +164,7 @@ class CompilationUnitVisitor {
   }
 
   visitClassElement(ClassElement classElement) {
-    if (classElement.name.startsWith('_')) {
-      return; // ignore private classes.
-    }
+    if (classElement.name[0] == '_') return; // ignore private classes.
     typeToImport[getCanonicalName(classElement.type)] =
         source.entryPointImport;
     if (!imports.contains(source.entryPointImport)) {
@@ -204,7 +200,7 @@ typedef CompilationUnitCrawler(CompilationUnitElement compilationUnit,
 class SourceCrawler {
   final List<String> packageRoots;
   final String sdkPath;
-  AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
+  var context = AnalysisEngine.instance.createAnalysisContext();
 
   SourceCrawler(this.sdkPath, this.packageRoots);
 
@@ -212,10 +208,10 @@ class SourceCrawler {
     JavaSystemIO.setProperty("com.google.dart.sdk", sdkPath);
     DartSdk sdk = DirectoryBasedDartSdk.defaultSdk;
 
-    AnalysisOptionsImpl contextOptions = new AnalysisOptionsImpl();
-    contextOptions.cacheSize = 256;
-    contextOptions.preserveComments = false;
-    contextOptions.analyzeFunctionBodies = false;
+    var contextOptions = new AnalysisOptionsImpl()
+        ..cacheSize = 256
+        ..preserveComments = false
+        ..analyzeFunctionBodies = false;
     context.analysisOptions = contextOptions;
     sdk.context.analysisOptions = contextOptions;
 
@@ -242,8 +238,7 @@ class SourceCrawler {
 
     Source source = new FileBasedSource.con1(
         context.sourceFactory.contentCache, entryPointFile);
-    ChangeSet changeSet = new ChangeSet();
-    changeSet.added(source);
+    ChangeSet changeSet = new ChangeSet()..added(source);
     context.applyChanges(changeSet);
     LibraryElement rootLib = context.computeLibraryElement(source);
     CompilationUnit resolvedUnit =
@@ -253,8 +248,8 @@ class SourceCrawler {
         entryPointFile.getAbsolutePath(),
         entryPointImport,
         resolvedUnit.element);
-    List<SourceFile> visited = <SourceFile>[];
-    List<SourceFile> toVisit = <SourceFile>[sourceFile];
+    var visited = <SourceFile>[];
+    var toVisit = <SourceFile>[sourceFile];
 
     while (toVisit.isNotEmpty) {
       SourceFile currentFile = toVisit.removeAt(0);
@@ -272,10 +267,9 @@ class SourceCrawler {
 }
 
 class CrawlerVisitor {
-  List<SourceFile> toVisit = <SourceFile>[];
-  SourceFile currentFile;
-  AnalysisContext context;
-  String currentDir;
+  final List<SourceFile> toVisit = <SourceFile>[];
+  final SourceFile currentFile;
+  final AnalysisContext context;
 
   CrawlerVisitor(this.currentFile, this.context);
 
@@ -286,7 +280,7 @@ class CrawlerVisitor {
         visitImportElement(import.uri, import.exportedLibrary.source));
   }
 
-  visitImportElement(String uri, Source source) {
+  void visitImportElement(String uri, Source source) {
     if (uri == null) return; // dart:core
 
     String systemImport;
@@ -299,10 +293,7 @@ class CrawlerVisitor {
       systemImport = currentFile.entryPointImport;
     }
     // check if it's some internal hidden library
-    if (isSystem &&
-        systemImport.substring(DART_PACKAGE_PREFIX.length).startsWith('_')) {
-      return;
-    }
+    if (isSystem && systemImport[DART_PACKAGE_PREFIX.length] == '_') return;
 
     var nextCompilationUnit = context
         .resolveCompilationUnit(source, context.computeLibraryElement(source));
@@ -336,15 +327,14 @@ class CrawlerVisitor {
 }
 
 class SourceFile {
-  String canonicalPath;
-  String entryPointImport;
-  CompilationUnitElement compilationUnit;
+  final String canonicalPath;
+  final String entryPointImport;
+  final CompilationUnitElement compilationUnit;
 
   SourceFile(this.canonicalPath, this.entryPointImport, this.compilationUnit);
 
   operator ==(o) {
     if (o is String) return o == canonicalPath;
-    if (o is! SourceFile) return false;
-    return o.canonicalPath == canonicalPath;
+    return o is SourceFile ? o.canonicalPath == canonicalPath : false;
   }
 }
