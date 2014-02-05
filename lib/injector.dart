@@ -199,11 +199,9 @@ class Injector {
       forceNewInstances.forEach((key) {
         var providerWithInjector = _getProviderWithInjectorForKey(key);
         var provider = providerWithInjector.provider;
-        forceNew.factory(key.type, // TODO: should ony br key
-            (Injector inj) => provider.get(this, inj, inj._getInstanceByKey,
-                inj._error),
-            creation: provider.creationStrategy,
-            visibility: provider.visibility);
+        forceNew._keyedFactory(key, (Injector inj) => provider.get(this,
+            inj, inj._getInstanceByKey, inj._error),
+            creation: provider.creationStrategy, visibility: provider.visibility);
       });
 
       modules = modules.toList(); // clone

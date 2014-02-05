@@ -82,8 +82,13 @@ class Module {
    */
   void factory(Type id, FactoryFn factoryFn, {List<Type> withAnnotations,
     CreationStrategy creation, Visibility visibility}) {
+    _keyedFactory(new Key(id, annotations: withAnnotations), factoryFn,
+        creation: creation, visibility: visibility);
+  }
+
+  void _keyedFactory(Key key, FactoryFn factoryFn, { CreationStrategy creation,
+    Visibility visibility}) {
     _dirty();
-    Key key = new Key(id, annotations: withAnnotations);
     _providers[key] = new _FactoryProvider(factoryFn, creation, visibility);
   }
 
