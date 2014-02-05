@@ -7,3 +7,7 @@ class NoProviderError extends ArgumentError {
 class CircularDependencyError extends ArgumentError {
   CircularDependencyError(message) : super(message);
 }
+
+class OverrideError extends ArgumentError {
+  OverrideError(message) : super(message);
+}

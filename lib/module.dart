@@ -52,9 +52,10 @@ class Module {
    *
    * The [value] is what actually will be injected.
    */
-  void value(Type id, value,
-      {CreationStrategy creation, Visibility visibility}) {
+  void value(Type id, value, {CreationStrategy creation, Visibility visibility,
+      bool allowOverride: false}) {
     _dirty();
+    _checkForExistingId(id, allowOverride);
     _providers[id] = new _ValueProvider(value, creation, visibility);
   }
 
@@ -66,8 +67,9 @@ class Module {
    * implied that [id] should be instantiated.
    */
   void type(Type id, {Type implementedBy, CreationStrategy creation,
-      Visibility visibility}) {
+      Visibility visibility, bool allowOverride: false}) {
     _dirty();
+    _checkForExistingId(id, allowOverride);
     _providers[id] = new _TypeProvider(
         implementedBy == null ? id : implementedBy, creation, visibility);
   }
@@ -78,9 +80,10 @@ class Module {
    * The [factoryFn] will be called and all its arguments will get injected.
    * The result of that function is the value that will be injected.
    */
-  void factory(Type id, FactoryFn factoryFn,
-      {CreationStrategy creation, Visibility visibility}) {
+  void factory(Type id, FactoryFn factoryFn, {CreationStrategy creation,
+      Visibility visibility, bool allowOverride: false}) {
     _dirty();
+    _checkForExistingId(id, allowOverride);
     _providers[id] = new _FactoryProvider(factoryFn, creation, visibility);
   }
 
@@ -93,12 +96,31 @@ class Module {
     _dirty();
   }
 
-  _dirty() {
+  void _dirty() {
     _providersCache = null;
   }
 
   bool get _isDirty =>
       _providersCache == null || _childModules.any((m) => m._isDirty);
+
+  void _checkForExistingId(Type id, bool allowOverride) {
+    if (allowOverride) return;
+    if (_providers.containsKey(id)) {
+      var binding = _providers[id];
+      var type;
+      if (binding is _ValueProvider) {
+        type = "value";
+      } else if (binding is _TypeProvider) {
+        type = "type";
+      } else if (binding is _FactoryProvider) {
+        type = "factory";
+      }
+      assert(type != null);
+
+      throw new OverrideError("'$id' is already registered as a $type "
+          "provider.");
+    }
+  }
 }
 
 /** Deafault creation strategy is to instantiate on the defining injector. */
@@ -117,7 +139,8 @@ abstract class _Provider {
 
   _Provider(this.creationStrategy, this.visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error);
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByType, error);
 }
 
 class _ValueProvider extends _Provider {
@@ -127,7 +150,8 @@ class _ValueProvider extends _Provider {
                               Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByType, error) =>
       value;
 }
 
@@ -138,7 +162,8 @@ class _TypeProvider extends _Provider {
                             Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByType, error) =>
       injector.newInstanceOf(type, getInstanceByType, requestor, error);
 
 }
@@ -150,6 +175,6 @@ class _FactoryProvider extends _Provider {
                                     Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, getInstanceByType, error) =>
-      factoryFn(injector);
+  dynamic get(Injector injector, Injector requestor, getInstanceByType,
+      error) => factoryFn(injector);
 }
