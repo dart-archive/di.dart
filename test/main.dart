@@ -185,6 +185,47 @@ void main() {
   createInjectorSpec('StaticInjector',
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
           typeFactories: type_factories_gen.typeFactories));
+
+  createKeySpec();
+}
+
+createKeySpec() {
+  describe('Key', () {
+    it('should be equal to another key if type is the same', () {
+      Key k1 = new Key(Car);
+      Key k2 = new Key(Car);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should be equal to another key if type and annotations are the same', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car, annotations: [Turbo, Broken]);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should be equal to another key if type and annotations are the same and out of order', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car, annotations: [Broken, Turbo]);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should not be equal to another key if types are same but annotations are different', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car);
+      expect( true, k1 != k2 );
+      expect( k1.hashCode != k2.hashCode, true );
+    });
+
+    it('should not be equal to another key if types are different', () {
+      Key k1 = new Key(Car);
+      Key k2 = new Key(Porsche);
+      expect( true, k1 != k2 );
+      expect( k1.hashCode != k2.hashCode, true );
+    });
+  });
 }
 
 typedef Injector InjectorFactory(List<Module> modules, [String name]);
