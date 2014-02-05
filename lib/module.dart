@@ -117,7 +117,8 @@ abstract class _Provider {
 
   _Provider(this.creationStrategy, this.visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error);
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByType, error);
 }
 
 class _ValueProvider extends _Provider {
@@ -127,7 +128,8 @@ class _ValueProvider extends _Provider {
                               Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByType, error) =>
       value;
 }
 
@@ -138,7 +140,8 @@ class _TypeProvider extends _Provider {
                             Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByType, error) =>
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByType, error) =>
       injector.newInstanceOf(type, getInstanceByType, requestor, error);
 
 }
@@ -150,6 +153,6 @@ class _FactoryProvider extends _Provider {
                                     Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, getInstanceByType, error) =>
-      factoryFn(injector);
+  dynamic get(Injector injector, Injector requestor, getInstanceByType,
+      error) => factoryFn(injector);
 }
