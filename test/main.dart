@@ -44,17 +44,21 @@ class Injectable {
 // just some classes for testing
 @Injectable()
 class Engine {
-  String id = 'v8-id';
+  final String id = 'v8-id';
 }
 
 @Injectable()
 class MockEngine implements Engine {
-  String id = 'mock-id';
+  final String id = 'mock-id';
 }
 
 @Injectable()
 class MockEngine2 implements Engine {
   String id = 'mock-id-2';
+}
+
+class HiddenConstructor {
+  HiddenConstructor._();
 }
 
 @Injectable()
@@ -89,6 +93,13 @@ class Porsche {
   Injector injector;
 
   Porsche(@Turbo() this.engine, this.injector);
+}
+
+class Lemon {
+  final engine;
+  final Injector injector;
+
+  Lemon(this.engine, this.injector);
 }
 
 class NumDependency {
@@ -127,9 +138,7 @@ int compareIntAsc(int a, int b) => b.compareTo(a);
 class WithTypeDefDependency {
   CompareInt compare;
 
-  WithTypeDefDependency(CompareInt c) {
-    compare = c;
-  }
+  WithTypeDefDependency(this.compare);
 }
 
 class MultipleConstructors {
@@ -154,13 +163,13 @@ class ParameterizedType<T1, T2> {
 
 @Injectable()
 class ParameterizedDependency {
-  ParameterizedType<bool, int> _p;
+  final ParameterizedType<bool, int> _p;
   ParameterizedDependency(this._p);
 }
 
 @Injectable()
 class GenericParameterizedDependency {
-  ParameterizedType _p;
+  final ParameterizedType _p;
   GenericParameterizedDependency(this._p);
 }
 
@@ -186,68 +195,8 @@ void main() {
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
           typeFactories: type_factories_gen.typeFactories));
 
-  createKeySpec();
-}
-
-createKeySpec() {
-  describe('Key', () {
-    it('should be equal to another key if type is the same', () {
-      Key k1 = new Key(Car);
-      Key k2 = new Key(Car);
-      expect( true, k1 == k2 );
-      expect( true, k1.hashCode == k2.hashCode );
-    });
-
-    it('should be equal to another key if type and annotations are the same', () {
-      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
-      Key k2 = new Key(Car, annotations: [Turbo, Broken]);
-      expect( true, k1 == k2 );
-      expect( true, k1.hashCode == k2.hashCode );
-    });
-
-    it('should be equal to another key if type and annotations are the same and out of order', () {
-      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
-      Key k2 = new Key(Car, annotations: [Broken, Turbo]);
-      expect( true, k1 == k2 );
-      expect( true, k1.hashCode == k2.hashCode );
-    });
-
-    it('should not be equal to another key if types are same but annotations are different', () {
-      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
-      Key k2 = new Key(Car);
-      expect( true, k1 != k2 );
-      expect( k1.hashCode != k2.hashCode, true );
-    });
-
-    it('should not be equal to another key if types are different', () {
-      Key k1 = new Key(Car);
-      Key k2 = new Key(Porsche);
-      expect( true, k1 != k2 );
-      expect( k1.hashCode != k2.hashCode, true );
-    });
-
-    it('should throw exception in one tries to modify type in the key', () {
-      Key k1 = new Key(Car);
-      expect( () {
-        k1.type = Porsche;
-      }, toThrow(IllegalOperationError, 'Mutations on type are not allowed.') );
-    });
-
-    it('should throw exception in one tries to modify annotations in the key', () {
-      Key k1 = new Key(Car);
-      expect( () {
-        k1.annotations = [Broken, Old].toSet();
-      }, toThrow(IllegalOperationError, 'Mutations on annotations are not'
-      ' allowed.') );
-    });
-
-    it('should throw exception in one tries to modify the set of annotations in the key', () {
-      Key k1 = new Key(Car, annotations: [Broken]);
-      expect( () {
-        k1.annotations.add(Old);
-      }, toThrow(UnsupportedError, 'Cannot modify an unmodifiable Set') );
-    });
-  });
+  dynamicInjectorTest();
+  keysTest();
 }
 
 typedef Injector InjectorFactory(List<Module> modules, [String name]);
@@ -701,4 +650,92 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
   });
 
+}
+
+void dynamicInjectorTest() {
+  describe('DynamicInjector', () {
+
+    it('should throw a comprehensible error message on untyped argument', () {
+      var module = new Module()..type(Lemon)..type(Engine);
+      var injector = new DynamicInjector(modules : [module]);
+
+      expect(() {
+        injector.get(Lemon);
+      }, toThrow(NoProviderError, "The 'engine' parameter must be typed "
+          "(resolving Lemon)"));
+    });
+
+    it('should throw a comprehensible error message when no default constructor found', () {
+      var module = new Module()..type(HiddenConstructor);
+      var injector = new DynamicInjector(modules: [module]);
+
+      expect(() {
+        injector.get(HiddenConstructor);
+      }, toThrow(NoProviderError, startsWith('Unable to find default '
+          'constructor for HiddenConstructor. Make sure class has a '
+          'default constructor.')));
+    });
+
+  });
+}
+
+keysTest() {
+  describe('Key', () {
+    it('should be equal to another key if type is the same', () {
+      Key k1 = new Key(Car);
+      Key k2 = new Key(Car);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should be equal to another key if type and annotations are the same', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car, annotations: [Turbo, Broken]);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should be equal to another key if type and annotations are the same and out of order', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car, annotations: [Broken, Turbo]);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should not be equal to another key if types are same but annotations are different', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car);
+      expect( true, k1 != k2 );
+      expect( k1.hashCode != k2.hashCode, true );
+    });
+
+    it('should not be equal to another key if types are different', () {
+      Key k1 = new Key(Car);
+      Key k2 = new Key(Porsche);
+      expect( true, k1 != k2 );
+      expect( k1.hashCode != k2.hashCode, true );
+    });
+
+    it('should throw exception in one tries to modify type in the key', () {
+      Key k1 = new Key(Car);
+      expect( () {
+        k1.type = Porsche;
+      }, toThrow(IllegalOperationError, 'Mutations on type are not allowed.') );
+    });
+
+    it('should throw exception in one tries to modify annotations in the key', () {
+      Key k1 = new Key(Car);
+      expect( () {
+        k1.annotations = [Broken, Old].toSet();
+      }, toThrow(IllegalOperationError, 'Mutations on annotations are not'
+      ' allowed.') );
+    });
+
+    it('should throw exception in one tries to modify the set of annotations in the key', () {
+      Key k1 = new Key(Car, annotations: [Broken]);
+      expect( () {
+        k1.annotations.add(Old);
+      }, toThrow(UnsupportedError, 'Cannot modify an unmodifiable Set') );
+    });
+  });
 }
