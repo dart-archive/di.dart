@@ -2,7 +2,7 @@ part of di;
 
 class Key {
   final Type type;
-  final UnmodifiableSetView<Type> annotations;
+  final Set<Type> annotations;
   int _hashCode;
 
   Key(this.type, {List<Type> annotations}) : this.annotations =
@@ -26,6 +26,14 @@ class Key {
     return other is Key && other.type == type &&
         other.annotations.length == annotations.length &&
         other.annotations.containsAll(annotations);
+  }
+
+  set type (Type type) {
+    throw new IllegalOperationError("Mutations on type are not allowed.");
+  }
+
+  set annotations (Set<Type> annotations) {
+    throw new IllegalOperationError("Mutations on annotations are not allowed.");
   }
 
   String toString() {
