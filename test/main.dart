@@ -20,6 +20,18 @@ import 'package:di/annotations.dart';
 // Generated file. Run ../test_tf_gen.sh.
 import 'type_factories_gen.dart' as type_factories_gen;
 
+class Broken {
+  const Broken();
+}
+
+class Old {
+  const Old();
+}
+
+class Turbo {
+  const Turbo();
+}
+
 /**
  * Annotation used to mark classes for which static type factory must be
  * generated. For testing purposes not all classes are marked with this
@@ -50,11 +62,37 @@ class HiddenConstructor {
 }
 
 @Injectable()
+class TurboEngine implements Engine {
+  String id = 'turbo-engine-id';
+}
+
+@Injectable()
+class BrokenOldEngine implements Engine {
+  String id = 'broken-old-engine-id';
+}
+
+@Injectable()
 class Car {
   Engine engine;
   Injector injector;
 
   Car(this.engine, this.injector);
+}
+
+@Injectable()
+class OldTimer {
+  Engine engine;
+  Injector injector;
+
+  OldTimer(@Broken() @Old() this.engine, this.injector);
+}
+
+@Injectable()
+class Porsche {
+  Engine engine;
+  Injector injector;
+
+  Porsche(@Turbo() this.engine, this.injector);
 }
 
 class Lemon {
@@ -158,6 +196,7 @@ void main() {
           typeFactories: type_factories_gen.typeFactories));
 
   dynamicInjectorTest();
+  keysTest();
 }
 
 typedef Injector InjectorFactory(List<Module> modules, [String name]);
@@ -172,6 +211,17 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       expect(instance, instanceOf(Engine));
       expect(instance.id, toEqual('v8-id'));
+    });
+
+    it('should instantiate an annotated type', () {
+      var injector = injectorFactory([new Module()
+          ..type(Engine, withAnnotations: [Turbo], implementedBy: TurboEngine)
+          ..value(Car, new Engine())
+      ]);
+      var instance = injector.getByKey(new Key(Engine, annotations: [Turbo]));
+
+      expect(instance, instanceOf(TurboEngine));
+      expect(instance.id, toEqual('turbo-engine-id'));
     });
 
     it('should fail if no binding is found', () {
@@ -191,6 +241,43 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       expect(instance.engine.id, toEqual('v8-id'));
     });
 
+    it('should resolve complex dependencies', () {
+      var injector = injectorFactory([new Module()
+            ..type(Porsche)
+            ..type(TurboEngine)
+            ..type(Engine, withAnnotations: [Turbo], implementedBy: TurboEngine)
+      ]);
+      var instance = injector.get(Porsche);
+
+      expect(instance, instanceOf(Porsche));
+      expect(instance.engine.id, toEqual('turbo-engine-id'));
+    });
+
+    it('should resolve dependencies with multiple annotations (in order)', () {
+      var injector = injectorFactory([new Module()
+            ..type(OldTimer)
+            ..type(BrokenOldEngine)
+            ..type(Engine, withAnnotations: [ Broken, Old ],
+                implementedBy: BrokenOldEngine)
+      ]);
+      var instance = injector.get(OldTimer);
+
+      expect(instance, instanceOf(OldTimer));
+      expect(instance.engine.id, toEqual('broken-old-engine-id'));
+    });
+
+    it('should resolve dependencies with multiple annotations (out of order)', () {
+      var injector = injectorFactory([new Module()
+            ..type(OldTimer)
+            ..type(BrokenOldEngine)
+            ..type(Engine, withAnnotations: [ Old, Broken ],
+                implementedBy: BrokenOldEngine)
+      ]);
+      var instance = injector.get(OldTimer);
+
+      expect(instance, instanceOf(OldTimer));
+      expect(instance.engine.id, toEqual('broken-old-engine-id'));
+    });
 
     it('should inject generic parameterized types', () {
       var injector = injectorFactory([new Module()
@@ -323,7 +410,8 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should throw an exception when circular dependency', () {
-      var injector = injectorFactory([new Module()..type(CircularA)..type(CircularB)]);
+      var injector = injectorFactory([new Module()..type(CircularA)
+                                        ..type(CircularB)]);
 
       expect(() {
         injector.get(CircularA);
@@ -385,8 +473,10 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       var parent = injectorFactory([new Module()..type(Engine)]);
       var child = parent.createChild([new Module()..type(MockEngine)]);
 
-      expect(parent.types, unorderedEquals(new Set.from([Engine, Injector])));
-      expect(child.types, unorderedEquals(new Set.from([Engine, MockEngine, Injector])));
+      expect(parent.types, unorderedEquals(new Set.from(
+          [new Key(Engine), new Key(Injector)])));
+      expect(child.types, unorderedEquals(new Set.from(
+          [new Key(Engine), new Key(MockEngine), new Key(Injector)])));
     });
 
 
@@ -427,7 +517,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       var parent = injectorFactory([new Module()..type(Engine)]);
       var abcAlreadyInParent = parent.get(Engine);
 
-      var child = parent.createChild([], forceNewInstances: [Engine]);
+      var child = parent.createChild([], forceNewInstances: [new Key(Engine)]);
       var abcFromChild = child.get(Engine);
 
       expect(abcFromChild, not(toBe(abcAlreadyInParent)));
@@ -439,7 +529,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       var grandParent = injectorFactory([module]);
       var parent = grandParent.createChild([]);
-      var child = parent.createChild([], forceNewInstances: [Engine]);
+      var child = parent.createChild([], forceNewInstances: [new Key(Engine)]);
 
       var abcFromGrandParent = grandParent.get(Engine);
       var abcFromChild = child.get(Engine);
@@ -586,5 +676,51 @@ void dynamicInjectorTest() {
           'default constructor.')));
     });
 
+  });
+}
+
+keysTest() {
+  describe('Key', () {
+    it('should be equal to another key if type is the same', () {
+      Key k1 = new Key(Car);
+      Key k2 = new Key(Car);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should be equal to another key if type and annotations are the same', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car, annotations: [Turbo, Broken]);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should be equal to another key if type and annotations are the same and out of order', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car, annotations: [Broken, Turbo]);
+      expect( true, k1 == k2 );
+      expect( true, k1.hashCode == k2.hashCode );
+    });
+
+    it('should not be equal to another key if types are same but annotations are different', () {
+      Key k1 = new Key(Car, annotations: [Turbo, Broken]);
+      Key k2 = new Key(Car);
+      expect( true, k1 != k2 );
+      expect( k1.hashCode != k2.hashCode, true );
+    });
+
+    it('should not be equal to another key if types are different', () {
+      Key k1 = new Key(Car);
+      Key k2 = new Key(Porsche);
+      expect( true, k1 != k2 );
+      expect( k1.hashCode != k2.hashCode, true );
+    });
+
+    it('should throw exception in one tries to modify the set of annotations in the key', () {
+      Key k1 = new Key(Car, annotations: [Broken]);
+      expect( () {
+        k1.annotations.add(Old);
+      }, toThrow(UnsupportedError, 'Cannot modify an unmodifiable Set') );
+    });
   });
 }
