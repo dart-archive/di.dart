@@ -716,21 +716,6 @@ keysTest() {
       expect( k1.hashCode != k2.hashCode, true );
     });
 
-    it('should throw exception in one tries to modify type in the key', () {
-      Key k1 = new Key(Car);
-      expect( () {
-        k1.type = Porsche;
-      }, toThrow(IllegalOperationError, 'Mutations on type are not allowed.') );
-    });
-
-    it('should throw exception in one tries to modify annotations in the key', () {
-      Key k1 = new Key(Car);
-      expect( () {
-        k1.annotations = [Broken, Old].toSet();
-      }, toThrow(IllegalOperationError, 'Mutations on annotations are not'
-      ' allowed.') );
-    });
-
     it('should throw exception in one tries to modify the set of annotations in the key', () {
       Key k1 = new Key(Car, annotations: [Broken]);
       expect( () {

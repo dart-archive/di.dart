@@ -28,14 +28,6 @@ class Key {
         other.annotations.containsAll(annotations);
   }
 
-  set type (Type type) {
-    throw new IllegalOperationError("Mutations on type are not allowed.");
-  }
-
-  set annotations (Set<Type> annotations) {
-    throw new IllegalOperationError("Mutations on annotations are not allowed.");
-  }
-
   String toString() {
     String asString = type.toString();
     if (annotations.isNotEmpty)
