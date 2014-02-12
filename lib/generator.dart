@@ -79,7 +79,12 @@ String printLibraryCode(Map<String, String> typeToImport, List<String> imports,
         print('WARNING: parameterized types are not supported: $param in $clazz in ${clazz.source}. Skipping!');
         skip = true;
       }
-      return 'f(${resolveClassIdentifier(param.type)})';
+      var annotations = [];
+      if (param.metadata.isNotEmpty) {
+        annotations = param.metadata.map(
+            (item)=>resolveClassIdentifier(item.element.returnType ));
+      }
+      return 'f(${resolveClassIdentifier(param.type)}, [${annotations.join(", ")}])';
     }).join(', '));
     factory.write(');\n');
     if (!skip) {
