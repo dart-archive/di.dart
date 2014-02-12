@@ -9,7 +9,7 @@ class InjectorBenchmark extends BenchmarkBase {
   var injectorFactory;
   var module;
 
-  InjectorBenchmark(name, this.injectorFactory) : super(name);
+  InjectorBenchmark(name, this.injectorFactory, ScoreEmitter emitter) : super(name, emitter: emitter);
 
   void run() {
     Injector injector = injectorFactory([module]);
