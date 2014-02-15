@@ -30,9 +30,7 @@ class InjectorBenchmark extends BenchmarkBase {
       ..type(E);
   }
 
-  teardown() {
-    print(count);
-  }
+  teardown() { }
 }
 
 class A {

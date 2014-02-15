@@ -2,10 +2,10 @@ import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:di/static_injector.dart';
 
 import 'injector_benchmark_common.dart';
-import 'score_emitter.dart';
+import 'emitter.dart';
 
-main(List<String> args) {
-  ScoreEmitter emitter = new HttpScoreEmitter(Uri.parse(args[0]));
+main() {
+  ScoreEmitter emitter = new StdoutScoreEmitter();
 
   var typeFactories = new Map();
   typeFactories[A] = (f) => new A(f(B), f(C));

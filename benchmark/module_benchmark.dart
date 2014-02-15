@@ -2,7 +2,7 @@ import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:di/di.dart';
 
 import 'injector_benchmark_common.dart';
-import 'score_emitter.dart';
+import 'emitter.dart';
 
 class ModuleBenchmark extends BenchmarkBase {
   var injectorFactory;
@@ -21,6 +21,6 @@ class ModuleBenchmark extends BenchmarkBase {
 }
 
 main(List<String> args) {
-  ScoreEmitter emitter = new HttpScoreEmitter(Uri.parse(args[0]));
+  ScoreEmitter emitter = new StdoutScoreEmitter();
   new ModuleBenchmark(emitter).report();
 }

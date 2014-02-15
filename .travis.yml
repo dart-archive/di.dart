@@ -3,6 +3,8 @@ node_js:
   - 0.10
 
 env:
+  global:
+    - BENCHMARK_ENDPOINT_URL=https://glowing-fire-326.firebaseio.com:443
   matrix:
     - JOB=unit-stable
     - JOB=unit-dev
@@ -12,6 +14,4 @@ before_script:
 
 script:
   - ./scripts/travis/build.sh
-
-after_success:
   - ./scripts/travis/benchmark.sh
