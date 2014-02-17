@@ -49,11 +49,12 @@ class HiddenConstructor {
   HiddenConstructor._();
 }
 
-@Injectable()
+
 class Car {
   Engine engine;
   Injector injector;
 
+  @Injectable()
   Car(this.engine, this.injector);
 }
 
