@@ -20,7 +20,7 @@ class ModuleBenchmark extends BenchmarkBase {
   }
 }
 
-main(List<String> args) {
+main() {
   ScoreEmitter emitter = new StdoutScoreEmitter();
   new ModuleBenchmark(emitter).report();
 }
