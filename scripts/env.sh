@@ -1,8 +1,6 @@
 #!/bin/sh
 set -e
 
-printenv
-
 if [ -n "$DART_SDK" ]; then
     DARTSDK=$DART_SDK
 else
