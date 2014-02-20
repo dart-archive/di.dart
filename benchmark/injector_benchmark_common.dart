@@ -5,6 +5,15 @@ import 'package:di/di.dart';
 
 int count = 0;
 
+class IdealizedInjectorBenchmark extends BenchmarkBase {
+  IdealizedInjectorBenchmark(name, emitter) : super(name, emitter: emitter);
+
+  void run() {
+    new A(new B(new D(), new E()), new C());
+    new B(new D(), new E());
+  }
+}
+
 class InjectorBenchmark extends BenchmarkBase {
   var injectorFactory;
   var module;
