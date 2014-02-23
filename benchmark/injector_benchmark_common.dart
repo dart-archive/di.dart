@@ -5,12 +5,42 @@ import 'package:di/di.dart';
 
 int count = 0;
 
-class IdealizedInjectorBenchmark extends BenchmarkBase {
-  IdealizedInjectorBenchmark(name, emitter) : super(name, emitter: emitter);
+class NoInjectorBenchmark extends BenchmarkBase {
+  NoInjectorBenchmark(name, emitter) : super(name, emitter: emitter);
 
   void run() {
     new A(new B(new D(), new E()), new C());
     new B(new D(), new E());
+  }
+}
+
+class IdealInjector {
+  var factories;
+
+  IdealInjector() {
+    factories = {
+      A: (i) => new A(i.get(B), i.get(C)),
+          B: (i) => new B(i.get(D), i.get(E)),
+          C: (i) => new C(),
+          D: (i) => new D(),
+          E: (i) => new E()
+    };
+  }
+
+  get(type) {
+    return factories[type](this);
+  }
+}
+
+class IdealizedInjectorBenchmark extends BenchmarkBase {
+  var injectorFactory;
+
+  IdealizedInjectorBenchmark(name, emitter) : super(name, emitter: emitter);
+
+  void run() {
+    var injector = new IdealInjector();
+    injector.get(A);
+    injector.get(B);
   }
 }
 
