@@ -314,6 +314,7 @@ class CrawlerVisitor {
 
   void accept(CompilationUnit cu) {
     cu.directives.forEach((Directive directive) {
+      if (directive.element == null) return; // unresolvable, ignore
       if (directive is ImportDirective) {
         var import = directive.element;
         visitImportElement(
