@@ -22,6 +22,7 @@ typedef dynamic CreationStrategy(
  */
 typedef bool Visibility(Injector requesting, Injector defining);
 
+typedef Object TypeFactory(factory(Type));
 
 /**
  * A collection of type bindings. Once the module is passed into the injector,
@@ -31,6 +32,26 @@ typedef bool Visibility(Injector requesting, Injector defining);
 class Module {
   final Map<Type, _Provider> _providers = <Type, _Provider>{};
   final List<Module> _childModules = <Module>[];
+  Map<Type, TypeFactory> _typeFactories = {};
+
+  Map<Type, TypeFactory> get typeFactories {
+    if (_childModules.isEmpty) {
+      return _typeFactories;
+    }
+    var tmp = new Map.from(_typeFactories);
+    _childModules.forEach((child) {
+      if (child.typeFactories != null) {
+        child.typeFactories.forEach((type, factory) {
+          tmp[type] = factory;
+        });
+      }
+    });
+    return tmp;
+  }
+
+  set typeFactories(Map<Type, TypeFactory> factories) {
+    _typeFactories = factories;
+  }
 
   Map<Type, _Provider> _providersCache;
 

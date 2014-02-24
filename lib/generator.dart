@@ -76,7 +76,7 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
       StringBuffer factory = new StringBuffer();
       bool skip = false;
       factory.write(
-          'typeFactories[${resolveClassIdentifier(clazz.type)}] = (f) => ');
+          '${resolveClassIdentifier(clazz.type)}: (f) => ');
       factory.write('new ${resolveClassIdentifier(clazz.type)}(');
       ConstructorElement constr =
           clazz.constructors.firstWhere((c) => c.name.isEmpty,
@@ -94,7 +94,7 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
         }
         return 'f(${resolveClassIdentifier(param.type)})';
       }).join(', '));
-      factory.write(');\n');
+      factory.write('),\n');
       if (!skip) {
         factories[chunk].write(factory);
       }
@@ -105,10 +105,8 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
     requiredImports.forEach((import) {
       code.write ('import "$import" as import_${imports.indexOf(import)};\n');
     });
-    code..write('var typeFactories = new Map();\n')
-        ..write('main() {\n')
-        ..write(factories[chunk])
-        ..write('}\n');
+    code..write('var typeFactories = {\n${factories[chunk]}\n};\n')
+        ..write('main() {}\n');
     result[chunk] = code.toString();
   });
 
@@ -175,7 +173,9 @@ class CompilationUnitVisitor {
               if (typeFactoryTypes[source.chunk] == null) {
                 typeFactoryTypes[source.chunk] = <ClassElement>[];
               }
-              typeFactoryTypes[source.chunk].add(element as ClassElement);
+              if (!typeFactoryTypes[source.chunk].contains(element)) {
+                typeFactoryTypes[source.chunk].add(element as ClassElement);
+              }
             }
           }
           annotationIdx++;
@@ -201,7 +201,9 @@ class CompilationUnitVisitor {
           if (typeFactoryTypes[source.chunk] == null) {
             typeFactoryTypes[source.chunk] = <ClassElement>[];
           }
-          typeFactoryTypes[source.chunk].add(classElement);
+          if (!typeFactoryTypes[source.chunk].contains(classElement)) {
+            typeFactoryTypes[source.chunk].add(classElement);
+          }
         }
       }
     }
