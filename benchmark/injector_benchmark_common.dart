@@ -73,9 +73,10 @@ class InjectorBenchmark extends BenchmarkBase {
     injector.get(A);
     injector.get(B);
 
-    var childInjector = injector.createChild([module]);
-    childInjector.get(A);
-    childInjector.get(B);
+    // TODO(@marko): figure out what to do with this!
+//    var childInjector = injector.createChild([module]);
+//    childInjector.get(A);
+//    childInjector.get(B);
   }
 
   setup() {
