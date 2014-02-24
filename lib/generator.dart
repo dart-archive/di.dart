@@ -399,8 +399,8 @@ bool isDeferredImport(Library library) {
           TopLevelVariableDeclaration topLevel = member;
           topLevel.variables.variables.forEach((VariableDeclaration varDecl) {
             if (varDecl.initializer is InstanceCreationExpression &&
-                varDecl.initializer.isConst &&
-                varDecl.initializer.staticElement is ConstructorElement &&
+                (varDecl.initializer as InstanceCreationExpression).isConst &&
+                (varDecl.initializer as InstanceCreationExpression).staticElement is ConstructorElement &&
                 varDecl.name.name == pa.name) {
               ConstructorElement constr = (varDecl.initializer as InstanceCreationExpression).staticElement;
               if (constr.enclosingElement.library.name == 'dart.async' &&
