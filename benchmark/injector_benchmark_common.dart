@@ -14,10 +14,10 @@ class NoInjectorBenchmark extends BenchmarkBase {
   }
 }
 
-class IdealInjector {
+class IdealFunctionBasedInjector {
   var factories;
 
-  IdealInjector() {
+  IdealFunctionBasedInjector() {
     factories = {
       A: (i) => new A(i.get(B), i.get(C)),
           B: (i) => new B(i.get(D), i.get(E)),
@@ -32,13 +32,31 @@ class IdealInjector {
   }
 }
 
-class IdealizedInjectorBenchmark extends BenchmarkBase {
+class IdealObjectBasedInjector {
+  var factories;
+
+  IdealObjectBasedInjector() {
+    factories = {
+      A: new A(this.get(B), this.get(C)),
+      B: new B(this.get(D), this.get(E)),
+      C: new C(),
+      D: new D(),
+      E: new E()
+    };
+  }
+
+  get(type) {
+    return factories[type];
+  }
+}
+
+class IdealizedHashMapBasedInjectorBenchmark extends BenchmarkBase {
   var injectorFactory;
 
-  IdealizedInjectorBenchmark(name, emitter) : super(name, emitter: emitter);
+  IdealizedHashMapBasedInjectorBenchmark(name, emitter) : super(name, emitter: emitter);
 
   void run() {
-    var injector = new IdealInjector();
+    var injector = new IdealFunctionBasedInjector();
     injector.get(A);
     injector.get(B);
   }

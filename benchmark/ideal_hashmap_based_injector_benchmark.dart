@@ -5,5 +5,5 @@ import 'emitter.dart';
 
 main() {
   ScoreEmitter emitter = new StdoutScoreEmitter();
-  new IdealizedInjectorBenchmark('IdealizedInjectorBenchmark', emitter).report();
+  new IdealizedHashMapBasedInjectorBenchmark('IdealizedHashMapBasedInjectorBenchmark', emitter).report();
 }
