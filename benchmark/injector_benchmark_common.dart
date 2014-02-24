@@ -65,13 +65,15 @@ class IdealizedHashMapBasedInjectorBenchmark extends BenchmarkBase {
 class InjectorBenchmark extends BenchmarkBase {
   var injectorFactory;
   var module;
+  var _testA;
+  var _testB;
 
   InjectorBenchmark(name, this.injectorFactory, ScoreEmitter emitter) : super(name, emitter: emitter);
 
   void run() {
     Injector injector = injectorFactory([module]);
-    injector.get(A);
-    injector.get(B);
+    _testA = injector.get(A);
+    _testB = injector.get(B);
 
     // TODO(@marko): figure out what to do with this!
 //    var childInjector = injector.createChild([module]);
@@ -88,18 +90,33 @@ class InjectorBenchmark extends BenchmarkBase {
       ..type(E);
   }
 
-  teardown() { }
+  teardown() {
+    if ("${_testA}" != "A(B(D, E), C)") throw "Something went wrong";
+    if ("${_testB}" != "B(D, E)") throw "Something went wrong";
+  }
 }
 
 class A {
-  A(B b, C c) {
+  B b;
+  C c;
+  A(this.b, this.c) {
     count++;
+  }
+
+  toString() {
+    return "A(${b}, ${c})";
   }
 }
 
 class B {
-  B(D b, E c) {
+  D d;
+  E e;
+  B(this.d, this.e) {
     count++;
+  }
+
+  toString() {
+    return "B(${d}, ${e})";
   }
 }
 
@@ -107,16 +124,28 @@ class C {
   C() {
     count++;
   }
+
+  toString() {
+    return "C";
+  }
 }
 
 class D {
   D() {
     count++;
   }
+
+  toString() {
+    return "D";
+  }
 }
 
 class E {
   E() {
     count++;
+  }
+
+  toString() {
+    return "E";
   }
 }
