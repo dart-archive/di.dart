@@ -1,0 +1,12 @@
+name: di_test
+description: Test for generating files for DI
+dependencies:
+  di:
+    path: ../..
+dev_dependencies:
+  unittest: any
+transformers:
+- di:
+    dart_entry: web/main.dart
+    injectable_annotations:
+    - di_test.injectables.Injectable
