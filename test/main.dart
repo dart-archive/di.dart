@@ -191,6 +191,27 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       expect(instance.engine.id, toEqual('v8-id'));
     });
 
+    it('should report time when dependencies resolved', () {
+      var injector = injectorFactory([new Module()..type(Car)..type(Engine)]);
+      var creation = new Stopwatch();
+      var resolution = new Stopwatch();
+      var instance = injector.get(Car, creationStopwatch: creation, resolutionStopwatch: resolution );
+
+      expect(resolution.elapsedMicroseconds, greaterThan(0));
+      expect(creation.elapsedMicroseconds, greaterThan(0));
+    });
+
+    it('should report time when dependencies resolved using child injector', () {
+      var parent = injectorFactory([new Module()..type(Engine)]);
+      var child = parent.createChild([new Module()..type(Car)]);
+
+      var creation = new Stopwatch();
+      var resolution = new Stopwatch();
+      var instance = child.get(Car, creationStopwatch: creation, resolutionStopwatch: resolution );
+
+      expect(resolution.elapsedMicroseconds, greaterThan(0));
+      expect(creation.elapsedMicroseconds, greaterThan(0));
+    });
 
     it('should inject generic parameterized types', () {
       var injector = injectorFactory([new Module()
