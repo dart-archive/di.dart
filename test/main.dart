@@ -150,14 +150,12 @@ void main() {
   createInjectorSpec('DynamicInjector',
       (modules, [name]) => new DynamicInjector(modules: modules, name: name));
 
-  // Initialize generated type factories.
-  type_factories_gen.main();
-
   createInjectorSpec('StaticInjector',
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
           typeFactories: type_factories_gen.typeFactories));
 
   dynamicInjectorTest();
+  staticInjectorTest();
 }
 
 typedef Injector InjectorFactory(List<Module> modules, [String name]);
@@ -584,6 +582,110 @@ void dynamicInjectorTest() {
       }, toThrow(NoProviderError, startsWith('Unable to find default '
           'constructor for HiddenConstructor. Make sure class has a '
           'default constructor.')));
+    });
+
+  });
+}
+
+void staticInjectorTest() {
+  describe('StaticInjector', () {
+
+    it('should use type factories passed in the constructor', () {
+      var module = new Module()
+          ..type(Engine);
+      var injector = new StaticInjector(modules: [module], typeFactories: {
+        Engine: (f) => new Engine()
+      });
+
+      var engine;
+      expect(() {
+        engine = injector.get(Engine);
+      }, isNot(throws));
+      expect(engine, new isInstanceOf<Engine>());
+    });
+
+    it('should use type factories passes in one module', () {
+      var module = new Module()
+          ..type(Engine)
+          ..typeFactories = {
+            Engine: (f) => new Engine()
+          };
+      var injector = new StaticInjector(modules: [module]);
+
+      var engine;
+      expect(() {
+        engine = injector.get(Engine);
+      }, isNot(throws));
+      expect(engine, new isInstanceOf<Engine>());
+    });
+
+    it('should use type factories passes in many modules', () {
+      var module1 = new Module()
+          ..type(Engine)
+          ..typeFactories = {
+            Engine: (f) => new Engine()
+          };
+      var module2 = new Module()
+          ..type(Car)
+          ..typeFactories = {
+            Car: (f) => new Car(f(Engine), f(Injector))
+          };
+
+      var injector = new StaticInjector(modules: [module1, module2]);
+
+      var engine;
+      expect(() {
+        engine = injector.get(Car);
+      }, isNot(throws));
+      expect(engine, new isInstanceOf<Car>());
+    });
+
+    it('should use type factories passes in hierarchical module', () {
+      var module = new Module()
+          ..type(Engine)
+          ..typeFactories = {
+            Engine: (f) => new Engine()
+          };
+
+      module.install(new Module()
+         ..type(Car)
+         ..typeFactories = {
+            Car: (f) => new Car(f(Engine), f(Injector))
+         });
+
+      var injector = new StaticInjector(modules: [module]);
+
+      var engine;
+      expect(() {
+        engine = injector.get(Car);
+      }, isNot(throws));
+      expect(engine, new isInstanceOf<Car>());
+    });
+
+    it('should find type factories from parent injector', () {
+      var module1 = new Module()
+          ..type(Engine)
+          ..typeFactories = {
+            Engine: (f) => new Engine()
+          };
+      var module2 = new Module()
+          ..type(Car)
+          ..typeFactories = {
+            Car: (f) => new Car(f(Engine), f(Injector))
+          };
+
+      var rootInjector = new StaticInjector(modules: [module1]);
+      var childInjector = rootInjector.createChild([module2]);
+
+      expect(() {
+        rootInjector.get(Car);
+      }, throws);
+
+      var engine;
+      expect(() {
+        engine = childInjector.get(Car);
+      }, isNot(throws));
+      expect(engine, new isInstanceOf<Car>());
     });
 
   });
