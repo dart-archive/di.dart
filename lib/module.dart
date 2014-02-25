@@ -109,7 +109,9 @@ dynamic _defaultCreationStrategy(Injector requesting, Injector defining,
 bool _defaultVisibility(_, __) => true;
 
 
-typedef Object ObjectFactory(Type type, Injector requestor);
+typedef Object ObjectFactory(Type type, Injector requestor,
+                             { Stopwatch creationStopwatch,
+                               Stopwatch resolutionStopwatch });
 
 abstract class _Provider {
   final CreationStrategy creationStrategy;

@@ -78,7 +78,8 @@ class Injector {
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceByType(Type typeName, Injector requester) {
+  dynamic _getInstanceByType(Type typeName, Injector requester,
+      { Stopwatch creationStopwatch, Stopwatch resolutionStopwatch }) {
     _checkTypeConditions(typeName);
 
     if (resolving.contains(typeName)) {
@@ -94,7 +95,11 @@ class Injector {
         _defaultVisibility(requester, injector);
 
     if (visible && instances.containsKey(typeName)) {
-      return instances[typeName];
+      if(resolutionStopwatch != null) resolutionStopwatch.stop();
+      if(creationStopwatch != null) creationStopwatch.start();
+      var instance = instances[typeName];
+      if(creationStopwatch != null) creationStopwatch.stop();
+      return instance;
     }
 
     if (providerWithInjector.injector != this || !visible) {
@@ -106,7 +111,10 @@ class Injector {
         injector =
             injector.parent._getProviderWithInjectorForType(typeName).injector;
       }
-      return injector._getInstanceByType(typeName, requester);
+      var instance = injector._getInstanceByType(typeName, requester,
+          creationStopwatch: creationStopwatch,
+          resolutionStopwatch: resolutionStopwatch );
+      return instance;
     }
 
     var value;
@@ -115,7 +123,10 @@ class Injector {
           provider.creationStrategy : _defaultCreationStrategy;
       value = strategy(requester, injector, () {
         resolving.add(typeName);
+        if(resolutionStopwatch != null) resolutionStopwatch.stop();
+        if(creationStopwatch != null) creationStopwatch.start();
         var val = provider.get(this, requester, _getInstanceByType, _error);
+        if(creationStopwatch != null) creationStopwatch.stop();
         resolving.removeLast();
         return val;
       });
@@ -155,7 +166,6 @@ class Injector {
     }
   }
 
-
   // PUBLIC API
 
   /**
@@ -170,7 +180,12 @@ class Injector {
    * If there is no parent injector, an implicit binding is used. That is,
    * the token ([Type]) is instantiated.
    */
-  dynamic get(Type type) => _getInstanceByType(type, this);
+  dynamic get(Type type,
+      { Stopwatch creationStopwatch, Stopwatch resolutionStopwatch }) {
+    if (resolutionStopwatch != null) resolutionStopwatch.start();
+    return _getInstanceByType(type, this, creationStopwatch: creationStopwatch,
+        resolutionStopwatch: resolutionStopwatch);
+  }
 
   /**
    * Create a child injector.
