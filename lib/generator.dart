@@ -9,6 +9,7 @@ import 'package:analyzer/src/generated/element.dart';
 import 'package:analyzer/src/generated/engine.dart';
 
 import 'dart:io';
+import 'package:di/di.dart';
 
 const String PACKAGE_PREFIX = 'package:';
 const String DART_PACKAGE_PREFIX = 'dart:';
@@ -71,20 +72,21 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
       }
       return 'import_${imports.indexOf(import)}.${type.name}';
     }
-    String resolveClassForType(String type) {
-      // TODO we shouldn't pass string here
-      // TODO find the first key that matches
-      var listOfImports = typeToImport.keys.where((String cannonicalName) {
-        return cannonicalName.contains(type);
+    String resolveClassForType(Type type) {
+      var typeToImportKeys = typeToImport.keys.where((String cannonicalName) {
+        return cannonicalName.contains(type.toString());
       } );
-      var import = listOfImports.first;
-      return "import_${imports.indexOf(typeToImport[import])}.${type}";
+      var import = typeToImport[typeToImportKeys.first];
+      if (!requiredImports.contains(import)) {
+        requiredImports.add(import);
+      }
+      return "import_${imports.indexOf(import)}.${type}";
     }
     factories[chunk] = new StringBuffer();
     classes.forEach((ClassElement clazz) {
       StringBuffer factory = new StringBuffer();
       bool skip = false;
-      factory.write('new ${resolveClassForType("Key")}('
+      factory.write('new ${resolveClassForType(Key)}('
           '${resolveClassIdentifier(clazz.type)}): (f) => ');
       factory.write('new ${resolveClassIdentifier(clazz.type)}(');
       ConstructorElement constr =

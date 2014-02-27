@@ -7,7 +7,7 @@ echo "run type factories generator for tests"
 
 echo "run tests in dart"
 dart --checked test/main.dart
-dart --checked test/generator_test.dart
+dart --checked --package-root=./packages/ test/generator_test.dart
 
 echo "run dart2js on tests"
 mkdir -p out

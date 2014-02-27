@@ -16,11 +16,11 @@ main(args) => group('generator', () {
     code.forEach((chunk, code) {
       var cu = parseCompilationUnit(code);
       if (chunk.library == null) {
-        expectHasImports(cu, ['main.dart', 'common1.dart']);
+        expectHasImports(cu, ['package:di/di.dart', 'main.dart', 'common1.dart']);
       } else if (chunk.library.name.endsWith('lib_a')) {
-        expectHasImports(cu, ['a.dart', 'a2.dart', 'common2.dart']);
+        expectHasImports(cu, ['package:di/di.dart', 'a.dart', 'a2.dart', 'common2.dart']);
       } else if (chunk.library.name.endsWith('lib_b')) {
-        expectHasImports(cu, ['b.dart', 'b2.dart', 'common2.dart']);
+        expectHasImports(cu, ['package:di/di.dart','b.dart', 'b2.dart', 'common2.dart']);
       }
     });
   });
