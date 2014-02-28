@@ -5,14 +5,12 @@ class Key {
   final Set<Type> annotations;
   int _hashCode;
 
-  Key(this.type, {List<Type> annotations}) : this.annotations =
-      new UnmodifiableSetView(annotations != null ? annotations.toSet() :
-        new HashSet()) {
-  }
+  Key(this.type, {List<Type> annotations})
+      : this.annotations = new UnmodifiableSetView(
+          annotations != null ? annotations.toSet() : new HashSet());
 
   int get hashCode {
-    if (_hashCode != null)
-      return _hashCode;
+    if (_hashCode != null) return _hashCode;
 
     int result = 17;
     result = 37 * result + type.hashCode;
@@ -30,8 +28,9 @@ class Key {
 
   String toString() {
     String asString = type.toString();
-    if (annotations.isNotEmpty)
+    if (annotations.isNotEmpty) {
       asString += " annotated with: [" + annotations.join(", ") + "]";
+    }
     return asString;
   }
 }
