@@ -684,7 +684,7 @@ void staticInjectorTest() {
       var module = new Module()
           ..type(Engine);
       var injector = new StaticInjector(modules: [module], typeFactories: {
-        new Key(Engine): (f) => new Engine()
+        Engine: (f) => new Engine()
       });
 
       var engine;
@@ -698,7 +698,7 @@ void staticInjectorTest() {
       var module = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key(Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
       var injector = new StaticInjector(modules: [module]);
 
@@ -713,12 +713,12 @@ void staticInjectorTest() {
       var module1 = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key(Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
       var module2 = new Module()
           ..type(Car)
           ..typeFactories = {
-            new Key(Car): (f) => new Car(f(Engine, []), f(Injector, []))
+            Car: (f) => new Car(f(Engine, []), f(Injector, []))
           };
 
       var injector = new StaticInjector(modules: [module1, module2]);
@@ -734,13 +734,13 @@ void staticInjectorTest() {
       var module = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key (Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
 
       module.install(new Module()
          ..type(Car)
          ..typeFactories = {
-            new Key(Car): (f) => new Car(f(Engine, []), f(Injector, []))
+            Car: (f) => new Car(f(Engine, []), f(Injector, []))
          });
 
       var injector = new StaticInjector(modules: [module]);
@@ -756,12 +756,12 @@ void staticInjectorTest() {
       var module1 = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key(Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
       var module2 = new Module()
           ..type(Car)
           ..typeFactories = {
-            new Key(Car): (f) => new Car(f(Engine, []), f(Injector, []))
+            Car: (f) => new Car(f(Engine, []), f(Injector, []))
           };
 
       var rootInjector = new StaticInjector(modules: [module1]);

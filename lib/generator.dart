@@ -70,24 +70,14 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
       if (!requiredImports.contains(import)) {
         requiredImports.add(import);
       }
-      return 'import_${imports.indexOf(import)}.${type.name}';
-    }
-    String resolveClassForType(Type type) {
-      var typeToImportKeys = typeToImport.keys.where((String cannonicalName) {
-        return cannonicalName.contains(type.toString());
-      } );
-      var import = typeToImport[typeToImportKeys.first];
-      if (!requiredImports.contains(import)) {
-        requiredImports.add(import);
-      }
-      return "import_${imports.indexOf(import)}.${type}";
+      String prefix = _calculateImportPrefix(import, imports);
+      return '$prefix.${type.name}';
     }
     factories[chunk] = new StringBuffer();
     classes.forEach((ClassElement clazz) {
       StringBuffer factory = new StringBuffer();
       bool skip = false;
-      factory.write('new ${resolveClassForType(Key)}('
-          '${resolveClassIdentifier(clazz.type)}): (f) => ');
+      factory.write('${resolveClassIdentifier(clazz.type)}: (f) => ');
       factory.write('new ${resolveClassIdentifier(clazz.type)}(');
       ConstructorElement constr =
           clazz.constructors.firstWhere((c) => c.name.isEmpty,
@@ -106,7 +96,7 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
         var annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
-              (item)=>resolveClassIdentifier(item.element.returnType ));
+              (item) => resolveClassIdentifier(item.element.returnType));
         }
         return 'f(${resolveClassIdentifier(param.type)}, [${annotations.join(", ")}])';
       }).join(', '));
@@ -119,7 +109,8 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
     String libSuffix = chunk.library == null ? '' : '.${chunk.library.name}';
     code.write('library di.generated.type_factories$libSuffix;\n');
     requiredImports.forEach((import) {
-      code.write ('import "$import" as import_${imports.indexOf(import)};\n');
+      String prefix = _calculateImportPrefix(import, imports);
+      code.write ('import "$import" as $prefix;\n');
     });
     code..write('var typeFactories = {\n${factories[chunk]}\n};\n')
         ..write('main() {}\n');
@@ -128,6 +119,9 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
 
   return result;
 }
+
+String _calculateImportPrefix(String import, List<String> imports) =>
+    'import_${imports.indexOf(import)}';
 
 _isParameterized(ParameterElement param) {
   String typeName = param.type.toString();

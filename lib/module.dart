@@ -32,9 +32,9 @@ typedef Object TypeFactory(factory(Type type, List<Type> annotations));
 class Module {
   final Map<Key, _Provider> _providers = <Key, _Provider>{};
   final List<Module> _childModules = <Module>[];
-  Map<Key, TypeFactory> _typeFactories = {};
+  Map<Type, TypeFactory> _typeFactories = {};
 
-  Map<Key, TypeFactory> get typeFactories {
+  Map<Type, TypeFactory> get typeFactories {
     if (_childModules.isEmpty) {
       return _typeFactories;
     }
@@ -49,7 +49,7 @@ class Module {
     return tmp;
   }
 
-  set typeFactories(Map<Key, TypeFactory> factories) {
+  set typeFactories(Map<Type, TypeFactory> factories) {
     _typeFactories = factories;
   }
 

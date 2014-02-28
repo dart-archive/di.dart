@@ -6,7 +6,7 @@ import 'di.dart';
  * Static implementation of [Injector] that uses type factories
  */
 class StaticInjector extends Injector {
-  Map<Key, TypeFactory> typeFactories;
+  Map<Type, TypeFactory> typeFactories;
 
   StaticInjector({List<Module> modules, String name,
                  bool allowImplicitInjection: false, typeFactories})
@@ -26,7 +26,7 @@ class StaticInjector extends Injector {
 
   Object newInstanceOf(Type type, ObjectFactory getInstanceByKey,
                        Injector requestor, error) {
-    TypeFactory typeFactory = _getFactory(new Key(type));
+    TypeFactory typeFactory = _getFactory(type);
     if (typeFactory == null) {
       throw new NoProviderError(error('No type factory provided for $type!'));
     }
@@ -34,7 +34,7 @@ class StaticInjector extends Injector {
         new Key(type, annotations: annotation), requestor));
   }
 
-  TypeFactory _getFactory(Key key) {
+  TypeFactory _getFactory(Type key) {
     var cursor = this;
     while (cursor != null) {
       if (cursor.typeFactories.containsKey(key)) {
@@ -46,8 +46,8 @@ class StaticInjector extends Injector {
   }
 }
 
-Map<Key, TypeFactory> _extractTypeFactories(List<Module> modules,
-    [Map<Key, TypeFactory> initial = const {}]) {
+Map<Type, TypeFactory> _extractTypeFactories(List<Module> modules,
+    [Map<Type, TypeFactory> initial = const {}]) {
   if (modules == null || modules.isEmpty) return initial;
   var tmp = new Map.from(initial == null ? {} : initial);
   modules.forEach((module) {
