@@ -838,12 +838,5 @@ createKeySpec() {
       expect(k1, not(equals(k2)));
       expect(k1.hashCode, not(equals(k2.hashCode)));
     });
-
-    xit('should throw exception in one tries to modify the set of annotations in the key', () {
-      Key k1 = new Key(Car, annotations: [Broken]);
-      expect( () {
-        k1.annotations.add(Old);
-      }, toThrow(UnsupportedError, 'Cannot modify an unmodifiable Set') );
-    });
   });
 }
