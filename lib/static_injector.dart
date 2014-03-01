@@ -24,20 +24,21 @@ class StaticInjector extends Injector {
     return new StaticInjector._fromParent(modules, this, name: name);
   }
 
-  Object newInstanceOf(Type type, ObjectFactory getInstanceByType,
+  Object newInstanceOf(Type type, ObjectFactory getInstanceByKey,
                        Injector requestor, error) {
     TypeFactory typeFactory = _getFactory(type);
     if (typeFactory == null) {
       throw new NoProviderError(error('No type factory provided for $type!'));
     }
-    return typeFactory((type) => getInstanceByType(type, requestor));
+    return typeFactory((type, annotation) => getInstanceByKey(
+        new Key(type, annotations: annotation), requestor));
   }
 
-  TypeFactory _getFactory(Type type) {
+  TypeFactory _getFactory(Type key) {
     var cursor = this;
     while (cursor != null) {
-      if (cursor.typeFactories.containsKey(type)) {
-        return cursor.typeFactories[type];
+      if (cursor.typeFactories.containsKey(key)) {
+        return cursor.typeFactories[key];
       }
       cursor = cursor.parent;
     }
@@ -50,8 +51,8 @@ Map<Type, TypeFactory> _extractTypeFactories(List<Module> modules,
   if (modules == null || modules.isEmpty) return initial;
   var tmp = new Map.from(initial == null ? {} : initial);
   modules.forEach((module) {
-    module.typeFactories.forEach((type, factory) {
-      tmp[type] = factory;
+    module.typeFactories.forEach((key, factory) {
+      tmp[key] = factory;
     });
   });
   return tmp;

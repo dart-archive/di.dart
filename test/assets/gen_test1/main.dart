@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'annotations.dart';
 import 'common1.dart';
+import 'package:di/di.dart';
 
 @lazyA
 import 'a.dart' as a;
