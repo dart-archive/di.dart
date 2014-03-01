@@ -7,6 +7,7 @@ import 'package:analyzer/src/generated/sdk.dart' show DartSdk;
 import 'package:analyzer/src/generated/sdk_io.dart' show DirectoryBasedDartSdk;
 import 'package:analyzer/src/generated/element.dart';
 import 'package:analyzer/src/generated/engine.dart';
+import 'package:path/path.dart' as path;
 
 import 'dart:io';
 
@@ -31,7 +32,7 @@ main(args) {
   print('output: $output');
   print('packageRoots: $packageRoots');
 
-  var code = generateCode(entryPoint, classAnnotations, pathToSdk, packageRoots);
+  var code = generateCode(entryPoint, classAnnotations, pathToSdk, packageRoots, output);
   code.forEach((chunk, code) {
     String fileName = output;
     if (chunk.library != null) {
@@ -43,14 +44,14 @@ main(args) {
 }
 
 Map<Chunk, String> generateCode(String entryPoint, List<String> classAnnotations,
-    String pathToSdk, List<String> packageRoots) {
+    String pathToSdk, List<String> packageRoots, String outputFilename) {
   var c = new SourceCrawler(pathToSdk, packageRoots);
   List<String> imports = <String>[];
   Map<Chunk, List<ClassElement>> typeFactoryTypes = <Chunk, List<ClassElement>>{};
   Map<String, String> typeToImport = new Map<String, String>();
   c.crawl(entryPoint, (CompilationUnitElement compilationUnit, SourceFile source) {
       new CompilationUnitVisitor(c.context, source, classAnnotations, imports,
-          typeToImport, typeFactoryTypes).visit(compilationUnit, source);
+          typeToImport, typeFactoryTypes, outputFilename).visit(compilationUnit, source);
   });
   return printLibraryCode(typeToImport, imports, typeFactoryTypes);
 }
@@ -131,10 +132,11 @@ class CompilationUnitVisitor {
   List<String> classAnnotations;
   SourceFile source;
   AnalysisContext context;
+  String outputFilename;
 
   CompilationUnitVisitor(this.context, this.source,
       this.classAnnotations, this.imports, this.typeToImport,
-      this.typeFactoryTypes);
+      this.typeFactoryTypes, this.outputFilename);
 
   visit(CompilationUnitElement compilationUnit, SourceFile source) {
     visitLibrary(compilationUnit.enclosingElement, source);
@@ -188,10 +190,13 @@ class CompilationUnitVisitor {
     if (classElement.name.startsWith('_')) {
       return; // ignore private classes.
     }
-    typeToImport[getCanonicalName(classElement.type)] =
-        source.entryPointImport;
-    if (!imports.contains(source.entryPointImport)) {
-      imports.add(source.entryPointImport);
+    var importUri = source.entryPointImport;
+    if (Uri.parse(importUri).scheme == '') {
+      importUri = path.relative(importUri, from: path.dirname(outputFilename));
+    }
+    typeToImport[getCanonicalName(classElement.type)] = importUri;
+    if (!imports.contains(importUri)) {
+      imports.add(importUri);
     }
     for (ElementAnnotation ann in classElement.metadata) {
       if (ann.element is ConstructorElement) {

@@ -14,16 +14,14 @@ main() {
   describe('generator', () {
     var injectableAnnotations = [];
     var options = new TransformOptions(
-        dartEntry: 'web/main.dart',
+        dartEntries: ['web/main.dart'],
         injectableAnnotations: injectableAnnotations,
         sdkDirectory: dartSdkDirectory);
 
-    var resolver = new ResolverTransformer(dartSdkDirectory,
-        (asset) => options.isDartEntry(asset.id));
+    var resolvers = new Resolvers(dartSdkDirectory);
 
     var phases = [
-      [resolver],
-      [new InjectorGenerator(options, resolver)]
+      [new InjectorGenerator(options, resolvers)]
     ];
 
     it('transforms imports', () {
@@ -59,22 +57,6 @@ main() {
             'import_1.Engine: (f) => new import_1.Engine(),',
             'import_2.Seat: (f) => new import_2.Seat(),',
           ]);
-    });
-
-    it('skips and warns about types in the web folder', () {
-      return generates(phases,
-          inputs: {
-            'a|web/main.dart': '''
-              import 'package:inject/inject.dart';
-              class Foo {
-                @inject
-                Foo();
-              }
-              ''',
-          },
-          messages: [
-            'warning: Foo cannot be injected because the containing file '
-            'cannot be imported. (main.dart 2 16)']);
     });
 
     it('warns about parameterized classes', () {
@@ -213,9 +195,36 @@ main() {
             'import_0.Car: (f) => new import_0.Car(f(import_1.Engine)),',
             'import_1.Engine: (f) => new import_1.Engine(),',
           ]);
-      });
+    });
 
-      it('skips and warns on named constructors', () {
+    it('handles web imports beside main', () {
+      return generates(phases,
+          inputs: {
+            'a|web/main.dart': 'import "a.dart";',
+            'a|web/a.dart': CLASS_ENGINE
+          },
+          imports: [
+            "import 'a.dart' as import_0;",
+          ],
+          generators: [
+            'import_0.Engine: (f) => new import_0.Engine(),',
+          ]);
+    });
+
+    it('handles imports in main', () {
+      return generates(phases,
+          inputs: {
+            'a|web/main.dart': CLASS_ENGINE,
+          },
+          imports: [
+            "import 'main.dart' as import_0;",
+          ],
+          generators: [
+            'import_0.Engine: (f) => new import_0.Engine(),',
+          ]);
+    });
+
+    it('skips and warns on named constructors', () {
         return generates(phases,
             inputs: {
               'a|web/main.dart': 'import "package:a/a.dart";',
@@ -549,7 +558,7 @@ main() {
             results: {
               'a|web/main.dart': '''
 library main;
-import 'package:a/generated_static_injector.dart' as generated_static_injector;
+import 'main_static_injector.dart' as generated_static_injector;
 import 'package:di/auto_injector.dart';
 import 'package:di/auto_injector.dart' as ai;
 
@@ -579,7 +588,7 @@ Future generates(List<List<Transformer>> phases,
   return tests.applyTransformers(phases,
       inputs: inputs,
       results: {
-          'a|lib/generated_static_injector.dart': '''
+          'a|web/main_static_injector.dart': '''
 $IMPORTS
 ${imports.join('')}$BOILER_PLATE
 ${generators.join('')}$FOOTER

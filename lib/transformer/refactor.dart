@@ -41,9 +41,7 @@ void transformIdentifiers(Transform transform, Resolver resolver,
       '$importPrefix.$replacement'));
 
   if (transaction.hasEdits) {
-    _addImport(transaction, unit,
-        'package:${transform.primaryInput.id.package}/$generatedFilename',
-        importPrefix);
+    _addImport(transaction, unit, generatedFilename, importPrefix);
   }
   _commitTransaction(transaction, transform);
 }

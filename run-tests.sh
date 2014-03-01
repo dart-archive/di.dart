@@ -18,17 +18,15 @@ echo "run tests in node"
 node out/main.dart.js
 
 echo "run transformer tests"
-pushd test/transformer
-pub install
-pub build --mode=debug
+pub build --mode=debug test
 
 echo "running transformer test (uncompiled, Dynamic DI)"
-dart --checked web/main.dart
+dart --checked test/auto_injector_test.dart
 
 echo "running transformer test (Static DI, Dart VM)"
-dart --checked build/web/main.dart
+dart --checked build/test/auto_injector_test.dart
 
 echo "running transformer test (Static DI, dart2js)"
-node build/web/main.dart.js
-
-popd
+# dartbug.com/17198- dart2js compilation is not picking up transformed files, so recompile
+dart2js -c build/test/auto_injector_test.dart -o build/test/auto_injector_test.dart.js;
+node build/test/auto_injector_test.dart.js

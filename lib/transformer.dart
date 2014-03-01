@@ -66,7 +66,7 @@ class DependencyInjectorTransformerGroup implements TransformerGroup {
   final Iterable<Iterable> phases;
 
   DependencyInjectorTransformerGroup(TransformOptions options)
-      : phases = _createDeployPhases(options);
+      : phases = _createPhases(options);
 
   DependencyInjectorTransformerGroup.asPlugin(BarbackSettings settings)
       : this(_parseSettings(settings));
@@ -84,7 +84,7 @@ TransformOptions _parseSettings(BarbackSettings settings) {
   }
 
   return new TransformOptions(
-      dartEntry: _readStringValue(args, 'dart_entry'),
+      dartEntries: _readStringListValue(args, 'dart_entries'),
       injectableAnnotations: annotations,
       injectedTypes: injectedTypes,
       sdkDirectory: sdkDir);
@@ -125,11 +125,5 @@ _readStringListValue(Map args, String name) {
   return results;
 }
 
-List<List<Transformer>> _createDeployPhases(TransformOptions options) {
-  var resolver = new ResolverTransformer(options.sdkDirectory,
-      (asset) => options.isDartEntry(asset.id));
-  return [
-    [resolver],
-    [new InjectorGenerator(options, resolver)],
-  ];
-}
+List<List<Transformer>> _createPhases(TransformOptions options) =>
+    [[new InjectorGenerator(options, new Resolvers(options.sdkDirectory))]];

@@ -10,16 +10,13 @@ import 'package:path/path.dart' as path;
 
 import 'refactor.dart';
 
-const String _generateInjector = 'generated_static_injector.dart';
-
 /**
  * Pub transformer which generates type factories for all injectable types
  * in the application.
  */
-class InjectorGenerator extends Transformer {
+class InjectorGenerator extends Transformer with ResolverTransformer {
   final TransformOptions options;
-  /** Source for resolved AST of the application */
-  final ResolverTransformer resolvers;
+
   /**
    * Current transform, for easy logging.
    *
@@ -27,6 +24,8 @@ class InjectorGenerator extends Transformer {
    */
   TransformLogger _logger;
   Resolver _resolver;
+  /** Asset ID for the location of the generated file, for imports. */
+  AssetId _generatorId;
   /**
    * Resolved injectable annotations of the form `@Injectable()`.
    *
@@ -40,35 +39,39 @@ class InjectorGenerator extends Transformer {
    */
   List<ConstructorElement> _injectableMetaConstructors;
 
-  InjectorGenerator(this.options, this.resolvers);
+  InjectorGenerator(this.options, Resolvers resolvers) {
+    this.resolvers = resolvers;
+  }
 
   Future<bool> isPrimary(Asset input) =>
       new Future.value(options.isDartEntry(input.id));
 
-  Future apply(Transform transform) {
+  applyResolver(Transform transform, Resolver resolver) {
     _logger = transform.logger;
-    _resolver = this.resolvers.getResolver(transform.primaryInput.id);
+    _resolver = resolver;
 
     // Update the resolver in case any previous transforms modified the source.
-    return _resolver.updateSources(transform).then((_) {
-      _resolveInjectableMetadata();
-      var constructors = _gatherConstructors();
+    _resolveInjectableMetadata();
 
-      var injectLibContents = _generateInjectLibrary(constructors);
+    var id = transform.primaryInput.id;
+    var outputFilename = '${path.url.basenameWithoutExtension(id.path)}'
+        '_static_injector.dart';
+    var outputPath = path.url.join(path.url.dirname(id.path), outputFilename);
+    _generatorId = new AssetId(id.package, outputPath);
 
-      var outputId = new AssetId(transform.primaryInput.id.package,
-          'lib/$_generateInjector');
-      transform.addOutput(new Asset.fromString(outputId, injectLibContents));
+    var constructors = _gatherConstructors();
 
-      transformIdentifiers(transform, _resolver,
-          identifier: 'di.auto_injector.defaultInjector',
-          replacement: 'createStaticInjector',
-          importPrefix: 'generated_static_injector',
-          generatedFilename: _generateInjector);
+    var injectLibContents = _generateInjectLibrary(constructors);
+    transform.addOutput(new Asset.fromString(_generatorId, injectLibContents));
 
-      _logger = null;
-      _resolver = null;
-    });
+    transformIdentifiers(transform, _resolver,
+        identifier: 'di.auto_injector.defaultInjector',
+        replacement: 'createStaticInjector',
+        importPrefix: 'generated_static_injector',
+        generatedFilename: outputFilename);
+
+    _logger = null;
+    _resolver = null;
   }
 
   /** Default list of injectable consts */
@@ -259,7 +262,7 @@ class InjectorGenerator extends Transformer {
           span: _resolver.getSourceSpan(cls));
       return false;
     }
-    if (_resolver.getImportUri(cls.library) == null) {
+    if (_resolver.getImportUri(cls.library, from: _generatorId) == null) {
       _logger.warning('${cls.name} cannot be injected because '
           'the containing file cannot be imported.',
           asset: _resolver.getSourceAssetId(ctor),
@@ -321,7 +324,7 @@ class InjectorGenerator extends Transformer {
         prefixes[lib] = '';
       } else {
         var prefix = 'import_${prefixes.length}';
-        var uri = _resolver.getImportUri(lib);
+        var uri = _resolver.getImportUri(lib, from: _generatorId);
         outputBuffer.write('import \'$uri\' as $prefix;\n');
         prefixes[lib] = '$prefix.';
       }

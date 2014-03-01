@@ -11,7 +11,7 @@ class TransformOptions {
    * This is used as the starting point to find all injectable types used by the
    * application.
    */
-  final String dartEntry;
+  final Set<String> dartEntries;
 
   /**
    * List of additional annotations which are used to indicate types as being
@@ -29,9 +29,9 @@ class TransformOptions {
    */
   final String sdkDirectory;
 
-  TransformOptions({String dartEntry, String sdkDirectory,
+  TransformOptions({List<String> dartEntries, String sdkDirectory,
       List<String> injectableAnnotations, List<String> injectedTypes})
-    : dartEntry = _systemToAssetPath(dartEntry),
+    : dartEntries = dartEntries.map(_systemToAssetPath).toSet(),
       sdkDirectory = sdkDirectory,
       injectableAnnotations =
           injectableAnnotations != null ? injectableAnnotations : [],
@@ -42,7 +42,7 @@ class TransformOptions {
   }
 
   // Don't need to check package as transformers only run for primary package.
-  bool isDartEntry(AssetId id) => id.path == dartEntry || dartEntry == '*';
+  bool isDartEntry(AssetId id) => dartEntries.contains(id.path);
 }
 
 /** Convert system paths to asset paths (asset paths are posix style). */
