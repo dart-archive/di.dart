@@ -73,7 +73,12 @@ class DynamicInjector extends Injector {
     int position = 0;
     List args = mm.parameters.map((ParameterMirror parameter) {
       try {
-        return get(getReflectedTypeWorkaround(parameter.type));
+        if (parameter.metadata.isNotEmpty) {
+          return get((parameter.type as ClassMirror).reflectedType,
+              annotations: parameter.metadata.map((item) => item.type.reflectedType).toList());
+        } else {
+          return get((parameter.type as ClassMirror).reflectedType);
+        }
       } on NoProviderError catch (e) {
         throw new NoProviderError(e.message);
       } finally {

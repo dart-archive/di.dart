@@ -674,6 +674,24 @@ void dynamicInjectorTest() {
           'default constructor.')));
     });
 
+    it('should inject parameters into function and invoke it', () {
+      var module = new Module()
+          ..type(Engine);
+      var id;
+      var injector = new DynamicInjector(modules: [module]);
+      injector.invoke((Engine e) => id = e.id);
+      expect(id, equals('v8-id'));
+    });
+
+    it('should inject annotated parameters into function and invoke it', () {
+      var module = new Module()
+          ..type(Engine, withAnnotations: [Turbo], implementedBy: TurboEngine);
+      var id;
+      var injector = new DynamicInjector(modules: [module]);
+      injector.invoke((@Turbo() Engine e) => id = e.id);
+      expect(id, equals('turbo-engine-id'));
+    });
+
   });
 }
 
