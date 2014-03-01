@@ -684,7 +684,7 @@ void staticInjectorTest() {
       var module = new Module()
           ..type(Engine);
       var injector = new StaticInjector(modules: [module], typeFactories: {
-        new Key(Engine): (f) => new Engine()
+        Engine: (f) => new Engine()
       });
 
       var engine;
@@ -698,7 +698,7 @@ void staticInjectorTest() {
       var module = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key(Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
       var injector = new StaticInjector(modules: [module]);
 
@@ -713,12 +713,12 @@ void staticInjectorTest() {
       var module1 = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key(Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
       var module2 = new Module()
           ..type(Car)
           ..typeFactories = {
-            new Key(Car): (f) => new Car(f(Engine, []), f(Injector, []))
+            Car: (f) => new Car(f(Engine, []), f(Injector, []))
           };
 
       var injector = new StaticInjector(modules: [module1, module2]);
@@ -734,13 +734,13 @@ void staticInjectorTest() {
       var module = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key (Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
 
       module.install(new Module()
          ..type(Car)
          ..typeFactories = {
-            new Key(Car): (f) => new Car(f(Engine, []), f(Injector, []))
+            Car: (f) => new Car(f(Engine, []), f(Injector, []))
          });
 
       var injector = new StaticInjector(modules: [module]);
@@ -756,12 +756,12 @@ void staticInjectorTest() {
       var module1 = new Module()
           ..type(Engine)
           ..typeFactories = {
-            new Key(Engine): (f) => new Engine()
+            Engine: (f) => new Engine()
           };
       var module2 = new Module()
           ..type(Car)
           ..typeFactories = {
-            new Key(Car): (f) => new Car(f(Engine, []), f(Injector, []))
+            Car: (f) => new Car(f(Engine, []), f(Injector, []))
           };
 
       var rootInjector = new StaticInjector(modules: [module1]);
@@ -786,39 +786,42 @@ createKeySpec() {
     it('should be equal to another key if type is the same', () {
       Key k1 = new Key(Car);
       Key k2 = new Key(Car);
-      expect( true, k1 == k2 );
-      expect( true, k1.hashCode == k2.hashCode );
+      Key k3 = new Key(Car, annotations: []);
+      expect(k1, equals(k2));
+      expect(k2, equals(k3));
+      expect(k1.hashCode,  equals(k2.hashCode));
+      expect(k2.hashCode,  equals(k3.hashCode));
     });
 
     it('should be equal to another key if type and annotations are the same', () {
       Key k1 = new Key(Car, annotations: [Turbo, Broken]);
       Key k2 = new Key(Car, annotations: [Turbo, Broken]);
-      expect( true, k1 == k2 );
-      expect( true, k1.hashCode == k2.hashCode );
+      expect(k1, equals(k2));
+      expect(k1.hashCode,  equals(k2.hashCode));
     });
 
     it('should be equal to another key if type and annotations are the same and out of order', () {
       Key k1 = new Key(Car, annotations: [Turbo, Broken]);
       Key k2 = new Key(Car, annotations: [Broken, Turbo]);
-      expect( true, k1 == k2 );
-      expect( true, k1.hashCode == k2.hashCode );
+      expect(k1, equals(k2));
+      expect(k1.hashCode,  equals(k2.hashCode));
     });
 
     it('should not be equal to another key if types are same but annotations are different', () {
       Key k1 = new Key(Car, annotations: [Turbo, Broken]);
       Key k2 = new Key(Car);
-      expect( true, k1 != k2 );
-      expect( k1.hashCode != k2.hashCode, true );
+      expect(k1, not(equals(k2)));
+      expect(k1.hashCode, not(equals(k2.hashCode)));
     });
 
     it('should not be equal to another key if types are different', () {
       Key k1 = new Key(Car);
       Key k2 = new Key(Porsche);
-      expect( true, k1 != k2 );
-      expect( k1.hashCode != k2.hashCode, true );
+      expect(k1, not(equals(k2)));
+      expect(k1.hashCode, not(equals(k2.hashCode)));
     });
 
-    it('should throw exception in one tries to modify the set of annotations in the key', () {
+    xit('should throw exception in one tries to modify the set of annotations in the key', () {
       Key k1 = new Key(Car, annotations: [Broken]);
       expect( () {
         k1.annotations.add(Old);
