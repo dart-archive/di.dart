@@ -20,7 +20,7 @@ class DynamicInjector extends Injector {
     return new DynamicInjector._fromParent(modules, this, name: name);
   }
 
-  Object newInstanceOf(Type type, ObjectFactory getInstanceByType,
+  Object newInstanceOf(Type type, ObjectFactory getInstanceByKey,
                        Injector requestor, error) {
     var classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
@@ -47,7 +47,14 @@ class DynamicInjector extends Injector {
         throw new NoProviderError(
             error('Cannot create new instance of a typedef ${p.type}'));
       }
-      return getInstanceByType(getReflectedTypeWorkaround(p.type), requestor);
+      if (p.metadata.isNotEmpty) {
+        return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType,
+            annotations: p.metadata.map(
+                (item) => item.type.reflectedType).toList()), requestor);
+      } else {
+        return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType),
+            requestor);
+      }
     }
 
     var args = new List.generate(ctor.parameters.length, resolveArgument,
@@ -66,7 +73,12 @@ class DynamicInjector extends Injector {
     int position = 0;
     List args = mm.parameters.map((ParameterMirror parameter) {
       try {
-        return get(getReflectedTypeWorkaround(parameter.type));
+        if (parameter.metadata.isNotEmpty) {
+          return get((parameter.type as ClassMirror).reflectedType,
+              annotations: parameter.metadata.map((item) => item.type.reflectedType).toList());
+        } else {
+          return get((parameter.type as ClassMirror).reflectedType);
+        }
       } on NoProviderError catch (e) {
         throw new NoProviderError(e.message);
       } finally {
