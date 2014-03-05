@@ -11,11 +11,7 @@ class Key {
 
   int get hashCode => type.hashCode + annotation.hashCode;
 
-  String toString() {
-    String asString = type.toString();
-    if (annotation != null) {
-      asString += ' annotated with: ${annotation.toString()}';
-    }
-    return asString;
-  }
+  String toString() => annotation == null ?
+      type.toString() :
+      '${type.toString()} annotated with: ${annotation.toString()}';
 }

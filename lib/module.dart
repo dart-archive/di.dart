@@ -30,23 +30,18 @@ typedef Object TypeFactory(factory(Type type, Type annotation));
  * module have no effect.
  */
 class Module {
-  final Map<Key, _Provider> _providers = <Key, _Provider>{};
-  final List<Module> _childModules = <Module>[];
+  final _providers = <Key, _Provider>{};
+  final _childModules = <Module>[];
   Map<Type, TypeFactory> _typeFactories = {};
 
   Map<Type, TypeFactory> get typeFactories {
-    if (_childModules.isEmpty) {
-      return _typeFactories;
-    }
-    var tmp = new Map.from(_typeFactories);
-    _childModules.forEach((child) {
-      if (child.typeFactories != null) {
-        child.typeFactories.forEach((key, factory) {
-          tmp[key] = factory;
-        });
-      }
+    if (_childModules.isEmpty) return _typeFactories;
+
+    var factories = new Map.from(_typeFactories);
+    _childModules.forEach((m) {
+      if (m.typeFactories != null) factories.addAll(m.typeFactories);
     });
-    return tmp;
+    return factories;
   }
 
   set typeFactories(Map<Type, TypeFactory> factories) {
@@ -62,7 +57,7 @@ class Module {
   Map<Key, _Provider> get _bindings {
     if (_isDirty) {
       _providersCache = <Key, _Provider>{};
-      _childModules.forEach((child) => _providersCache.addAll(child._bindings));
+      _childModules.forEach((m) => _providersCache.addAll(m._bindings));
       _providersCache.addAll(_providers);
     }
     return _providersCache;
@@ -132,7 +127,7 @@ class Module {
 
 /** Deafault creation strategy is to instantiate on the defining injector. */
 dynamic _defaultCreationStrategy(Injector requesting, Injector defining,
-    dynamic factory()) => factory();
+    factory()) => factory();
 
 /** By default all values are visible to child injectors. */
 bool _defaultVisibility(_, __) => true;
@@ -145,7 +140,8 @@ abstract class _Provider {
 
   _Provider(this.creationStrategy, this.visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error);
+  dynamic get(Injector injector, Injector requestor,
+              ObjectFactory getInstanceByKey, error);
 }
 
 class _ValueProvider extends _Provider {
@@ -155,8 +151,8 @@ class _ValueProvider extends _Provider {
                               Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
-      value;
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByKey, error) => value;
 }
 
 class _TypeProvider extends _Provider {
@@ -166,7 +162,8 @@ class _TypeProvider extends _Provider {
                             Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByKey, error) =>
       injector.newInstanceOf(type, getInstanceByKey, requestor, error);
 
 }
@@ -178,6 +175,6 @@ class _FactoryProvider extends _Provider {
                                     Visibility visibility])
       : super(creationStrategy, visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
-      factoryFn(injector);
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByKey, error) => factoryFn(injector);
 }

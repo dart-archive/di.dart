@@ -16,9 +16,8 @@ class DynamicInjector extends Injector {
   DynamicInjector._fromParent(List<Module> modules, Injector parent, {name})
       : super.fromParent(modules, parent, name: name);
 
-  newFromParent(List<Module> modules, String name) {
-    return new DynamicInjector._fromParent(modules, this, name: name);
-  }
+  newFromParent(List<Module> modules, String name) =>
+      new DynamicInjector._fromParent(modules, this, name: name);
 
   Object newInstanceOf(Type type, ObjectFactory getInstanceByKey,
                        Injector requestor, error) {
@@ -32,9 +31,8 @@ class DynamicInjector extends Injector {
 
     if (ctor == null) {
       throw new NoProviderError('Unable to find default constructor for $type. '
-          'Make sure class has a default constructor.' +
-          (1.0 is int ?
-              ' Make sure you have correctly configured @MirrorsUsed.' : ''));
+          'Make sure class has a default constructor.' + (1.0 is int ?
+              'Make sure you have correctly configured @MirrorsUsed.' : ''));
     }
 
     resolveArgument(int pos) {
@@ -48,11 +46,11 @@ class DynamicInjector extends Injector {
             error('Cannot create new instance of a typedef ${p.type}'));
       }
       if (p.metadata.isNotEmpty) {
-        var annotations = p.metadata.map(
-            (item) => item.type.reflectedType).toList();
-        assert(annotations.length == 1);
+        assert(p.metadata.length == 1);
+        var annotation = p.metadata[0].type.reflectedType;
+
         return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType,
-            annotations[0] ), requestor);
+            annotation), requestor);
       } else {
         return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType),
             requestor);
@@ -76,9 +74,8 @@ class DynamicInjector extends Injector {
     List args = mm.parameters.map((ParameterMirror parameter) {
       try {
         if (parameter.metadata.isNotEmpty) {
-          var annotations = parameter.metadata.map((item) => item.type.reflectedType).toList();
-          return get((parameter.type as ClassMirror).reflectedType,
-              annotations[0] );
+          var annotation = parameter.metadata[0].type.reflectedType;
+          return get((parameter.type as ClassMirror).reflectedType, annotation);
         } else {
           return get((parameter.type as ClassMirror).reflectedType);
         }
