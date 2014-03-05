@@ -53,7 +53,8 @@ main() {
             "import 'package:a/seat.dart' as import_2;",
           ],
           generators: [
-            'import_0.Car: (f) => new import_0.Car(f(import_1.Engine), f(import_2.Seat)),',
+            'import_0.Car: (f) => new import_0.Car(f(import_1.Engine), '
+                'f(import_2.Seat)),',
             'import_1.Engine: (f) => new import_1.Engine(),',
             'import_2.Seat: (f) => new import_2.Seat(),',
           ]);
@@ -371,7 +372,8 @@ main() {
             "import 'package:a/a.dart' as import_0;",
             ],
             generators: [
-              'import_0.Engine: (f) => new import_0.Engine(f(import_0.JetFuel)),',
+              'import_0.Engine: (f) => '
+                  'new import_0.Engine(f(import_0.JetFuel)),',
             ]);
       });
 
@@ -607,7 +609,7 @@ import 'package:di/static_injector.dart';
     'di.dynamic_injector',
     'mirrors',
     'di.src.reflected_type'])
-import 'dart:mirrors';''';
+import 'dart:mirrors' show MirrorsUsed;''';
 
 const String BOILER_PLATE = '''
 Injector createStaticInjector({List<Module> modules, String name,

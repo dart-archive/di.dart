@@ -27,6 +27,7 @@ echo "running transformer test (Static DI, Dart VM)"
 dart --checked build/test/auto_injector_test.dart
 
 echo "running transformer test (Static DI, dart2js)"
-# dartbug.com/17198- dart2js compilation is not picking up transformed files, so recompile
+# TODO(blois) dart2js compilation is not picking up transformed files, so
+# run dart2js manually. dartbug.com/17198
 dart2js -c build/test/auto_injector_test.dart -o build/test/auto_injector_test.dart.js;
 node build/test/auto_injector_test.dart.js

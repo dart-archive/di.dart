@@ -7,16 +7,17 @@ import 'package:code_transformers/resolver.dart';
 import 'package:source_maps/refactor.dart';
 
 
-/// Transforms all simple identifiers of [identifier] to be [replacement] in the
-/// entry point of the application.
+/// Transforms all simple identifiers of [identifier] to be
+/// [importPrefix].[replacement] in the entry point of the application.
+///
+/// When the identifier is replaced, this function also adds a prefixed import
+/// of the form `import "[importUrl]" as [importPrefix]`.
 ///
 /// This will resolve the full name of [identifier] and warn if it cannot be
-/// resolved.
-///
-/// If the identifier is found and modifications are made then an import will be
-/// added to the file indicated by [generatedFilename].
+/// resolved. This will only modify the main entry point of the application and
+/// will not traverse into parts.
 void transformIdentifiers(Transform transform, Resolver resolver,
-    {String identifier, String replacement, String generatedFilename,
+    {String identifier, String replacement, String importUrl,
     String importPrefix}) {
 
   var identifierElement = resolver.getLibraryVariable(identifier);
@@ -38,10 +39,10 @@ void transformIdentifiers(Transform transform, Resolver resolver,
   var unit = lib.definingCompilationUnit.node;
 
   unit.accept(new _IdentifierTransformer(transaction, identifierElement,
-      '$importPrefix.$replacement'));
+      '$importPrefix.$replacement', transform.logger));
 
   if (transaction.hasEdits) {
-    _addImport(transaction, unit, generatedFilename, importPrefix);
+    _addImport(transaction, unit, importUrl, importPrefix);
   }
   _commitTransaction(transaction, transform);
 }
@@ -65,12 +66,12 @@ void _commitTransaction(TextEditTransaction transaction, Transform transform) {
 
 /// Injects an import into the list of imports in the file.
 void _addImport(TextEditTransaction transaction, CompilationUnit unit,
-    String uri, String alias) {
+    String uri, String prefix) {
   var libDirective;
   for (var directive in unit.directives) {
     if (directive is ImportDirective) {
       transaction.edit(directive.keyword.offset, directive.keyword.offset,
-          'import \'$uri\' as $alias;\n');
+          'import \'$uri\' as $prefix;\n');
       return;
     } else if (directive is LibraryDirective) {
       libDirective = directive;
@@ -81,7 +82,7 @@ void _addImport(TextEditTransaction transaction, CompilationUnit unit,
   if (libDirective != null) {
     transaction.edit(libDirective.endToken.offset + 2,
         libDirective.endToken.offset + 2,
-        'import \'$uri\' as $alias;\n');
+        'import \'$uri\' as $prefix;\n');
   }
 }
 
@@ -93,8 +94,11 @@ class _IdentifierTransformer extends GeneralizingASTVisitor {
   final Element original;
   /// The text which should replace [original].
   final String replacement;
+  /// The current logger.
+  final TransformLogger logger;
 
-  _IdentifierTransformer(this.transaction, this.original, this.replacement);
+  _IdentifierTransformer(this.transaction, this.original, this.replacement,
+      this.logger);
 
   visitIdentifier(Identifier node) {
     if (node.bestElement == original) {
@@ -105,8 +109,8 @@ class _IdentifierTransformer extends GeneralizingASTVisitor {
     super.visitIdentifier(node);
   }
 
-  // Bug 17043- should be eliminated once prefixed top-level methods are
-  // treated as prefixed identifiers.
+  // Top-level methods are not treated as prefixed identifiers, so handle those
+  // here.
   visitMethodInvocation(MethodInvocation m) {
     if (m.methodName.bestElement == original) {
       if (m.target is SimpleIdentifier) {
@@ -124,4 +128,8 @@ class _IdentifierTransformer extends GeneralizingASTVisitor {
 
   // Skip the contents of imports/exports/parts
   visitUriBasedDirective(ImportDirective d) {}
+
+  visitPartDirective(PartDirective node) {
+    logger.warn('Not transforming code within ${node.uri}.');
+  }
 }

@@ -23,15 +23,19 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
    * Only valid while processing.
    */
   TransformLogger _logger;
+
   Resolver _resolver;
+
   /** Asset ID for the location of the generated file, for imports. */
-  AssetId _generatorId;
+  AssetId _generatedAssetId;
+
   /**
    * Resolved injectable annotations of the form `@Injectable()`.
    *
    * Only valid while processing.
    */
   List<TopLevelVariableElement> _injectableMetaConsts;
+
   /**
    * Resolved injectable annotations of the form `@injectable`.
    *
@@ -57,18 +61,19 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
     var outputFilename = '${path.url.basenameWithoutExtension(id.path)}'
         '_static_injector.dart';
     var outputPath = path.url.join(path.url.dirname(id.path), outputFilename);
-    _generatorId = new AssetId(id.package, outputPath);
+    _generatedAssetId = new AssetId(id.package, outputPath);
 
     var constructors = _gatherConstructors();
 
     var injectLibContents = _generateInjectLibrary(constructors);
-    transform.addOutput(new Asset.fromString(_generatorId, injectLibContents));
+    transform.addOutput(
+        new Asset.fromString(_generatedAssetId, injectLibContents));
 
     transformIdentifiers(transform, _resolver,
         identifier: 'di.auto_injector.defaultInjector',
         replacement: 'createStaticInjector',
         importPrefix: 'generated_static_injector',
-        generatedFilename: outputFilename);
+        importUrl: outputFilename);
 
     _logger = null;
     _resolver = null;
@@ -151,9 +156,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
           for (var expr in listLiteral.elements) {
             var element = (expr as SimpleIdentifier).bestElement;
             if (element == null || element is! ClassElement) {
-              _logger.warning('Unable to resolve class $expr',
-                  asset: _resolver.getSourceAssetId(element),
-                  span: _resolver.getSourceSpan(element));
+              _warn('Unable to resolve class $expr', element);
               continue;
             }
             var ctor = _findInjectedConstructor(element, true);
@@ -215,10 +218,8 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
     if (_isElementAnnotated(cls) || noAnnotation) {
       var defaultConstructor = cls.unnamedConstructor;
       if (defaultConstructor == null) {
-        _logger.warning('${cls.name} cannot be injected because '
-            'it does not have a default constructor.',
-            asset: _resolver.getSourceAssetId(cls),
-            span: _resolver.getSourceSpan(cls));
+        _warn('${cls.name} cannot be injected because '
+            'it does not have a default constructor.', cls);
       } else {
         classInjectedConstructors.add(defaultConstructor);
       }
@@ -229,10 +230,8 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
 
     if (classInjectedConstructors.isEmpty) return null;
     if (classInjectedConstructors.length > 1) {
-      _logger.warning('${cls.name} has more than one constructor annotated for '
-          'injection.',
-          asset: _resolver.getSourceAssetId(cls),
-          span: _resolver.getSourceSpan(cls));
+      _warn('${cls.name} has more than one constructor annotated for '
+          'injection.', cls);
       return null;
     }
 
@@ -249,53 +248,39 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
   bool _validateConstructor(ConstructorElement ctor) {
     var cls = ctor.enclosingElement;
     if (cls.isAbstract && !ctor.isFactory) {
-      _logger.warning('${cls.name} cannot be injected because '
-          'it is an abstract type with no factory constructor.',
-          asset: _resolver.getSourceAssetId(cls),
-          span: _resolver.getSourceSpan(cls));
+      _warn('${cls.name} cannot be injected because '
+          'it is an abstract type with no factory constructor.', cls);
       return false;
     }
     if (cls.isPrivate) {
-      _logger.warning('${cls.name} cannot be injected because it is a private '
-          'type.',
-          asset: _resolver.getSourceAssetId(cls),
-          span: _resolver.getSourceSpan(cls));
+      _warn('${cls.name} cannot be injected because it is a private type.',
+          cls);
       return false;
     }
-    if (_resolver.getImportUri(cls.library, from: _generatorId) == null) {
-      _logger.warning('${cls.name} cannot be injected because '
-          'the containing file cannot be imported.',
-          asset: _resolver.getSourceAssetId(ctor),
-          span: _resolver.getSourceSpan(ctor));
+    if (_resolver.getImportUri(cls.library, from: _generatedAssetId) == null) {
+      _warn('${cls.name} cannot be injected because '
+          'the containing file cannot be imported.', ctor);
       return false;
     }
     if (!cls.typeParameters.isEmpty) {
-      _logger.warning('${cls.name} is a parameterized type.',
-          asset: _resolver.getSourceAssetId(ctor),
-          span: _resolver.getSourceSpan(ctor));
+      _warn('${cls.name} is a parameterized type.', ctor);
       // Only warn.
     }
     if (ctor.name != '') {
-      _logger.warning('Named constructors cannot be injected.',
-          asset: _resolver.getSourceAssetId(ctor),
-          span: _resolver.getSourceSpan(ctor));
+      _warn('Named constructors cannot be injected.', ctor);
       return false;
     }
     for (var param in ctor.parameters) {
       var type = param.type;
       if (type is InterfaceType &&
           type.typeArguments.any((t) => !t.isDynamic)) {
-        _logger.warning('${cls.name} cannot be injected because '
-            '${param.type} is a parameterized type.',
-            asset: _resolver.getSourceAssetId(ctor),
-            span: _resolver.getSourceSpan(ctor));
+        _warn('${cls.name} cannot be injected because '
+            '${param.type} is a parameterized type.', ctor);
         return false;
       }
       if (type.isDynamic) {
-        _logger.warning('${cls.name} cannot be injected because parameter type '
-          '${param.name} cannot be resolved.',
-            asset: _resolver.getSourceAssetId(ctor),
-            span: _resolver.getSourceSpan(ctor));
+        _warn('${cls.name} cannot be injected because parameter type '
+          '${param.name} cannot be resolved.', ctor);
         return false;
       }
     }
@@ -324,7 +309,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
         prefixes[lib] = '';
       } else {
         var prefix = 'import_${prefixes.length}';
-        var uri = _resolver.getImportUri(lib, from: _generatorId);
+        var uri = _resolver.getImportUri(lib, from: _generatedAssetId);
         outputBuffer.write('import \'$uri\' as $prefix;\n');
         prefixes[lib] = '$prefix.';
       }
@@ -348,6 +333,11 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
 
     return outputBuffer.toString();
   }
+
+  void _warn(String msg, Element element) {
+     _logger.warning(msg, asset: _resolver.getSourceAssetId(element),
+        span: _resolver.getSourceSpan(element));
+  }
 }
 
 void _writeStaticInjectorHeader(AssetId id, StringSink sink) {
@@ -362,7 +352,7 @@ import 'package:di/static_injector.dart';
     'di.dynamic_injector',
     'mirrors',
     'di.src.reflected_type'])
-import 'dart:mirrors';
+import 'dart:mirrors' show MirrorsUsed;
 ''');
 }
 

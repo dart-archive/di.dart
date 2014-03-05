@@ -58,10 +58,10 @@ import 'package:di/transformer/options.dart';
 import 'package:path/path.dart' as path;
 
 
- /**
-  * The transformer, which will extract all classes being dependency injected
-  * into a static injector.
-  */
+/**
+ * The transformer, which will extract all classes being dependency injected
+ * into a static injector.
+ */
 class DependencyInjectorTransformerGroup implements TransformerGroup {
   final Iterable<Iterable> phases;
 
