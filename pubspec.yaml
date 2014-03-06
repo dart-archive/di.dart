@@ -8,8 +8,15 @@ homepage: https://github.com/angular/di.dart
 environment:
   sdk: '>=0.8.10'
 dependencies:
-  analyzer: '>=0.11.0 <0.12.0'
+  analyzer: '>=0.12.0 <0.13.0'
+  code_transformers: '>=0.0.1-dev.2 <0.1.0'
+  path: ">=0.9.0 <2.0.0"
 dev_dependencies:
   benchmark_harness: any
   unittest: any
   browser: any
+
+transformers:
+- di:
+    dart_entries: test/auto_injector_test.dart
+    injectable_annotations: di.tests.Injectable
