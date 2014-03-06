@@ -31,7 +31,7 @@ class TransformOptions {
 
   TransformOptions({List<String> dartEntries, String sdkDirectory,
       List<String> injectableAnnotations, List<String> injectedTypes})
-    : dartEntries = dartEntries.map(_systemToAssetPath).toSet(),
+    : dartEntries = dartEntries.toSet(),
       sdkDirectory = sdkDirectory,
       injectableAnnotations =
           injectableAnnotations != null ? injectableAnnotations : [],
@@ -43,10 +43,4 @@ class TransformOptions {
 
   // Don't need to check package as transformers only run for primary package.
   bool isDartEntry(AssetId id) => dartEntries.contains(id.path);
-}
-
-/** Convert system paths to asset paths (asset paths are posix style). */
-String _systemToAssetPath(String assetPath) {
-  if (path.Style.platform != path.Style.windows) return assetPath;
-  return path.posix.joinAll(path.split(assetPath));
 }

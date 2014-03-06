@@ -69,11 +69,10 @@ class DependencyInjectorTransformerGroup implements TransformerGroup {
       : phases = _createPhases(options);
 
   DependencyInjectorTransformerGroup.asPlugin(BarbackSettings settings)
-      : this(_parseSettings(settings));
+      : this(_parseSettings(settings.configuration));
 }
 
-TransformOptions _parseSettings(BarbackSettings settings) {
-  var args = settings.configuration;
+TransformOptions _parseSettings(Map args) {
   var annotations = _readStringListValue(args, 'injectable_annotations');
   var injectedTypes = _readStringListValue(args, 'injected_types');
 

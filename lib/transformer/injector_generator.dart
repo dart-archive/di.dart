@@ -17,32 +17,6 @@ import 'refactor.dart';
 class InjectorGenerator extends Transformer with ResolverTransformer {
   final TransformOptions options;
 
-  /**
-   * Current transform, for easy logging.
-   *
-   * Only valid while processing.
-   */
-  TransformLogger _logger;
-
-  Resolver _resolver;
-
-  /** Asset ID for the location of the generated file, for imports. */
-  AssetId _generatedAssetId;
-
-  /**
-   * Resolved injectable annotations of the form `@Injectable()`.
-   *
-   * Only valid while processing.
-   */
-  List<TopLevelVariableElement> _injectableMetaConsts;
-
-  /**
-   * Resolved injectable annotations of the form `@injectable`.
-   *
-   * Only valid while processing.
-   */
-  List<ConstructorElement> _injectableMetaConstructors;
-
   InjectorGenerator(this.options, Resolvers resolvers) {
     this.resolvers = resolvers;
   }
@@ -50,11 +24,40 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
   Future<bool> isPrimary(Asset input) =>
       new Future.value(options.isDartEntry(input.id));
 
-  applyResolver(Transform transform, Resolver resolver) {
-    _logger = transform.logger;
-    _resolver = resolver;
+  applyResolver(Transform transform, Resolver resolver) =>
+      new _Processor(transform, resolver, options).process();
+}
 
-    // Update the resolver in case any previous transforms modified the source.
+/** Class for processing a single apply.*/
+class _Processor {
+
+  /** Current transform. */
+  final Transform transform;
+
+  final Resolver resolver;
+  final TransformOptions options;
+
+  /** Asset ID for the location of the generated file, for imports. */
+  AssetId _generatedAssetId;
+
+  /** Resolved injectable annotations of the form `@Injectable()`. */
+  final List<TopLevelVariableElement> injectableMetaConsts =
+      <TopLevelVariableElement>[];
+
+  /** Resolved injectable annotations of the form `@injectable`. */
+  final List<ConstructorElement> injectableMetaConstructors =
+      <ConstructorElement>[];
+
+  /** Default list of injectable consts */
+  static const List<String> defaultInjectableMetaConsts = const [
+    'inject.inject'
+  ];
+
+  _Processor(this.transform, this.resolver, this.options);
+
+  TransformLogger get logger => transform.logger;
+
+  process() {
     _resolveInjectableMetadata();
 
     var id = transform.primaryInput.id;
@@ -69,53 +72,42 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
     transform.addOutput(
         new Asset.fromString(_generatedAssetId, injectLibContents));
 
-    transformIdentifiers(transform, _resolver,
+    transformIdentifiers(transform, resolver,
         identifier: 'di.auto_injector.defaultInjector',
         replacement: 'createStaticInjector',
         importPrefix: 'generated_static_injector',
         importUrl: outputFilename);
-
-    _logger = null;
-    _resolver = null;
   }
-
-  /** Default list of injectable consts */
-  static const List<String> _defaultInjectableMetaConsts = const [
-    'inject.inject'
-  ];
 
   /** Resolves the classes for the injectable annotations in the current AST. */
   void _resolveInjectableMetadata() {
-    _injectableMetaConsts = <TopLevelVariableElement>[];
-    _injectableMetaConstructors = <ConstructorElement>[];
-
-    for (var constName in _defaultInjectableMetaConsts) {
-      var variable = _resolver.getLibraryVariable(constName);
+    for (var constName in defaultInjectableMetaConsts) {
+      var variable = resolver.getLibraryVariable(constName);
       if (variable != null) {
-        _injectableMetaConsts.add(variable);
+        injectableMetaConsts.add(variable);
       }
     }
 
     // Resolve the user-specified annotations
     // These may be either type names (constructors) or consts.
     for (var metaName in options.injectableAnnotations) {
-      var variable = _resolver.getLibraryVariable(metaName);
+      var variable = resolver.getLibraryVariable(metaName);
       if (variable != null) {
-        _injectableMetaConsts.add(variable);
+        injectableMetaConsts.add(variable);
         continue;
       }
-      var cls = _resolver.getType(metaName);
+      var cls = resolver.getType(metaName);
       if (cls != null && cls.unnamedConstructor != null) {
-        _injectableMetaConstructors.add(cls.unnamedConstructor);
+        injectableMetaConstructors.add(cls.unnamedConstructor);
         continue;
       }
-      _logger.warning('Unable to resolve injectable annotation $metaName');
+      logger.warning('Unable to resolve injectable annotation $metaName');
     }
   }
 
   /** Finds all annotated constructors or annotated classes in the program. */
   Iterable<ConstructorElement> _gatherConstructors() {
-    var constructors = _resolver.libraries
+    var constructors = resolver.libraries
         .expand((lib) => lib.units)
         .expand((compilationUnit) => compilationUnit.types)
         .map(_findInjectedConstructor)
@@ -138,13 +130,13 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
    *     library my.library;
    */
   Iterable<ConstructorElement> _gatherInjectablesContents() {
-    var injectablesClass = _resolver.getType('di.annotations.Injectables');
+    var injectablesClass = resolver.getType('di.annotations.Injectables');
     if (injectablesClass == null) return const [];
     var injectablesCtor = injectablesClass.unnamedConstructor;
 
     var ctors = [];
 
-    for (var lib in _resolver.libraries) {
+    for (var lib in resolver.libraries) {
       var annotationIdx = 0;
       for (var annotation in lib.metadata) {
         if (annotation.element == injectablesCtor) {
@@ -177,9 +169,9 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
   Iterable<ConstructorElement> _gatherManuallyInjected() {
     var ctors = [];
     for (var injectedName in options.injectedTypes) {
-      var injectedClass = _resolver.getType(injectedName);
+      var injectedClass = resolver.getType(injectedName);
       if (injectedClass == null) {
-        _logger.warning('Unable to resolve injected type name $injectedName');
+        logger.warning('Unable to resolve injected type name $injectedName');
         continue;
       }
       var ctor = _findInjectedConstructor(injectedClass, true);
@@ -197,10 +189,10 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
   bool _isElementAnnotated(Element e) {
     for (var meta in e.metadata) {
       if (meta.element is PropertyAccessorElement &&
-          _injectableMetaConsts.contains(meta.element.variable)) {
+          injectableMetaConsts.contains(meta.element.variable)) {
         return true;
       } else if (meta.element is ConstructorElement &&
-          _injectableMetaConstructors.contains(meta.element)) {
+          injectableMetaConstructors.contains(meta.element)) {
         return true;
       }
     }
@@ -257,7 +249,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
           cls);
       return false;
     }
-    if (_resolver.getImportUri(cls.library, from: _generatedAssetId) == null) {
+    if (resolver.getImportUri(cls.library, from: _generatedAssetId) == null) {
       _warn('${cls.name} cannot be injected because '
           'the containing file cannot be imported.', ctor);
       return false;
@@ -293,7 +285,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
   String _generateInjectLibrary(Iterable<ConstructorElement> constructors) {
     var outputBuffer = new StringBuffer();
 
-    _writeStaticInjectorHeader(_resolver.entryPoint, outputBuffer);
+    _writeStaticInjectorHeader(resolver.entryPoint, outputBuffer);
 
     var prefixes = <LibraryElement, String>{};
 
@@ -309,7 +301,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
         prefixes[lib] = '';
       } else {
         var prefix = 'import_${prefixes.length}';
-        var uri = _resolver.getImportUri(lib, from: _generatedAssetId);
+        var uri = resolver.getImportUri(lib, from: _generatedAssetId);
         outputBuffer.write('import \'$uri\' as $prefix;\n');
         prefixes[lib] = '$prefix.';
       }
@@ -335,8 +327,8 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
   }
 
   void _warn(String msg, Element element) {
-     _logger.warning(msg, asset: _resolver.getSourceAssetId(element),
-        span: _resolver.getSourceSpan(element));
+     logger.warning(msg, asset: resolver.getSourceAssetId(element),
+        span: resolver.getSourceSpan(element));
   }
 }
 
