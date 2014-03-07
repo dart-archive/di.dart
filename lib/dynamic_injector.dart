@@ -47,7 +47,7 @@ class DynamicInjector extends Injector {
         throw new NoProviderError(
             error('Cannot create new instance of a typedef ${p.type}'));
       }
-      return getInstanceByType(getReflectedTypeWorkaround(p.type), requestor);
+      return getInstanceByType(p.type.reflectedType, requestor);
     }
 
     var args = new List.generate(ctor.parameters.length, resolveArgument,
@@ -66,7 +66,7 @@ class DynamicInjector extends Injector {
     int position = 0;
     List args = mm.parameters.map((ParameterMirror parameter) {
       try {
-        return get(getReflectedTypeWorkaround(parameter.type));
+        return get(parameter.type.reflectedType);
       } on NoProviderError catch (e) {
         throw new NoProviderError(e.message);
       } finally {
