@@ -574,6 +574,35 @@ main() {
 
             });
       });
+
+      it('handles annotated dependencies', () {
+        return generates(phases,
+            inputs: {
+              'a|web/main.dart': 'import "package:a/a.dart";',
+              'a|lib/a.dart': '''
+                  import "package:inject/inject.dart";
+
+                  class Turbo {
+                    const Turbo();
+                  }
+
+                  @inject
+                  class Engine {}
+
+                  @inject
+                  class Car {
+                    Car(@Turbo() Engine engine);
+                  }
+                  '''
+            },
+            imports: [
+            "import 'package:a/a.dart' as import_0;",
+            ],
+            generators: [
+               'import_0.Engine: (f) => new import_0.Engine(),',
+               'import_0.Car: (f) => new import_0.Car(f(import_0.Engine, import_0.Turbo)),',
+            ]);
+      });
   });
 }
 
@@ -607,8 +636,7 @@ import 'package:di/static_injector.dart';
 
 @MirrorsUsed(override: const [
     'di.dynamic_injector',
-    'mirrors',
-    'di.src.reflected_type'])
+    'mirrors'])
 import 'dart:mirrors' show MirrorsUsed;''';
 
 const String BOILER_PLATE = '''

@@ -283,44 +283,59 @@ class _Processor {
    * Creates a library file for the specified constructors.
    */
   String _generateInjectLibrary(Iterable<ConstructorElement> constructors) {
-    var outputBuffer = new StringBuffer();
-
-    _writeStaticInjectorHeader(resolver.entryPoint, outputBuffer);
-
     var prefixes = <LibraryElement, String>{};
 
     var ctorTypes = constructors.map((ctor) => ctor.enclosingElement).toSet();
     var paramTypes = constructors.expand((ctor) => ctor.parameters)
         .map((param) => param.type.element).toSet();
 
-    var libs = ctorTypes..addAll(paramTypes);
-    libs = libs.map((type) => type.library).toSet();
-
-    for (var lib in libs) {
-      if (lib.isDartCore) {
-        prefixes[lib] = '';
-      } else {
-        var prefix = 'import_${prefixes.length}';
-        var uri = resolver.getImportUri(lib, from: _generatedAssetId);
-        outputBuffer.write('import \'$uri\' as $prefix;\n');
-        prefixes[lib] = '$prefix.';
+    var usedLibs = <LibraryElement>[];
+    String resolveClassName(ClassElement type) {
+      var library = type.library;
+      if (!usedLibs.contains(library)) {
+        usedLibs.add(library);
       }
+
+      var prefix = prefixes[library];
+      if (prefix == null) {
+        prefix = prefixes[library] =
+            library.isDartCore ? '' : 'import_${prefixes.length}';
+      }
+      if (prefix.isNotEmpty) {
+        prefix = '$prefix.';
+      }
+      return '$prefix${type.name}';
     }
 
-    _writePreamble(outputBuffer);
-
+    var factoriesBuffer = new StringBuffer();
     for (var ctor in constructors) {
       var type = ctor.enclosingElement;
-      var typeName = '${prefixes[type.library]}${type.name}';
-      outputBuffer.write('  $typeName: (f) => new $typeName(');
+      var typeName = resolveClassName(type);
+      factoriesBuffer.write('  $typeName: (f) => new $typeName(');
       var params = ctor.parameters.map((param) {
-        var type = param.type.element;
-        var typeName = '${prefixes[type.library]}${type.name}';
-        return 'f($typeName)';
+        var typeName = resolveClassName(param.type.element);
+        var annotations = [];
+        if (param.metadata.isNotEmpty) {
+          annotations = param.metadata.map(
+              (item) => resolveClassName(item.element.returnType.element));
+        }
+        var annotationsSuffix =
+            annotations.isNotEmpty ? ', ${annotations.first}' : '';
+        return 'f($typeName$annotationsSuffix)';
       });
-      outputBuffer.write('${params.join(', ')}),\n');
+      factoriesBuffer.write('${params.join(', ')}),\n');
     }
 
+    var outputBuffer = new StringBuffer();
+
+    _writeStaticInjectorHeader(resolver.entryPoint, outputBuffer);
+    usedLibs.forEach((lib) {
+      if (lib.isDartCore) return;
+      var uri = resolver.getImportUri(lib, from: _generatedAssetId);
+      outputBuffer.write('import \'$uri\' as ${prefixes[lib]};\n');
+    });
+    _writePreamble(outputBuffer);
+    outputBuffer.write(factoriesBuffer);
     _writeFooter(outputBuffer);
 
     return outputBuffer.toString();
@@ -342,8 +357,7 @@ import 'package:di/static_injector.dart';
 
 @MirrorsUsed(override: const [
     'di.dynamic_injector',
-    'mirrors',
-    'di.src.reflected_type'])
+    'mirrors'])
 import 'dart:mirrors' show MirrorsUsed;
 ''');
 }
