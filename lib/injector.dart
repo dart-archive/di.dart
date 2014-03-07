@@ -26,14 +26,14 @@ class Injector {
 
   final bool allowImplicitInjection;
 
-  Iterable<Key> _typesCache;
+  Iterable<Type> _typesCache;
 
   /**
    * List of all types which the injector can return
    */
-  Iterable<Key> get _types {
+  Iterable<Type> get _types {
     if (_typesCache == null) {
-      _typesCache = _providers.keys;
+      _typesCache = _providers.keys.map((k) => k.type);
     }
     return _typesCache;
   }
@@ -194,10 +194,16 @@ class Injector {
    * token, there will be a new instance created in the child injector.
    */
   Injector createChild(List<Module> modules,
-                       {List<Key> forceNewInstances, String name}) {
+                       {List forceNewInstances, String name}) {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
       forceNewInstances.forEach((key) {
+        if (key is Type) {
+          key = new Key(key);
+        } else if (key is! Key) {
+          throw 'forceNewInstances must be List<Key|Type>';
+        }
+        assert(key is Key);
         var providerWithInjector = _getProviderWithInjectorForKey(key);
         var provider = providerWithInjector.provider;
         forceNew._keyedFactory(key, (Injector inj) => provider.get(this,

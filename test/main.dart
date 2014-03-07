@@ -427,9 +427,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       var child = parent.createChild([new Module()..type(MockEngine)]);
 
       expect(parent.types, unorderedEquals(new Set.from(
-          [new Key(Engine), new Key(Injector)])));
+          [Engine, Injector])));
       expect(child.types, unorderedEquals(new Set.from(
-          [new Key(Engine), new Key(MockEngine), new Key(Injector)])));
+          [Engine, MockEngine, Injector])));
     });
 
 
