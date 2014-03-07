@@ -156,6 +156,9 @@ class CompilationUnitVisitor {
       this.typeFactoryTypes, this.outputFilename);
 
   visit(CompilationUnitElement compilationUnit, SourceFile source) {
+    if (typeFactoryTypes[source.chunk] == null) {
+      typeFactoryTypes[source.chunk] = <ClassElement>[];
+    }
     visitLibrary(compilationUnit.enclosingElement, source);
 
     List<ClassElement> types = <ClassElement>[];
@@ -188,9 +191,6 @@ class CompilationUnitVisitor {
               if (element == null || element is! ClassElement) {
                 throw 'Unable to resolve type "$expr" from @Injectables '
                       'in ${library.element.source}';
-              }
-              if (typeFactoryTypes[source.chunk] == null) {
-                typeFactoryTypes[source.chunk] = <ClassElement>[];
               }
               if (!typeFactoryTypes[source.chunk].contains(element)) {
                 typeFactoryTypes[source.chunk].add(element as ClassElement);

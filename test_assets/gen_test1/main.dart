@@ -9,12 +9,17 @@ import 'a.dart' as a;
 @lazyB
 import 'b.dart' as b;
 
+@lazyC
+import 'c.dart' as c;
+
 const lazyA = const DeferredLibrary('lib_a');
 const lazyB = const DeferredLibrary('lib_b');
+const lazyC = const DeferredLibrary('lib_c');
 
 void main() {
   lazyA.load().then(onALoaded);
   lazyB.load().then(onBLoaded);
+  lazyC.load().then(onCLoaded);
 }
 
 void onALoaded(_) {
@@ -25,6 +30,10 @@ void onALoaded(_) {
 void onBLoaded(_) {
   var serviceB = new b.ServiceB();
   serviceB.sayHi();
+}
+
+void onCLoaded(_) {
+  c.cStuff();
 }
 
 @Injectable()
