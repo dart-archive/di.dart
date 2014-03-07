@@ -70,30 +70,43 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
       if (!requiredImports.contains(import)) {
         requiredImports.add(import);
       }
-      return 'import_${imports.indexOf(import)}.${type.name}';
+      String prefix = _calculateImportPrefix(import, imports);
+      return '$prefix.${type.name}';
     }
     factories[chunk] = new StringBuffer();
     classes.forEach((ClassElement clazz) {
       StringBuffer factory = new StringBuffer();
       bool skip = false;
-      factory.write(
-          '${resolveClassIdentifier(clazz.type)}: (f) => ');
+      factory.write('${resolveClassIdentifier(clazz.type)}: (f) => ');
       factory.write('new ${resolveClassIdentifier(clazz.type)}(');
       ConstructorElement constr =
           clazz.constructors.firstWhere((c) => c.name.isEmpty,
           orElse: () {
-            throw 'Unable to find default constructor for $clazz in ${clazz.source}';
+            throw 'Unable to find default constructor for '
+                  '$clazz in ${clazz.source}';
           });
       factory.write(constr.parameters.map((param) {
         if (param.type.element is! ClassElement) {
           throw 'Unable to resolve type for constructor parameter '
-          '"${param.name}" for type "$clazz" in ${clazz.source}';
+                '"${param.name}" for type "$clazz" in ${clazz.source}';
         }
         if (_isParameterized(param)) {
-          print('WARNING: parameterized types are not supported: $param in $clazz in ${clazz.source}. Skipping!');
+          print('WARNING: parameterized types are not supported: '
+                '$param in $clazz in ${clazz.source}. Skipping!');
           skip = true;
         }
-        return 'f(${resolveClassIdentifier(param.type)})';
+        var annotations = [];
+        if (param.metadata.isNotEmpty) {
+          annotations = param.metadata.map(
+              (item) => resolveClassIdentifier(item.element.returnType));
+        }
+        StringBuffer output =
+            new StringBuffer('f(${resolveClassIdentifier(param.type)}');
+        if (annotations.isNotEmpty) {
+          output.write(', ${annotations.first}');
+        }
+        output.write(')');
+        return output;
       }).join(', '));
       factory.write('),\n');
       if (!skip) {
@@ -104,7 +117,8 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
     String libSuffix = chunk.library == null ? '' : '.${chunk.library.name}';
     code.write('library di.generated.type_factories$libSuffix;\n');
     requiredImports.forEach((import) {
-      code.write ('import "$import" as import_${imports.indexOf(import)};\n');
+      String prefix = _calculateImportPrefix(import, imports);
+      code.write ('import "$import" as $prefix;\n');
     });
     code..write('var typeFactories = {\n${factories[chunk]}\n};\n')
         ..write('main() {}\n');
@@ -113,6 +127,9 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
 
   return result;
 }
+
+String _calculateImportPrefix(String import, List<String> imports) =>
+    'import_${imports.indexOf(import)}';
 
 _isParameterized(ParameterElement param) {
   String typeName = param.type.toString();
