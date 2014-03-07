@@ -73,7 +73,7 @@ class Injector {
   }
 
   dynamic _getInstanceByKey(Key key, Injector requester) {
-    _checkTypeConditions(key.type);
+    _checkTypeConditions(key);
 
     if (resolving.contains(key)) {
       throw new CircularDependencyError(
@@ -136,10 +136,10 @@ class Injector {
     throw new NoProviderError(_error('No provider found for ${key}!', key));
   }
 
-  void _checkTypeConditions(Type typeName) {
-    if (_PRIMITIVE_TYPES.contains(typeName)) {
+  void _checkTypeConditions(Key key) {
+    if (_PRIMITIVE_TYPES.contains(key.type)) {
       throw new NoProviderError(_error('Cannot inject a primitive type '
-          'of $typeName!', new Key(typeName)));
+          'of ${key.type}!', key));
     }
   }
 
