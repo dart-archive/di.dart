@@ -289,12 +289,10 @@ class _Processor {
     var paramTypes = constructors.expand((ctor) => ctor.parameters)
         .map((param) => param.type.element).toSet();
 
-    var usedLibs = <LibraryElement>[];
+    var usedLibs = new Set<LibraryElement>();
     String resolveClassName(ClassElement type) {
       var library = type.library;
-      if (!usedLibs.contains(library)) {
-        usedLibs.add(library);
-      }
+      usedLibs.add(library);
 
       var prefix = prefixes[library];
       if (prefix == null) {
