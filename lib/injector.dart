@@ -111,14 +111,9 @@ class Injector {
 
     var value;
     try {
-      var strategy = provider.creationStrategy != null ?
-          provider.creationStrategy : _defaultCreationStrategy;
-      value = strategy(requester, injector, () {
-        resolving.add(key);
-        var val = provider.get(this, requester, _getInstanceByKey, _error);
-        resolving.removeLast();
-        return val;
-      });
+      resolving.add(key);
+      value = provider.get(this, requester, _getInstanceByKey, _error);
+      resolving.removeLast();
     } catch(e) {
       resolving.clear();
       rethrow;
@@ -208,7 +203,7 @@ class Injector {
         var provider = providerWithInjector.provider;
         forceNew._keyedFactory(key, (Injector inj) => provider.get(this,
             inj, inj._getInstanceByKey, inj._error),
-            creation: provider.creationStrategy, visibility: provider.visibility);
+            visibility: provider.visibility);
       });
 
       modules = modules.toList(); // clone

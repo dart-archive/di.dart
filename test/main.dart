@@ -526,46 +526,6 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
-    describe('creation strategy', () {
-
-      it('should get called for instance creation', () {
-
-        List creationLog = [];
-        dynamic creation(Injector requesting, Injector defining, factory) {
-          creationLog.add([requesting, defining]);
-          return factory();
-        }
-
-        var parentModule = new Module()
-          ..type(Engine, implementedBy: MockEngine, creation: creation)
-          ..type(Car, creation: creation);
-
-        var parentInjector = injectorFactory([parentModule]);
-        var childInjector = parentInjector.createChild([]);
-        childInjector.get(Car);
-        expect(creationLog, [
-          [childInjector, parentInjector],
-          [childInjector, parentInjector]
-        ]);
-      });
-
-      it('should be able to prevent instantiation', () {
-
-        List creationLog = [];
-        dynamic creation(Injector requesting, Injector defining, factory) {
-          throw 'not allowing';
-        }
-
-        var module = new Module()
-          ..type(Engine, implementedBy: MockEngine, creation: creation);
-        var injector = injectorFactory([module]);
-        expect(() {
-          injector.get(Engine);
-        }, throwsA('not allowing'));
-      });
-    });
-
-
     describe('visiblity', () {
 
       it('should hide instances', () {
