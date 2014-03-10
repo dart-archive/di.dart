@@ -12,7 +12,7 @@ class Injector {
   ];
 
   /**
-   * Returns the parent injector or null if root.
+   * The parent injector or null if root.
    */
   final Injector parent;
 
@@ -20,9 +20,9 @@ class Injector {
 
   Map<Key, _Provider> _providers = <Key, _Provider>{};
 
-  final Map<Key, Object> instances = <Key, Object>{};
+  final instances = <Key, Object>{};
 
-  final List<Key> resolving = <Key>[];
+  final resolving = <Key>[];
 
   final bool allowImplicitInjection;
 
@@ -31,12 +31,8 @@ class Injector {
   /**
    * List of all types which the injector can return
    */
-  Iterable<Type> get _types {
-    if (_typesCache == null) {
-      _typesCache = _providers.keys.map((k) => k.type);
-    }
-    return _typesCache;
-  }
+  Iterable<Type> get _types => _typesCache == null ?
+      _typesCache = _providers.keys.map((k) => k.type) : _typesCache;
 
   Injector({List<Module> modules, String name,
            bool allowImplicitInjection: false})
@@ -67,9 +63,7 @@ class Injector {
   }
 
   String _error(message, [appendDependency]) {
-    if (appendDependency != null) {
-      resolving.add(appendDependency);
-    }
+    if (appendDependency != null) resolving.add(appendDependency);
 
     String graph = resolving.join(' -> ');
 
@@ -79,7 +73,7 @@ class Injector {
   }
 
   dynamic _getInstanceByKey(Key key, Injector requester) {
-    _checkTypeConditions(key.type);
+    _checkTypeConditions(key);
 
     if (resolving.contains(key)) {
       throw new CircularDependencyError(
@@ -93,9 +87,7 @@ class Injector {
         provider.visibility(requester, injector) :
         _defaultVisibility(requester, injector);
 
-    if (visible && instances.containsKey(key)) {
-      return instances[key];
-    }
+    if (visible && instances.containsKey(key)) return instances[key];
 
     if (providerWithInjector.injector != this || !visible) {
       if (!visible) {
@@ -125,8 +117,7 @@ class Injector {
     }
 
     // cache the value.
-    providerWithInjector.injector.instances[key] = value;
-    return value;
+    return injector.instances[key] = value;
   }
 
   /// Returns a pair for provider and the injector where it's defined.
@@ -135,23 +126,20 @@ class Injector {
       return new _ProviderWithDefiningInjector(_providers[key], this);
     }
 
-    if (parent != null) {
-      return parent._getProviderWithInjectorForKey(key);
-    }
+    if (parent != null) return parent._getProviderWithInjectorForKey(key);
 
     if (allowImplicitInjection) {
       return new _ProviderWithDefiningInjector(
           new _TypeProvider(key.type), this);
     }
 
-    throw new NoProviderError(_error('No provider found for '
-        '${key}!', key));
+    throw new NoProviderError(_error('No provider found for ${key}!', key));
   }
 
-  void _checkTypeConditions(Type typeName) {
-    if (_PRIMITIVE_TYPES.contains(typeName)) {
+  void _checkTypeConditions(Key key) {
+    if (_PRIMITIVE_TYPES.contains(key.type)) {
       throw new NoProviderError(_error('Cannot inject a primitive type '
-          'of $typeName!', new Key(typeName)));
+          'of ${key.type}!', key));
     }
   }
 
