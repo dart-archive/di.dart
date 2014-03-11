@@ -353,10 +353,6 @@ library ${id.package}.$libPath.generated_static_injector;
 import 'package:di/di.dart';
 import 'package:di/static_injector.dart';
 
-@MirrorsUsed(override: const [
-    'di.dynamic_injector',
-    'mirrors'])
-import 'dart:mirrors' show MirrorsUsed;
 ''');
 }
 
@@ -367,9 +363,6 @@ Injector createStaticInjector({List<Module> modules, String name,
   new StaticInjector(modules: modules, name: name,
       allowImplicitInjection: allowImplicitInjection,
       typeFactories: factories);
-
-Module get staticInjectorModule => new Module()
-    ..value(Injector, createStaticInjector(name: 'Static Injector'));
 
 final Map<Type, TypeFactory> factories = <Type, TypeFactory>{
 ''');

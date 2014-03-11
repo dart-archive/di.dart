@@ -426,7 +426,7 @@ main() {
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
               'import_0.Car: (f) => new import_0.Car(),',
-            ]).then((_) {
+            ]).whenComplete(() {
               injectableAnnotations.clear();
             });
       });
@@ -596,11 +596,11 @@ main() {
                   '''
             },
             imports: [
-            "import 'package:a/a.dart' as import_0;",
+              "import 'package:a/a.dart' as import_0;",
             ],
             generators: [
-               'import_0.Engine: (f) => new import_0.Engine(),',
-               'import_0.Car: (f) => new import_0.Car(f(import_0.Engine, import_0.Turbo)),',
+              'import_0.Engine: (f) => new import_0.Engine(),',
+              'import_0.Car: (f) => new import_0.Car(f(import_0.Engine, import_0.Turbo)),',
             ]);
       });
   });
@@ -633,11 +633,7 @@ library a.web.main.generated_static_injector;
 
 import 'package:di/di.dart';
 import 'package:di/static_injector.dart';
-
-@MirrorsUsed(override: const [
-    'di.dynamic_injector',
-    'mirrors'])
-import 'dart:mirrors' show MirrorsUsed;''';
+''';
 
 const String BOILER_PLATE = '''
 Injector createStaticInjector({List<Module> modules, String name,
@@ -645,9 +641,6 @@ Injector createStaticInjector({List<Module> modules, String name,
   new StaticInjector(modules: modules, name: name,
       allowImplicitInjection: allowImplicitInjection,
       typeFactories: factories);
-
-Module get staticInjectorModule => new Module()
-    ..value(Injector, createStaticInjector(name: 'Static Injector'));
 
 final Map<Type, TypeFactory> factories = <Type, TypeFactory>{''';
 

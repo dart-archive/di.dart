@@ -28,8 +28,9 @@ void transformIdentifiers(Transform transform, Resolver resolver,
   }
 
   if (identifierElement == null) {
-    transform.logger.info('Unable to resolve $identifier, not '
-        'transforming entry point.');
+    // TODO(blois) enable once on barback 0.12.0
+    // transform.logger.fine('Unable to resolve $identifier, not '
+    //     'transforming entry point.');
     transform.addOutput(transform.primaryInput);
     return;
   }
