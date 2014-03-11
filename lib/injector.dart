@@ -56,7 +56,7 @@ class Injector {
 
   Injector get root => _root;
 
-  Set<Key> get types {
+  Set<Type> get types {
     var types = new Set.from(_types);
     var parent = this.parent;
     while (parent != null) {
