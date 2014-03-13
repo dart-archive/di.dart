@@ -254,13 +254,14 @@ class SourceCrawler {
 
   SourceCrawler(this.sdkPath, this.packageRoots);
 
-  void crawl(String entryPoint, CompilationUnitCrawler _visitor) {
+  void crawl(String entryPoint, CompilationUnitCrawler _visitor,
+             {bool preserveComments : false}) {
     JavaSystemIO.setProperty("com.google.dart.sdk", sdkPath);
     DartSdk sdk = DirectoryBasedDartSdk.defaultSdk;
 
     AnalysisOptionsImpl contextOptions = new AnalysisOptionsImpl();
     contextOptions.cacheSize = 256;
-    contextOptions.preserveComments = false;
+    contextOptions.preserveComments = preserveComments;
     contextOptions.analyzeFunctionBodies = false;
     context.analysisOptions = contextOptions;
     sdk.context.analysisOptions = contextOptions;
