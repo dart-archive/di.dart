@@ -3,18 +3,6 @@ part of di;
 typedef dynamic FactoryFn(Injector injector);
 
 /**
- * Creation strategy is asked to return an instance of the type after
- * [Injector.get] locates the defining injector that has no instance cached.
- * [directInstantation] is true when an instance is created directly from
- * [Injector.instantiate].
- */
-typedef dynamic CreationStrategy(
-  Injector requesting,
-  Injector defining,
-  dynamic factory()
-);
-
-/**
  * Visibility determines if the instance in the defining module is visible to
  * the requesting injector. If true is returned, then the instance from the
  * defining injector is provided. If false is returned, the injector keeps
@@ -73,11 +61,10 @@ class Module {
    *
    * The [value] is what actually will be injected.
    */
-  void value(Type id, value, {Type withAnnotation, CreationStrategy creation,
-      Visibility visibility}) {
+  void value(Type id, value, {Type withAnnotation, Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
-    _providers[key] = new _ValueProvider(value, creation, visibility);
+    _providers[key] = new _ValueProvider(value, visibility);
   }
 
   /**
@@ -88,11 +75,11 @@ class Module {
    * implied that [id] should be instantiated.
    */
   void type(Type id, {Type withAnnotation, Type implementedBy,
-    CreationStrategy creation, Visibility visibility}) {
+      Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
     _providers[key] = new _TypeProvider(
-        implementedBy == null ? id : implementedBy, creation, visibility);
+        implementedBy == null ? id : implementedBy, visibility);
   }
 
   /**
@@ -102,15 +89,14 @@ class Module {
    * The result of that function is the value that will be injected.
    */
   void factory(Type id, FactoryFn factoryFn, {Type withAnnotation,
-    CreationStrategy creation, Visibility visibility}) {
+      Visibility visibility}) {
     _keyedFactory(new Key(id, withAnnotation), factoryFn,
-        creation: creation, visibility: visibility);
+        visibility: visibility);
   }
 
-  void _keyedFactory(Key key, FactoryFn factoryFn, { CreationStrategy creation,
-    Visibility visibility}) {
+  void _keyedFactory(Key key, FactoryFn factoryFn, {Visibility visibility}) {
     _dirty();
-    _providers[key] = new _FactoryProvider(factoryFn, creation, visibility);
+    _providers[key] = new _FactoryProvider(factoryFn, visibility);
   }
 
   /**
@@ -140,10 +126,9 @@ bool _defaultVisibility(_, __) => true;
 typedef Object ObjectFactory(Key type, Injector requestor);
 
 abstract class _Provider {
-  final CreationStrategy creationStrategy;
   final Visibility visibility;
 
-  _Provider(this.creationStrategy, this.visibility);
+  _Provider(this.visibility);
 
   dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error);
 }
@@ -151,9 +136,7 @@ abstract class _Provider {
 class _ValueProvider extends _Provider {
   dynamic value;
 
-  _ValueProvider(this.value, [CreationStrategy creationStrategy,
-                              Visibility visibility])
-      : super(creationStrategy, visibility);
+  _ValueProvider(this.value, [Visibility visibility]) : super(visibility);
 
   dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
       value;
@@ -162,9 +145,7 @@ class _ValueProvider extends _Provider {
 class _TypeProvider extends _Provider {
   final Type type;
 
-  _TypeProvider(this.type, [CreationStrategy creationStrategy,
-                            Visibility visibility])
-      : super(creationStrategy, visibility);
+  _TypeProvider(this.type, [Visibility visibility]) : super(visibility);
 
   dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
       injector.newInstanceOf(type, getInstanceByKey, requestor, error);
@@ -174,9 +155,7 @@ class _TypeProvider extends _Provider {
 class _FactoryProvider extends _Provider {
   final Function factoryFn;
 
-  _FactoryProvider(this.factoryFn, [CreationStrategy creationStrategy,
-                                    Visibility visibility])
-      : super(creationStrategy, visibility);
+  _FactoryProvider(this.factoryFn, [Visibility visibility]) : super(visibility);
 
   dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
       factoryFn(injector);
