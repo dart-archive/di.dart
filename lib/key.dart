@@ -4,7 +4,7 @@ class Key {
   final Type type;
   final Type annotation;
 
-  Key(this.type, [this.annotation]);
+  const Key(this.type, [this.annotation]);
 
   bool operator ==(other) =>
       other is Key && other.type == type && other.annotation == annotation;
