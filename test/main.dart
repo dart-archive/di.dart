@@ -161,6 +161,12 @@ class Log {
   add(String message) => log.add(message);
 }
 
+@Injectable()
+class AnnotatedPrimitiveDependency {
+  String strValue;
+  AnnotatedPrimitiveDependency(@Turbo() this.strValue);
+}
+
 class EmulatedMockEngineFactory {
   call(Injector i) => new MockEngine();
 }
@@ -230,6 +236,17 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       expect(instance, instanceOf(Porsche));
       expect(instance.engine.id, toEqual('turbo-engine-id'));
+    });
+
+    it('should resolve annotated primitive type', () {
+      var injector = injectorFactory([new Module()
+            ..type(AnnotatedPrimitiveDependency)
+            ..value(String, 'Worked!', withAnnotation: Turbo)
+      ]);
+      var instance = injector.get(AnnotatedPrimitiveDependency);
+
+      expect(instance, instanceOf(AnnotatedPrimitiveDependency));
+      expect(instance.strValue, toEqual('Worked!'));
     });
 
     it('should inject generic parameterized types', () {

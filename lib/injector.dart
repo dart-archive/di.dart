@@ -7,8 +7,9 @@ class Injector {
    */
   final String name;
 
-  static const List<Type> _PRIMITIVE_TYPES = const <Type>[
-    num, int, double, String, bool
+  static const List<Key> _PRIMITIVE_TYPES = const <Key>[
+    const Key(num), const Key(int), const Key(double), const Key(String),
+    const Key(bool)
   ];
 
   /**
@@ -79,7 +80,7 @@ class Injector {
   }
 
   dynamic _getInstanceByKey(Key key, Injector requester) {
-    _checkTypeConditions(key.type);
+    _checkKeyConditions(key);
 
     if (resolving.contains(key)) {
       throw new CircularDependencyError(
@@ -148,10 +149,10 @@ class Injector {
         '${key}!', key));
   }
 
-  void _checkTypeConditions(Type typeName) {
-    if (_PRIMITIVE_TYPES.contains(typeName)) {
+  void _checkKeyConditions(Key key) {
+    if (_PRIMITIVE_TYPES.contains(key)) {
       throw new NoProviderError(_error('Cannot inject a primitive type '
-          'of $typeName!', new Key(typeName)));
+          'of ${key.type}!', key));
     }
   }
 
