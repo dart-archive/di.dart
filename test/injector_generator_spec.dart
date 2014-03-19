@@ -14,7 +14,6 @@ main() {
   describe('generator', () {
     var injectableAnnotations = [];
     var options = new TransformOptions(
-        dartEntries: ['web/main.dart'],
         injectableAnnotations: injectableAnnotations,
         sdkDirectory: dartSdkDirectory);
 
@@ -27,7 +26,7 @@ main() {
     it('transforms imports', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/car.dart";',
+            'a|web/main.dart': 'import "package:a/car.dart"; main() {}',
             'a|lib/car.dart': '''
                 import 'package:inject/inject.dart';
                 import 'package:a/engine.dart';
@@ -63,7 +62,7 @@ main() {
     it('warns about parameterized classes', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart";',
+            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
             'a|lib/a.dart': '''
                 import 'package:inject/inject.dart';
                 class Parameterized<T> {
@@ -87,7 +86,7 @@ main() {
     it('skips and warns about parameterized constructor parameters', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart";',
+            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
             'a|lib/a.dart': '''
                 import 'package:inject/inject.dart';
                 class Foo<T> {}
@@ -106,18 +105,18 @@ main() {
     it('allows un-parameterized parameters', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart";',
-            'a|lib/a.dart': '''
+            'a|web/main.dart': '''
                 import 'package:inject/inject.dart';
                 class Foo<T> {}
                 class Bar {
                   @inject
                   Bar(Foo f);
                 }
+                main() {}
                 '''
           },
           imports: [
-            "import 'package:a/a.dart' as import_0;",
+            "import 'main.dart' as import_0;",
           ],
           generators: [
             'import_0.Bar: (f) => new import_0.Bar(f(import_0.Foo)),',
@@ -127,7 +126,7 @@ main() {
     it('follows exports', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart";',
+            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
             'a|lib/a.dart': 'export "package:a/b.dart";',
             'a|lib/b.dart': CLASS_ENGINE
           },
@@ -142,13 +141,16 @@ main() {
     it('handles parts', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart";',
+            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
             'a|lib/a.dart':
                 'import "package:inject/inject.dart";\n'
                 'part "b.dart";',
             'a|lib/b.dart': '''
                 part of a.a;
-                $CLASS_ENGINE
+                class Engine {
+                  @inject
+                  Engine();
+                }
                 '''
           },
           imports: [
@@ -162,7 +164,7 @@ main() {
     it('follows relative imports', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart";',
+            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
             'a|lib/a.dart': 'import "b.dart";',
             'a|lib/b.dart': CLASS_ENGINE
           },
@@ -177,7 +179,7 @@ main() {
     it('handles relative imports', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart";',
+            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
             'a|lib/a.dart': '''
                 import "package:inject/inject.dart";
                 import 'b.dart';
@@ -201,7 +203,7 @@ main() {
     it('handles web imports beside main', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': 'import "a.dart";',
+            'a|web/main.dart': 'import "a.dart"; main() {}',
             'a|web/a.dart': CLASS_ENGINE
           },
           imports: [
@@ -215,7 +217,10 @@ main() {
     it('handles imports in main', () {
       return generates(phases,
           inputs: {
-            'a|web/main.dart': CLASS_ENGINE,
+            'a|web/main.dart': '''
+                $CLASS_ENGINE
+                main() {}
+                '''
           },
           imports: [
             "import 'main.dart' as import_0;",
@@ -228,31 +233,33 @@ main() {
     it('skips and warns on named constructors', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   class Engine {
                     @inject
                     Engine.foo();
                   }
+
+                  main() {}
                   '''
             },
             messages: ['warning: Named constructors cannot be injected. '
-                '(package:a/a.dart 2 20)']);
+                '(web/main.dart 2 20)']);
       });
 
       it('handles inject on classes', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   @inject
                   class Engine {}
+
+                  main() {}
                   '''
             },
             imports: [
-            "import 'package:a/a.dart' as import_0;",
+            "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
@@ -262,56 +269,56 @@ main() {
       it('skips and warns when no default constructor', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   @inject
                   class Engine {
                     Engine.foo();
                   }
+                  main() {}
                   '''
             },
             messages: ['warning: Engine cannot be injected because it does not '
-                'have a default constructor. (package:a/a.dart 1 18)']);
+                'have a default constructor. (web/main.dart 1 18)']);
       });
 
       it('skips and warns on abstract types with no factory constructor', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   @inject
                   abstract class Engine { }
+
+                  main() {}
                   '''
             },
             messages: ['warning: Engine cannot be injected because it is an '
                 'abstract type with no factory constructor. '
-                '(package:a/a.dart 1 18)']);
+                '(web/main.dart 1 18)']);
       });
 
       it('skips and warns on abstract types with implicit constructor', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   @inject
                   abstract class Engine {
                     Engine();
                   }
+                  main() {}
                   '''
             },
             messages: ['warning: Engine cannot be injected because it is an '
                 'abstract type with no factory constructor. '
-                '(package:a/a.dart 1 18)']);
+                '(web/main.dart 1 18)']);
       });
 
       it('injects abstract types with factory constructors', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   @inject
                   abstract class Engine {
@@ -319,10 +326,12 @@ main() {
                   }
 
                   class ConcreteEngine implements Engine {}
+
+                  main() {}
                   '''
             },
             imports: [
-            "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
@@ -332,8 +341,7 @@ main() {
       it('injects this parameters', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   class Engine {
                     final Fuel fuel;
@@ -342,10 +350,12 @@ main() {
                   }
 
                   class Fuel {}
+
+                  main() {}
                   '''
             },
             imports: [
-            "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(f(import_0.Fuel)),',
@@ -355,8 +365,7 @@ main() {
       it('narrows this parameters', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   class Engine {
                     final Fuel fuel;
@@ -366,10 +375,12 @@ main() {
 
                   class Fuel {}
                   class JetFuel implements Fuel {}
+
+                  main() {}
                   '''
             },
             imports: [
-            "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => '
@@ -380,8 +391,7 @@ main() {
       it('skips and warns on unresolved types', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   @inject
                   class Engine {
@@ -393,21 +403,22 @@ main() {
                     var foo;
                     Car(this.foo);
                   }
+
+                  main() {}
                   '''
             },
             messages: ['warning: Engine cannot be injected because parameter '
-                'type foo cannot be resolved. (package:a/a.dart 3 20)',
+                'type foo cannot be resolved. (web/main.dart 3 20)',
                 'warning: Car cannot be injected because parameter type '
-                'foo cannot be resolved. (package:a/a.dart 9 20)']);
+                'foo cannot be resolved. (web/main.dart 9 20)']);
       });
 
       it('supports custom annotations', () {
         injectableAnnotations.add('angular.NgInjectableService');
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
               'angular|lib/angular.dart': PACKAGE_ANGULAR,
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import 'package:angular/angular.dart';
                   @NgInjectableService()
                   class Engine {
@@ -418,10 +429,12 @@ main() {
                     @NgInjectableService()
                     Car();
                   }
+
+                  main() {}
                   '''
             },
             imports: [
-              "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
@@ -434,8 +447,7 @@ main() {
       it('supports default formal parameters', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   class Engine {
                     final Car car;
@@ -448,10 +460,12 @@ main() {
                     @inject
                     Car();
                   }
+
+                  main() {}
                   '''
             },
             imports: [
-              "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(f(import_0.Car)),',
@@ -462,9 +476,8 @@ main() {
       it('supports injectableTypes argument', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
               'di|lib/annotations.dart': PACKAGE_DI,
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   @Injectables(const[Engine])
                   library a;
 
@@ -473,10 +486,12 @@ main() {
                   class Engine {
                     Engine();
                   }
+
+                  main() {}
                   '''
             },
             imports: [
-              "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
@@ -486,18 +501,18 @@ main() {
       it('does not generate dart:core imports', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import 'package:inject/inject.dart';
 
                   class Engine {
                     @inject
                     Engine(int i);
                   }
+                  main() {}
                   '''
             },
             imports: [
-              "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(f(int)),',
@@ -507,24 +522,24 @@ main() {
       it('warns on private types', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
                   @inject
                   class _Engine {
                     _Engine();
                   }
+
+                  main() {}
                   '''
             },
             messages: ['warning: _Engine cannot be injected because it is a '
-                'private type. (package:a/a.dart 1 18)']);
+                'private type. (web/main.dart 1 18)']);
       });
 
       it('warns on multiple constructors', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
 
                   @inject
@@ -534,10 +549,12 @@ main() {
                     @inject
                     Engine.foo();
                   }
+
+                  main() {}
                   '''
             },
             messages: ['warning: Engine has more than one constructor '
-                'annotated for injection. (package:a/a.dart 2 18)']);
+                'annotated for injection. (web/main.dart 2 18)']);
       });
 
       it('transforms main', () {
@@ -578,8 +595,7 @@ main() {
       it('handles annotated dependencies', () {
         return generates(phases,
             inputs: {
-              'a|web/main.dart': 'import "package:a/a.dart";',
-              'a|lib/a.dart': '''
+              'a|web/main.dart': '''
                   import "package:inject/inject.dart";
 
                   class Turbo {
@@ -593,10 +609,12 @@ main() {
                   class Car {
                     Car(@Turbo() Engine engine);
                   }
+
+                  main() {}
                   '''
             },
             imports: [
-              "import 'package:a/a.dart' as import_0;",
+              "import 'main.dart' as import_0;",
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
@@ -685,5 +703,4 @@ library di.auto_injector;
 
 defaultInjector({List modules, String name,
     bool allowImplicitInjection: false}) => null;
-}
 ''';

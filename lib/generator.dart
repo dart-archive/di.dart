@@ -269,7 +269,7 @@ class SourceCrawler {
     var packageUriResolver =
         new PackageUriResolver(packageRoots.map(
             (pr) => new JavaFile.fromUri(new Uri.file(pr))).toList());
-    context.sourceFactory = new SourceFactory.con2([
+    context.sourceFactory = new SourceFactory([
       new DartUriResolver(sdk),
       new FileUriResolver(),
       packageUriResolver
@@ -287,10 +287,9 @@ class SourceCrawler {
       entryPointImport = entryPointFile.getAbsolutePath();
     }
 
-    Source source = new FileBasedSource.con1(
-        context.sourceFactory.contentCache, entryPointFile);
+    Source source = new FileBasedSource.con1(entryPointFile);
     ChangeSet changeSet = new ChangeSet();
-    changeSet.added(source);
+    changeSet.addedSource(source);
     context.applyChanges(changeSet);
     LibraryElement rootLib = context.computeLibraryElement(source);
     CompilationUnit resolvedUnit =

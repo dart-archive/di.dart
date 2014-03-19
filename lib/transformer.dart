@@ -83,7 +83,6 @@ TransformOptions _parseSettings(Map args) {
   }
 
   return new TransformOptions(
-      dartEntries: _readStringListValue(args, 'dart_entries'),
       injectableAnnotations: annotations,
       injectedTypes: injectedTypes,
       sdkDirectory: sdkDir);

@@ -21,8 +21,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
     this.resolvers = resolvers;
   }
 
-  Future<bool> isPrimary(Asset input) =>
-      new Future.value(options.isDartEntry(input.id));
+  Future<bool> isPrimary(Asset input) => options.isDartEntry(input);
 
   applyResolver(Transform transform, Resolver resolver) =>
       new _Processor(transform, resolver, options).process();
@@ -326,7 +325,7 @@ class _Processor {
 
     var outputBuffer = new StringBuffer();
 
-    _writeStaticInjectorHeader(resolver.entryPoint, outputBuffer);
+    _writeStaticInjectorHeader(transform.primaryInput.id, outputBuffer);
     usedLibs.forEach((lib) {
       if (lib.isDartCore) return;
       var uri = resolver.getImportUri(lib, from: _generatedAssetId);
@@ -346,9 +345,10 @@ class _Processor {
 }
 
 void _writeStaticInjectorHeader(AssetId id, StringSink sink) {
-  var libPath = path.withoutExtension(id.path).replaceAll('/', '.');
+  var libName = path.withoutExtension(id.path).replaceAll('/', '.');
+  libName = libName.replaceAll('-', '_');
   sink.write('''
-library ${id.package}.$libPath.generated_static_injector;
+library ${id.package}.$libName.generated_static_injector;
 
 import 'package:di/di.dart';
 import 'package:di/static_injector.dart';

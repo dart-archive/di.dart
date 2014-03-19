@@ -35,7 +35,7 @@ void transformIdentifiers(Transform transform, Resolver resolver,
     return;
   }
 
-  var lib = resolver.entryLibrary;
+  var lib = resolver.getLibrary(transform.primaryInput.id);
   var transaction = resolver.createTextEditTransaction(lib);
   var unit = lib.definingCompilationUnit.node;
 
@@ -89,7 +89,7 @@ void _addImport(TextEditTransaction transaction, CompilationUnit unit,
 
 /// Vistior which changes every reference to a resolved element to a specific
 /// string value.
-class _IdentifierTransformer extends GeneralizingASTVisitor {
+class _IdentifierTransformer extends GeneralizingAstVisitor {
   final TextEditTransaction transaction;
   /// The element which all references to should be replaced.
   final Element original;

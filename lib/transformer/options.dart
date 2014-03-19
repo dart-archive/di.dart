@@ -1,16 +1,20 @@
 library di.transformer.options;
 
+import 'dart:async';
+
 import 'package:barback/barback.dart';
+import 'package:code_transformers/resolver.dart';
+
+/// Returns either a bool or a Future<bool> when complete.
+typedef EntryFilter(Asset asset);
 
 /** Options used by DI transformers */
 class TransformOptions {
 
   /**
-   * The file path of the primary Dart entry point (main) for the application.
-   * This is used as the starting point to find all injectable types used by the
-   * application.
+   * Filter to determine which assets should be modified.
    */
-  final Set<String> dartEntries;
+  final EntryFilter entryFilter;
 
   /**
    * List of additional annotations which are used to indicate types as being
@@ -28,9 +32,9 @@ class TransformOptions {
    */
   final String sdkDirectory;
 
-  TransformOptions({List<String> dartEntries, String sdkDirectory,
+  TransformOptions({EntryFilter entryFilter, String sdkDirectory,
       List<String> injectableAnnotations, List<String> injectedTypes})
-    : dartEntries = dartEntries.toSet(),
+    : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
       sdkDirectory = sdkDirectory,
       injectableAnnotations =
           injectableAnnotations != null ? injectableAnnotations : [],
@@ -40,6 +44,5 @@ class TransformOptions {
       throw new ArgumentError('sdkDirectory must be provided.');
   }
 
-  // Don't need to check package as transformers only run for primary package.
-  bool isDartEntry(AssetId id) => dartEntries.contains(id.path);
+  Future<bool> isDartEntry(Asset asset) => new Future.value(entryFilter(asset));
 }
