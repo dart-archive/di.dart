@@ -10,7 +10,7 @@ environment:
 dependencies:
   analyzer: '>=0.13.0 <0.14.0'
   barback: '>=0.11.1 <0.12.0'
-  code_transformers: '>=0.0.1 <0.1.0'
+  code_transformers: '>=0.1.0 <0.2.0'
   path: ">=0.9.0 <2.0.0"
 dev_dependencies:
   benchmark_harness: any
@@ -20,7 +20,3 @@ dev_dependencies:
 transformers:
 - di:
     injectable_annotations: di.tests.Injectable
-
-dependency_overrides:
-  code_transformers: 0.0.1-dev.3
-  analyzer: '>=0.13.0-dev <0.14.0'
