@@ -120,8 +120,11 @@ class Injector {
       rethrow;
     }
 
+    Injector injToCacheTo = provider is _FactoryProvider &&
+        (provider as _FactoryProvider).injectFromRequestor ?
+            requester : providerWithInjector.injector;
     // cache the value.
-    providerWithInjector.injector.instances[key] = value;
+    injToCacheTo.instances[key] = value;
     return value;
   }
 
@@ -204,7 +207,7 @@ class Injector {
         var provider = providerWithInjector.provider;
         forceNew._keyedFactory(key, (Injector inj) => provider.get(this,
             inj, inj._getInstanceByKey, inj._error),
-            visibility: provider.visibility);
+            provider.visibility);
       });
 
       modules = modules.toList(); // clone

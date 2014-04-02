@@ -89,14 +89,15 @@ class Module {
    * The result of that function is the value that will be injected.
    */
   void factory(Type id, FactoryFn factoryFn, {Type withAnnotation,
-      Visibility visibility}) {
+      Visibility visibility, bool injectFromRequestor : false}) {
     _keyedFactory(new Key(id, withAnnotation), factoryFn,
-        visibility: visibility);
+                  visibility, injectFromRequestor);
   }
 
-  void _keyedFactory(Key key, FactoryFn factoryFn, {Visibility visibility}) {
+  void _keyedFactory(Key key, FactoryFn factoryFn, Visibility visibility,
+    [bool injectFromRequestor = false]) {
     _dirty();
-    _providers[key] = new _FactoryProvider(factoryFn, visibility);
+    _providers[key] = new _FactoryProvider(factoryFn, visibility, injectFromRequestor);
   }
 
   /**
@@ -154,9 +155,11 @@ class _TypeProvider extends _Provider {
 
 class _FactoryProvider extends _Provider {
   final Function factoryFn;
+  final bool injectFromRequestor;
 
-  _FactoryProvider(this.factoryFn, [Visibility visibility]) : super(visibility);
+  _FactoryProvider(this.factoryFn, Visibility visibility, 
+      bool this.injectFromRequestor) : super(visibility);
 
   dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
-      factoryFn(injector);
+      factoryFn(injectFromRequestor ? requestor : injector);
 }
