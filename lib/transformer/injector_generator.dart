@@ -21,7 +21,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
     this.resolvers = resolvers;
   }
 
-  Future<bool> isPrimary(Asset input) => options.isDartEntry(input);
+  Future<bool> shouldApplyResolver(Asset asset) => options.isDartEntry(asset);
 
   applyResolver(Transform transform, Resolver resolver) =>
       new _Processor(transform, resolver, options).process();
