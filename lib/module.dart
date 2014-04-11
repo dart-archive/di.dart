@@ -18,23 +18,20 @@ typedef Object TypeFactory(factory(Type type, Type annotation));
  * module have no effect.
  */
 class Module {
-  final Map<Key, _Provider> _providers = <Key, _Provider>{};
-  final List<Module> _childModules = <Module>[];
+  final _providers = <Key, _Provider>{};
+  final _childModules = <Module>[];
   Map<Type, TypeFactory> _typeFactories = {};
 
   Map<Type, TypeFactory> get typeFactories {
-    if (_childModules.isEmpty) {
-      return _typeFactories;
-    }
-    var tmp = new Map.from(_typeFactories);
-    _childModules.forEach((child) {
-      if (child.typeFactories != null) {
-        child.typeFactories.forEach((key, factory) {
-          tmp[key] = factory;
-        });
+    if (_childModules.isEmpty) return _typeFactories;
+
+    var factories = new Map.from(_typeFactories);
+    _childModules.forEach((m) {
+      if (m.typeFactories != null) {
+        factories.addAll(m.typeFactories);
       }
     });
-    return tmp;
+    return factories;
   }
 
   set typeFactories(Map<Type, TypeFactory> factories) {
@@ -130,7 +127,8 @@ abstract class _Provider {
 
   _Provider(this.visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error);
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByKey, error);
 }
 
 class _ValueProvider extends _Provider {
@@ -138,8 +136,8 @@ class _ValueProvider extends _Provider {
 
   _ValueProvider(this.value, [Visibility visibility]) : super(visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
-      value;
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByKey, error) => value;
 }
 
 class _TypeProvider extends _Provider {
@@ -147,9 +145,10 @@ class _TypeProvider extends _Provider {
 
   _TypeProvider(this.type, [Visibility visibility]) : super(visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
-      injector.newInstanceOf(type, getInstanceByKey, requestor, error);
-
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByKey, error) {
+    return injector.newInstanceOf(type, getInstanceByKey, requestor, error);
+  }
 }
 
 class _FactoryProvider extends _Provider {
@@ -157,6 +156,6 @@ class _FactoryProvider extends _Provider {
 
   _FactoryProvider(this.factoryFn, [Visibility visibility]) : super(visibility);
 
-  dynamic get(Injector injector, Injector requestor, ObjectFactory getInstanceByKey, error) =>
-      factoryFn(injector);
+  dynamic get(Injector injector, Injector requestor,
+      ObjectFactory getInstanceByKey, error) => factoryFn(injector);
 }

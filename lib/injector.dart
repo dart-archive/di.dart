@@ -13,7 +13,7 @@ class Injector {
   ];
 
   /**
-   * Returns the parent injector or null if root.
+   * The parent injector or null if root.
    */
   final Injector parent;
 
@@ -94,9 +94,7 @@ class Injector {
         provider.visibility(requester, injector) :
         _defaultVisibility(requester, injector);
 
-    if (visible && instances.containsKey(key)) {
-      return instances[key];
-    }
+    if (visible && instances.containsKey(key)) return instances[key];
 
     if (providerWithInjector.injector != this || !visible) {
       if (!visible) {
@@ -140,8 +138,7 @@ class Injector {
           new _TypeProvider(key.type), this);
     }
 
-    throw new NoProviderError(_error('No provider found for '
-        '${key}!', key));
+    throw new NoProviderError(_error('No provider found for ${key}!', key));
   }
 
   void _checkKeyConditions(Key key) {

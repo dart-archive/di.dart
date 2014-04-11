@@ -279,8 +279,7 @@ class SourceCrawler {
     var entryPointImport;
     if (entryPoint.startsWith(PACKAGE_PREFIX)) {
       entryPointFile = new JavaFile(packageUriResolver
-          .resolveAbsolute(context.sourceFactory.contentCache,
-              Uri.parse(entryPoint)).toString());
+          .resolveAbsolute(Uri.parse(entryPoint)).toString());
       entryPointImport = entryPoint;
     } else {
       entryPointFile = new JavaFile(entryPoint);
