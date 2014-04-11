@@ -1,15 +1,22 @@
 part of di;
 
+int _uniqKey = 0;
+Map<int, int> hashToKey = {};
+
 class Key {
   final Type type;
   final Type annotation;
+  int hashCode;
+  int key;
 
-  const Key(this.type, [this.annotation]);
+  Key(this.type, [this.annotation]) {
+    hashCode = type.hashCode + annotation.hashCode;
+    key = hashToKey.putIfAbsent(hashCode, () => _uniqKey++);
+  }
 
   bool operator ==(other) =>
-      other is Key && other.type == type && other.annotation == annotation;
+      other is Key && other.hashCode == hashCode;
 
-  int get hashCode => type.hashCode + annotation.hashCode;
 
   String toString() {
     String asString = type.toString();
