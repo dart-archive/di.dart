@@ -7,9 +7,9 @@ class Injector {
    */
   final String name;
 
-  static const List<Key> _PRIMITIVE_TYPES = const <Key>[
-    const Key(num), const Key(int), const Key(double), const Key(String),
-    const Key(bool)
+  static  List<Key> _PRIMITIVE_TYPES = <Key>[
+    new Key(num), new Key(int), new Key(double), new Key(String),
+    new Key(bool)
   ];
 
   /**
@@ -19,7 +19,8 @@ class Injector {
 
   Injector _root;
 
-  Map<Key, _Provider> _providers = <Key, _Provider>{};
+  List<_Provider> _providers;
+  int _providersLen = 0;
 
   final Map<Key, Object> instances = <Key, Object>{};
 
@@ -33,8 +34,10 @@ class Injector {
    * List of all types which the injector can return
    */
   Iterable<Type> get _types {
+    if (_providers == null) return [];
+
     if (_typesCache == null) {
-      _typesCache = _providers.keys.map((k) => k.type);
+      _typesCache = _providers.where((k) => k != null).map((k) => k.type);
     }
     return _typesCache;
   }
@@ -47,12 +50,17 @@ class Injector {
   Injector.fromParent(List<Module> modules,
       Injector this.parent, {this.name, this.allowImplicitInjection}) {
     _root = parent == null ? this : parent._root;
+    var injectorKey = new Key(Injector).key;
+    _providers = new List(_uniqKey + 1);
+    _providersLen = _uniqKey + 1;
     if (modules != null) {
       modules.forEach((module) {
-        _providers.addAll(module._bindings);
+        module._bindings.forEach((k,v) {
+          _providers[k] = v;
+        });
       });
     }
-    _providers[new Key(Injector)] = new _ValueProvider(this);
+    _providers[injectorKey] = new _ValueProvider(Injector, this);
   }
 
   Injector get root => _root;
@@ -125,8 +133,11 @@ class Injector {
 
   /// Returns a pair for provider and the injector where it's defined.
   _ProviderWithDefiningInjector _getProviderWithInjectorForKey(Key key) {
-    if (_providers.containsKey(key)) {
-      return new _ProviderWithDefiningInjector(_providers[key], this);
+    if (key.key < _providersLen) {
+      var provider = _providers[key.key];
+      if (provider != null) {
+        return new _ProviderWithDefiningInjector(provider, this);
+      }
     }
 
     if (parent != null) {

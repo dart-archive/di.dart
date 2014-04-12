@@ -18,7 +18,7 @@ typedef Object TypeFactory(factory(Type type, Type annotation));
  * module have no effect.
  */
 class Module {
-  final _providers = <Key, _Provider>{};
+  final _providers = <int, _Provider>{};
   final _childModules = <Module>[];
   Map<Type, TypeFactory> _typeFactories = {};
 
@@ -38,15 +38,15 @@ class Module {
     _typeFactories = factories;
   }
 
-  Map<Key, _Provider> _providersCache;
+  Map<int, _Provider> _providersCache;
 
   /**
    * Compiles and returs bindings map by performing depth-first traversal of the
    * child (installed) modules.
    */
-  Map<Key, _Provider> get _bindings {
+  Map<int, _Provider> get _bindings {
     if (_isDirty) {
-      _providersCache = <Key, _Provider>{};
+      _providersCache = <int, _Provider>{};
       _childModules.forEach((child) => _providersCache.addAll(child._bindings));
       _providersCache.addAll(_providers);
     }
@@ -61,7 +61,7 @@ class Module {
   void value(Type id, value, {Type withAnnotation, Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
-    _providers[key] = new _ValueProvider(value, visibility);
+    _providers[key.key] = new _ValueProvider(id, value, visibility);
   }
 
   /**
@@ -75,7 +75,7 @@ class Module {
       Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
-    _providers[key] = new _TypeProvider(
+    _providers[key.key] = new _TypeProvider(
         implementedBy == null ? id : implementedBy, visibility);
   }
 
@@ -93,7 +93,7 @@ class Module {
 
   void _keyedFactory(Key key, FactoryFn factoryFn, {Visibility visibility}) {
     _dirty();
-    _providers[key] = new _FactoryProvider(factoryFn, visibility);
+    _providers[key.key] = new _FactoryProvider(key.type, factoryFn, visibility);
   }
 
   /**
@@ -124,8 +124,9 @@ typedef Object ObjectFactory(Key type, Injector requestor);
 
 abstract class _Provider {
   final Visibility visibility;
+  final Type type;
 
-  _Provider(this.visibility);
+  _Provider(this.type, this.visibility);
 
   dynamic get(Injector injector, Injector requestor,
       ObjectFactory getInstanceByKey, error);
@@ -134,16 +135,14 @@ abstract class _Provider {
 class _ValueProvider extends _Provider {
   dynamic value;
 
-  _ValueProvider(this.value, [Visibility visibility]) : super(visibility);
+  _ValueProvider(type, this.value, [Visibility visibility]) : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
       ObjectFactory getInstanceByKey, error) => value;
 }
 
 class _TypeProvider extends _Provider {
-  final Type type;
-
-  _TypeProvider(this.type, [Visibility visibility]) : super(visibility);
+  _TypeProvider(type, [Visibility visibility]) : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
       ObjectFactory getInstanceByKey, error) {
@@ -154,7 +153,7 @@ class _TypeProvider extends _Provider {
 class _FactoryProvider extends _Provider {
   final Function factoryFn;
 
-  _FactoryProvider(this.factoryFn, [Visibility visibility]) : super(visibility);
+  _FactoryProvider(type, this.factoryFn, [Visibility visibility]) : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
       ObjectFactory getInstanceByKey, error) => factoryFn(injector);
