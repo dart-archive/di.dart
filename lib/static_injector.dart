@@ -49,7 +49,7 @@ Map<Type, TypeFactory> _extractTypeFactories(List<Module> modules,
     [Map<Type, TypeFactory> initial = const {}]) {
   if (modules == null || modules.isEmpty) return initial;
   var factories = new Map.from(initial == null ? {} : initial);
-  modules.forEach((m) {
+  modules.forEach((Module m) {
     factories.addAll(m.typeFactories);
   });
   return factories;
