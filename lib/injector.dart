@@ -1,16 +1,16 @@
 part of di;
 
+List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
+  new Key(num), new Key(int), new Key(double), new Key(String),
+  new Key(bool)
+]);
+
 class Injector {
 
   /**
    * Name of the injector or null of none is given.
    */
   final String name;
-
-  static  List<Key> _PRIMITIVE_TYPES = <Key>[
-    new Key(num), new Key(int), new Key(double), new Key(String),
-    new Key(bool)
-  ];
 
   /**
    * The parent injector or null if root.
@@ -37,7 +37,9 @@ class Injector {
     if (_providers == null) return [];
 
     if (_typesCache == null) {
-      _typesCache = _providers.where((k) => k != null).map((k) => k.type);
+      _typesCache = _providers
+          .where((p) => p != null)
+          .map((p) => p.type);
     }
     return _typesCache;
   }
@@ -50,17 +52,17 @@ class Injector {
   Injector.fromParent(List<Module> modules,
       Injector this.parent, {this.name, this.allowImplicitInjection}) {
     _root = parent == null ? this : parent._root;
-    var injectorKey = new Key(Injector).key;
-    _providers = new List(_uniqKey + 1);
-    _providersLen = _uniqKey + 1;
+    var injectorId = new Key(Injector).id;
+    _providers = new List(_lastKeyId + 1);
+    _providersLen = _lastKeyId + 1;
     if (modules != null) {
       modules.forEach((module) {
-        module._bindings.forEach((k,v) {
+        module._bindings.forEach((k, v) {
           _providers[k] = v;
         });
       });
     }
-    _providers[injectorKey] = new _ValueProvider(Injector, this);
+    _providers[injectorId] = new _ValueProvider(Injector, this);
   }
 
   Injector get root => _root;
@@ -133,8 +135,8 @@ class Injector {
 
   /// Returns a pair for provider and the injector where it's defined.
   _ProviderWithDefiningInjector _getProviderWithInjectorForKey(Key key) {
-    if (key.key < _providersLen) {
-      var provider = _providers[key.key];
+    if (key.id < _providersLen) {
+      var provider = _providers[key.id];
       if (provider != null) {
         return new _ProviderWithDefiningInjector(provider, this);
       }

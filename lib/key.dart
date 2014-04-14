@@ -1,22 +1,24 @@
 part of di;
 
-int _uniqKey = 0;
-Map<int, int> hashToKey = {};
+int _lastKeyId = 0;
+Map<int, int> _hashToKey = {};
 
 class Key {
   final Type type;
   final Type annotation;
-  int hashCode;
-  int key;
+  final int hashCode;
+  final int id;
 
-  Key(this.type, [this.annotation]) {
-    hashCode = type.hashCode + annotation.hashCode;
-    key = hashToKey.putIfAbsent(hashCode, () => _uniqKey++);
+  factory Key(Type type, [Type annotation]) {
+    var _hashCode = type.hashCode + annotation.hashCode;
+    var _id = _hashToKey.putIfAbsent(_hashCode, () => _lastKeyId++);
+    return new Key._newKey(type, annotation, _hashCode, _id);
   }
+
+  Key._newKey(this.type, this.annotation, this.hashCode, this.id);
 
   bool operator ==(other) =>
       other is Key && other.hashCode == hashCode;
-
 
   String toString() {
     String asString = type.toString();

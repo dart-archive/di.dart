@@ -61,7 +61,7 @@ class Module {
   void value(Type id, value, {Type withAnnotation, Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
-    _providers[key.key] = new _ValueProvider(id, value, visibility);
+    _providers[key.id] = new _ValueProvider(id, value, visibility);
   }
 
   /**
@@ -75,7 +75,7 @@ class Module {
       Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
-    _providers[key.key] = new _TypeProvider(
+    _providers[key.id] = new _TypeProvider(
         implementedBy == null ? id : implementedBy, visibility);
   }
 
@@ -93,7 +93,7 @@ class Module {
 
   void _keyedFactory(Key key, FactoryFn factoryFn, {Visibility visibility}) {
     _dirty();
-    _providers[key.key] = new _FactoryProvider(key.type, factoryFn, visibility);
+    _providers[key.id] = new _FactoryProvider(key.type, factoryFn, visibility);
   }
 
   /**
@@ -135,7 +135,8 @@ abstract class _Provider {
 class _ValueProvider extends _Provider {
   dynamic value;
 
-  _ValueProvider(type, this.value, [Visibility visibility]) : super(type, visibility);
+  _ValueProvider(type, this.value, [Visibility visibility])
+      : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
       ObjectFactory getInstanceByKey, error) => value;
@@ -153,7 +154,8 @@ class _TypeProvider extends _Provider {
 class _FactoryProvider extends _Provider {
   final Function factoryFn;
 
-  _FactoryProvider(type, this.factoryFn, [Visibility visibility]) : super(type, visibility);
+  _FactoryProvider(type, this.factoryFn, [Visibility visibility])
+      : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
       ObjectFactory getInstanceByKey, error) => factoryFn(injector);
