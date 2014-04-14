@@ -171,6 +171,17 @@ class EmulatedMockEngineFactory {
   call(Injector i) => new MockEngine();
 }
 
+bool throwOnceShouldThrow = true;
+@Injectable()
+class ThrowOnce {
+  ThrowOnce() {
+    if (throwOnceShouldThrow) {
+      throwOnceShouldThrow = false;
+      throw ["ThrowOnce"];
+    }
+  }
+}
+
 void main() {
   createInjectorSpec('DynamicInjector',
       (modules, [name]) => new DynamicInjector(modules: modules, name: name));
@@ -388,6 +399,21 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
       }, toThrow(CircularDependencyError, 'Cannot resolve a circular dependency! '
           '(resolving CircularA -> '
       'CircularB -> CircularA)'));
+    });
+
+
+    it('should recover from errors', () {
+      var injector = injectorFactory([new Module()..type(ThrowOnce)]);
+      throwOnceShouldThrow = true;
+
+      var caught = false;
+      try {
+        injector.get(ThrowOnce);
+      } catch (e, s) {
+        caught = true;
+        expect(injector.get(ThrowOnce), not(toEqual(null)));
+      }
+      expect(caught, toEqual(true));
     });
 
 
