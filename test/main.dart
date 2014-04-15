@@ -398,7 +398,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
         injector.get(CircularA);
       }, toThrow(CircularDependencyError, 'Cannot resolve a circular dependency! '
           '(resolving CircularA -> '
-      'CircularB -> CircularA)'));
+      'CircularB -> CircularA'));
     });
 
 
