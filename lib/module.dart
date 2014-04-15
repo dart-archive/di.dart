@@ -120,7 +120,7 @@ dynamic _defaultCreationStrategy(Injector requesting, Injector defining,
 /** By default all values are visible to child injectors. */
 bool _defaultVisibility(_, __) => true;
 
-typedef Object ObjectFactory(Key type, Injector requestor);
+typedef Object ObjectFactory(Key type, Injector requestor, List resolving);
 
 abstract class _Provider {
   final Visibility visibility;
@@ -129,7 +129,8 @@ abstract class _Provider {
   _Provider(this.type, this.visibility);
 
   dynamic get(Injector injector, Injector requestor,
-      ObjectFactory getInstanceByKey, error);
+      ObjectFactory getInstanceByKey, error,
+      List<Key> resolving);
 }
 
 class _ValueProvider extends _Provider {
@@ -139,15 +140,16 @@ class _ValueProvider extends _Provider {
       : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
-      ObjectFactory getInstanceByKey, error) => value;
+      ObjectFactory getInstanceByKey, error, resolving) => value;
 }
 
 class _TypeProvider extends _Provider {
   _TypeProvider(type, [Visibility visibility]) : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
-      ObjectFactory getInstanceByKey, error) {
-    return injector.newInstanceOf(type, getInstanceByKey, requestor, error);
+      ObjectFactory getInstanceByKey, error, resolving) {
+    return injector.newInstanceOf(
+        type, getInstanceByKey, requestor, error, resolving);
   }
 }
 
@@ -158,5 +160,6 @@ class _FactoryProvider extends _Provider {
       : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
-      ObjectFactory getInstanceByKey, error) => factoryFn(injector);
+       ObjectFactory getInstanceByKey, error, resolving) =>
+     factoryFn(new InjectorDelagate(injector, resolving));
 }
