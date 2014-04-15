@@ -119,14 +119,9 @@ class Injector {
     }
 
     var value;
-    try {
-      resolving.add(key);
-      value = provider.get(this, requester, _getInstanceByKey, _error);
-      resolving.removeLast();
-    } catch(e) {
-      resolving.clear();
-      rethrow;
-    }
+    resolving.add(key);
+    value = provider.get(this, requester, _getInstanceByKey, _error);
+    resolving.removeLast();
 
     // cache the value.
     providerWithInjector.injector.instances[key] = value;
