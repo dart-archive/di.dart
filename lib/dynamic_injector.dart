@@ -19,12 +19,11 @@ class DynamicInjector extends Injector {
   newFromParent(List<Module> modules, String name) =>
       new DynamicInjector._fromParent(modules, this, name: name);
 
-  Object newInstanceOf(Type type, ObjectFactory getInstanceByKey, Injector requestor,
-                        error(resolving, message, [appendDependency]),
+  Object newInstanceOf(Type type, ObjectFactory objFactory, Injector requestor,
                         List<Key> resolving) {
     var classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
-      throw new NoProviderError(error(resolving, 'No implementation provided '
+      throw new NoProviderError(Injector.error(resolving, 'No implementation provided '
           'for ${getSymbolName(classMirror.qualifiedName)} typedef!'));
     }
 
@@ -40,19 +39,19 @@ class DynamicInjector extends Injector {
       ParameterMirror p = ctor.parameters[pos];
       if (p.type.qualifiedName == #dynamic) {
         var name = MirrorSystem.getName(p.simpleName);
-        throw new NoProviderError(error(resolving, "The '$name' parameter must be typed"));
+        throw new NoProviderError(Injector.error(resolving, "The '$name' parameter must be typed"));
       }
       if (p.type is TypedefMirror) {
         throw new NoProviderError(
-            error(resolving, 'Cannot create new instance of a typedef ${p.type}'));
+            Injector.error(resolving, 'Cannot create new instance of a typedef ${p.type}'));
       }
       if (p.metadata.isNotEmpty) {
         assert(p.metadata.length == 1);
         var type = p.metadata.first.type.reflectedType;
-        return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType,
+        return objFactory.getInstanceByKey(new Key((p.type as ClassMirror).reflectedType,
             type), requestor, resolving);
       } else {
-        return getInstanceByKey(new Key((p.type as ClassMirror).reflectedType),
+        return objFactory.getInstanceByKey(new Key((p.type as ClassMirror).reflectedType),
             requestor, resolving);
       }
     }

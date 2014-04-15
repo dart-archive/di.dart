@@ -5,7 +5,11 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
   new Key(bool)
 ]);
 
-abstract class Injector {
+abstract class ObjectFactory {
+  Object getInstanceByKey(Key key, Injector requester, List<Key> resolving);
+}
+
+abstract class Injector implements ObjectFactory {
 
   /**
    * Name of the injector or null of none is given.
@@ -75,7 +79,7 @@ abstract class Injector {
     return types;
   }
 
-  String _error(resolving, message, [appendDependency]) {
+  static String error(resolving, message, [appendDependency]) {
     if (appendDependency != null) {
       resolving.add(appendDependency);
     }
@@ -85,13 +89,13 @@ abstract class Injector {
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceByKey(Key key, Injector requester, List<Key> resolving) {
+  Object getInstanceByKey(Key key, Injector requester, List<Key> resolving) {
     assert(_checkKeyConditions(key, resolving));
 
     // Do not bother checking the array until we are fairly deep.
     if (resolving.length > 30 && resolving.contains(key)) {
       throw new CircularDependencyError(
-          _error(resolving, 'Cannot resolve a circular dependency!', key));
+          Injector.error(resolving, 'Cannot resolve a circular dependency!', key));
     }
 
     var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
@@ -107,16 +111,16 @@ abstract class Injector {
       if (!visible) {
         if (injector.parent == null) {
           throw new NoProviderError(
-              _error(resolving, 'No provider found for ${key}!', key));
+              Injector.error(resolving, 'No provider found for ${key}!', key));
         }
         injector =
             injector.parent._getProviderWithInjectorForKey(key, resolving).injector;
       }
-      return injector._getInstanceByKey(key, requester, resolving);
+      return injector.getInstanceByKey(key, requester, resolving);
     }
 
     resolving.add(key);
-    var value = provider.get(this, requester, _getInstanceByKey, _error, resolving);
+    var value = provider.get(this, requester, this, resolving);
     resolving.removeLast();
 
     // cache the value.
@@ -143,12 +147,12 @@ abstract class Injector {
           new _TypeProvider(key.type), this);
     }
 
-    throw new NoProviderError(_error(resolving, 'No provider found for ${key}!', key));
+    throw new NoProviderError(Injector.error(resolving, 'No provider found for ${key}!', key));
   }
 
   bool _checkKeyConditions(Key key, List resolving) {
     if (_PRIMITIVE_TYPES.contains(key)) {
-      throw new NoProviderError(_error(resolving, 'Cannot inject a primitive type '
+      throw new NoProviderError(Injector.error(resolving, 'Cannot inject a primitive type '
           'of ${key.type}!', key));
     }
     return true;
@@ -170,7 +174,7 @@ abstract class Injector {
    * the token ([Type]) is instantiated.
    */
   dynamic get(Type type, [Type annotation]) =>
-      _getInstanceByKey(new Key(type, annotation), this, []);
+      getInstanceByKey(new Key(type, annotation), this, []);
 
   /**
    * Get an instance for given key ([Key]).
@@ -181,7 +185,7 @@ abstract class Injector {
    *
    * If there is no binding for given key, injector asks parent injector.
    */
-  dynamic getByKey(Key key) => _getInstanceByKey(key, this, []);
+  dynamic getByKey(Key key) => getInstanceByKey(key, this, []);
 
   /**
    * Create a child injector.
@@ -214,7 +218,7 @@ abstract class Injector {
         var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
         var provider = providerWithInjector.provider;
         forceNew._keyedFactory(key, (Injector inj) => provider.get(this,
-            inj, inj._getInstanceByKey, inj._error, resolving),
+            inj, inj, resolving),
             visibility: provider.visibility);
       });
 
@@ -228,7 +232,6 @@ abstract class Injector {
   newFromParent(List<Module> modules, String name);
 
   Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
-                       errorHandler(resolving, message, [appendDependency]),
                        List<Key> resolving);
 }
 
