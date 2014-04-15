@@ -6,7 +6,7 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
 ]);
 
 abstract class ObjectFactory {
-  Object getInstanceByKey(Key key, Injector requester, List<Key> resolving);
+  Object getInstanceByKey(Key key, Injector requester, List resolving);
 }
 
 abstract class Injector implements ObjectFactory {
@@ -79,21 +79,34 @@ abstract class Injector implements ObjectFactory {
     return types;
   }
 
-  static String error(resolving, message, [appendDependency]) {
+  // 'resolving' is a tuple of (depth, Key, cdr), I implemented it
+  // as an array, but there may be a better solution.
+  static const ZERO_DEPTH_RESOLVING = const [0];
+
+  static Iterable<Key> resolvedTypes(resolving) {
+    List resolved = [];
+    while (resolving[0] != 0) {
+      resolved.add(resolving[1]);
+      resolving = resolving[2];
+    }
+    return resolved.reversed;
+  }
+
+  static String error(List resolving, message, [appendDependency]) {
     if (appendDependency != null) {
-      resolving.add(appendDependency);
+      resolving = [resolving[0] + 1, appendDependency, resolving];
     }
 
-    String graph = resolving.join(' -> ');
+    String graph = resolvedTypes(resolving).join(' -> ');
 
     return '$message (resolving $graph)';
   }
 
-  Object getInstanceByKey(Key key, Injector requester, List<Key> resolving) {
+  Object getInstanceByKey(Key key, Injector requester, List resolving) {
     assert(_checkKeyConditions(key, resolving));
 
     // Do not bother checking the array until we are fairly deep.
-    if (resolving.length > 30 && resolving.contains(key)) {
+    if (resolving[0] > 30 && resolvedTypes(resolving).contains(key)) {
       throw new CircularDependencyError(
           Injector.error(resolving, 'Cannot resolve a circular dependency!', key));
     }
@@ -119,9 +132,8 @@ abstract class Injector implements ObjectFactory {
       return injector.getInstanceByKey(key, requester, resolving);
     }
 
-    resolving.add(key);
+    resolving = [resolving[0] + 1, key, resolving];
     var value = provider.get(this, requester, this, resolving);
-    resolving.removeLast();
 
     // cache the value.
     providerWithInjector.injector.instances[key] = value;
@@ -174,7 +186,7 @@ abstract class Injector implements ObjectFactory {
    * the token ([Type]) is instantiated.
    */
   dynamic get(Type type, [Type annotation]) =>
-      getInstanceByKey(new Key(type, annotation), this, []);
+      getInstanceByKey(new Key(type, annotation), this, Injector.ZERO_DEPTH_RESOLVING);
 
   /**
    * Get an instance for given key ([Key]).
@@ -185,7 +197,7 @@ abstract class Injector implements ObjectFactory {
    *
    * If there is no binding for given key, injector asks parent injector.
    */
-  dynamic getByKey(Key key) => getInstanceByKey(key, this, []);
+  dynamic getByKey(Key key) => getInstanceByKey(key, this, Injector.ZERO_DEPTH_RESOLVING);
 
   /**
    * Create a child injector.
@@ -198,13 +210,13 @@ abstract class Injector implements ObjectFactory {
    */
   Injector createChild(List<Module> modules,
                        {List forceNewInstances, String name}) =>
-      _createChildWithResolvingHistory(modules, [],
+      _createChildWithResolvingHistory(modules, Injector.ZERO_DEPTH_RESOLVING,
           forceNewInstances: forceNewInstances,
           name: name);
 
   Injector _createChildWithResolvingHistory(
                         List<Module> modules,
-                        List<Key> resolving,
+                        resolving,
                         {List forceNewInstances, String name}) {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
@@ -232,7 +244,7 @@ abstract class Injector implements ObjectFactory {
   newFromParent(List<Module> modules, String name);
 
   Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
-                       List<Key> resolving);
+                       resolving);
 }
 
 class _ProviderWithDefiningInjector {

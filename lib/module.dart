@@ -124,7 +124,7 @@ abstract class _Provider {
 
   dynamic get(Injector injector, Injector requestor,
       ObjectFactory objFactory,
-      List<Key> resolving);
+      resolving);
 }
 
 class _ValueProvider extends _Provider {
