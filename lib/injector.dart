@@ -5,7 +5,11 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
   new Key(bool)
 ]);
 
-class Injector {
+abstract class ObjectFactory {
+  Object getInstanceByKey(Key key, Injector requester, List resolving);
+}
+
+abstract class Injector implements ObjectFactory {
 
   /**
    * Name of the injector or null of none is given.
@@ -23,8 +27,6 @@ class Injector {
   int _providersLen = 0;
 
   final Map<Key, Object> instances = <Key, Object>{};
-
-  final List<Key> resolving = <Key>[];
 
   final bool allowImplicitInjection;
 
@@ -77,27 +79,39 @@ class Injector {
     return types;
   }
 
-  String _error(message, [appendDependency]) {
+  // 'resolving' is a tuple of (depth, Key, cdr), I implemented it
+  // as an array, but there may be a better solution.
+  static const ZERO_DEPTH_RESOLVING = const [0];
+
+  static Iterable<Key> resolvedTypes(resolving) {
+    List resolved = [];
+    while (resolving[0] != 0) {
+      resolved.add(resolving[1]);
+      resolving = resolving[2];
+    }
+    return resolved.reversed;
+  }
+
+  static String error(List resolving, message, [appendDependency]) {
     if (appendDependency != null) {
-      resolving.add(appendDependency);
+      resolving = [resolving[0] + 1, appendDependency, resolving];
     }
 
-    String graph = resolving.join(' -> ');
-
-    resolving.clear();
+    String graph = resolvedTypes(resolving).join(' -> ');
 
     return '$message (resolving $graph)';
   }
 
-  dynamic _getInstanceByKey(Key key, Injector requester) {
-    assert(_checkKeyConditions(key));
+  Object getInstanceByKey(Key key, Injector requester, List resolving) {
+    assert(_checkKeyConditions(key, resolving));
 
-    if (resolving.contains(key)) {
+    // Do not bother checking the array until we are fairly deep.
+    if (resolving[0] > 30 && resolvedTypes(resolving).contains(key)) {
       throw new CircularDependencyError(
-          _error('Cannot resolve a circular dependency!', key));
+          Injector.error(resolving, 'Cannot resolve a circular dependency!', key));
     }
 
-    var providerWithInjector = _getProviderWithInjectorForKey(key);
+    var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
     var provider = providerWithInjector.provider;
     var injector = providerWithInjector.injector;
     var visible = provider.visibility != null ?
@@ -110,23 +124,16 @@ class Injector {
       if (!visible) {
         if (injector.parent == null) {
           throw new NoProviderError(
-              _error('No provider found for ${key}!', key));
+              Injector.error(resolving, 'No provider found for ${key}!', key));
         }
         injector =
-            injector.parent._getProviderWithInjectorForKey(key).injector;
+            injector.parent._getProviderWithInjectorForKey(key, resolving).injector;
       }
-      return injector._getInstanceByKey(key, requester);
+      return injector.getInstanceByKey(key, requester, resolving);
     }
 
-    var value;
-    try {
-      resolving.add(key);
-      value = provider.get(this, requester, _getInstanceByKey, _error);
-      resolving.removeLast();
-    } catch(e) {
-      resolving.clear();
-      rethrow;
-    }
+    resolving = [resolving[0] + 1, key, resolving];
+    var value = provider.get(this, requester, this, resolving);
 
     // cache the value.
     providerWithInjector.injector.instances[key] = value;
@@ -134,7 +141,8 @@ class Injector {
   }
 
   /// Returns a pair for provider and the injector where it's defined.
-  _ProviderWithDefiningInjector _getProviderWithInjectorForKey(Key key) {
+  _ProviderWithDefiningInjector _getProviderWithInjectorForKey(
+      Key key, List resolving) {
     if (key.id < _providersLen) {
       var provider = _providers[key.id];
       if (provider != null) {
@@ -143,7 +151,7 @@ class Injector {
     }
 
     if (parent != null) {
-      return parent._getProviderWithInjectorForKey(key);
+      return parent._getProviderWithInjectorForKey(key, resolving);
     }
 
     if (allowImplicitInjection) {
@@ -151,12 +159,12 @@ class Injector {
           new _TypeProvider(key.type), this);
     }
 
-    throw new NoProviderError(_error('No provider found for ${key}!', key));
+    throw new NoProviderError(Injector.error(resolving, 'No provider found for ${key}!', key));
   }
 
-  bool _checkKeyConditions(Key key) {
+  bool _checkKeyConditions(Key key, List resolving) {
     if (_PRIMITIVE_TYPES.contains(key)) {
-      throw new NoProviderError(_error('Cannot inject a primitive type '
+      throw new NoProviderError(Injector.error(resolving, 'Cannot inject a primitive type '
           'of ${key.type}!', key));
     }
     return true;
@@ -178,7 +186,7 @@ class Injector {
    * the token ([Type]) is instantiated.
    */
   dynamic get(Type type, [Type annotation]) =>
-      _getInstanceByKey(new Key(type, annotation), this);
+      getInstanceByKey(new Key(type, annotation), this, Injector.ZERO_DEPTH_RESOLVING);
 
   /**
    * Get an instance for given key ([Key]).
@@ -189,7 +197,7 @@ class Injector {
    *
    * If there is no binding for given key, injector asks parent injector.
    */
-  dynamic getByKey(Key key) => _getInstanceByKey(key, this);
+  dynamic getByKey(Key key) => getInstanceByKey(key, this, Injector.ZERO_DEPTH_RESOLVING);
 
   /**
    * Create a child injector.
@@ -201,7 +209,15 @@ class Injector {
    * token, there will be a new instance created in the child injector.
    */
   Injector createChild(List<Module> modules,
-                       {List forceNewInstances, String name}) {
+                       {List forceNewInstances, String name}) =>
+      _createChildWithResolvingHistory(modules, Injector.ZERO_DEPTH_RESOLVING,
+          forceNewInstances: forceNewInstances,
+          name: name);
+
+  Injector _createChildWithResolvingHistory(
+                        List<Module> modules,
+                        resolving,
+                        {List forceNewInstances, String name}) {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
       forceNewInstances.forEach((key) {
@@ -211,10 +227,10 @@ class Injector {
           throw 'forceNewInstances must be List<Key|Type>';
         }
         assert(key is Key);
-        var providerWithInjector = _getProviderWithInjectorForKey(key);
+        var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
         var provider = providerWithInjector.provider;
         forceNew._keyedFactory(key, (Injector inj) => provider.get(this,
-            inj, inj._getInstanceByKey, inj._error),
+            inj, inj, resolving),
             visibility: provider.visibility);
       });
 
@@ -225,14 +241,10 @@ class Injector {
     return newFromParent(modules, name);
   }
 
-  newFromParent(List<Module> modules, String name) {
-    throw new UnimplementedError('This method must be overriden.');
-  }
+  newFromParent(List<Module> modules, String name);
 
   Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
-                       errorHandler(message, [appendDependency])) {
-    throw new UnimplementedError('This method must be overriden.');
-  }
+                       resolving);
 }
 
 class _ProviderWithDefiningInjector {
