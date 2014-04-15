@@ -24,13 +24,14 @@ class StaticInjector extends Injector {
       new StaticInjector._fromParent(modules, this, name: name);
 
   Object newInstanceOf(Type type, ObjectFactory getInstanceByKey,
-                       Injector requestor, error) {
+                       Injector requestor, error, resolving) {
     TypeFactory typeFactory = _getFactory(type);
     if (typeFactory == null) {
-      throw new NoProviderError(error('No type factory provided for $type!'));
+      throw new NoProviderError(
+          error(resolving, 'No type factory provided for $type!'));
     }
     return typeFactory((type, [annotation]) =>
-        getInstanceByKey(new Key(type, annotation), requestor));
+        getInstanceByKey(new Key(type, annotation), requestor, resolving));
   }
 
   TypeFactory _getFactory(Type key) {
