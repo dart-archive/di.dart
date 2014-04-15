@@ -88,7 +88,8 @@ abstract class Injector {
   dynamic _getInstanceByKey(Key key, Injector requester, List<Key> resolving) {
     assert(_checkKeyConditions(key, resolving));
 
-    if (resolving.contains(key)) {
+    // Do not bother checking the array until we are fairly deep.
+    if (resolving.length > 30 && resolving.contains(key)) {
       throw new CircularDependencyError(
           _error(resolving, 'Cannot resolve a circular dependency!', key));
     }
