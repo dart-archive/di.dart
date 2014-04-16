@@ -396,9 +396,19 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       expect(() {
         injector.get(CircularA);
-      }, toThrow(CircularDependencyError, 'Cannot resolve a circular dependency! '
-          '(resolving CircularA -> '
-      'CircularB -> CircularA'));
+      }, toThrow(CircularDependencyError, 'Cannot resolve a circular '
+          'dependency! (resolving CircularA -> CircularB -> CircularA'));
+    });
+
+    it('should throw an exception when circular dependency in factory', () {
+      var injector = injectorFactory([new Module()
+          ..factory(CircularA, (i) => i.get(CircularA))
+      ]);
+
+      expect(() {
+        injector.get(CircularA);
+      }, toThrow(CircularDependencyError, 'Cannot resolve a '
+          'circular dependency! (resolving CircularA -> CircularA'));
     });
 
 
