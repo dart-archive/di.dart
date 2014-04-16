@@ -2,7 +2,7 @@ library lib_common2;
 
 import 'annotations.dart';
 
-@Injectable()
+@InjectableTest()
 class ServiceCommon2 {
   sayHi() {
     print('Hi ServiceCommon2!');

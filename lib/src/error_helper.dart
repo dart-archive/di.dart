@@ -1,6 +1,6 @@
 library di.error_helper;
 
-import 'package:di/di.dart';
+import 'package:di/key.dart';
 
 String error(List resolving, message, [appendDependency]) {
   if (appendDependency != null) {

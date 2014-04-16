@@ -18,7 +18,7 @@ typedef Object TypeFactory(factory(Type type, Type annotation));
  * module have no effect.
  */
 class Module {
-  final _providers = <int, _Provider>{};
+  final _providers = <int, Provider>{};
   final _childModules = <Module>[];
   Map<Type, TypeFactory> _typeFactories = {};
 
@@ -38,16 +38,16 @@ class Module {
     _typeFactories = factories;
   }
 
-  Map<int, _Provider> _providersCache;
+  Map<int, Provider> _providersCache;
 
   /**
    * Compiles and returs bindings map by performing depth-first traversal of the
    * child (installed) modules.
    */
-  Map<int, _Provider> get _bindings {
+  Map<int, Provider> get bindings {
     if (_isDirty) {
-      _providersCache = <int, _Provider>{};
-      _childModules.forEach((child) => _providersCache.addAll(child._bindings));
+      _providersCache = <int, Provider>{};
+      _childModules.forEach((child) => _providersCache.addAll(child.bindings));
       _providersCache.addAll(_providers);
     }
     return _providersCache;
@@ -61,7 +61,7 @@ class Module {
   void value(Type id, value, {Type withAnnotation, Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
-    _providers[key.id] = new _ValueProvider(id, value, visibility);
+    _providers[key.id] = new ValueProvider(id, value, visibility);
   }
 
   /**
@@ -75,7 +75,7 @@ class Module {
       Visibility visibility}) {
     _dirty();
     Key key = new Key(id, withAnnotation);
-    _providers[key.id] = new _TypeProvider(
+    _providers[key.id] = new TypeProvider(
         implementedBy == null ? id : implementedBy, visibility);
   }
 
@@ -87,13 +87,13 @@ class Module {
    */
   void factory(Type id, FactoryFn factoryFn, {Type withAnnotation,
       Visibility visibility}) {
-    _keyedFactory(new Key(id, withAnnotation), factoryFn,
+    factoryByKey(new Key(id, withAnnotation), factoryFn,
         visibility: visibility);
   }
 
-  void _keyedFactory(Key key, FactoryFn factoryFn, {Visibility visibility}) {
+  void factoryByKey(Key key, FactoryFn factoryFn, {Visibility visibility}) {
     _dirty();
-    _providers[key.id] = new _FactoryProvider(key.type, factoryFn, visibility);
+    _providers[key.id] = new FactoryProvider(key.type, factoryFn, visibility);
   }
 
   /**
@@ -111,49 +111,4 @@ class Module {
 
   bool get _isDirty =>
       _providersCache == null || _childModules.any((m) => m._isDirty);
-}
-
-/** By default all values are visible to child injectors. */
-bool _defaultVisibility(_, __) => true;
-
-abstract class _Provider {
-  final Visibility visibility;
-  final Type type;
-
-  _Provider(this.type, this.visibility);
-
-  dynamic get(Injector injector, Injector requestor,
-      ObjectFactory objFactory,
-      resolving);
-}
-
-class _ValueProvider extends _Provider {
-  dynamic value;
-
-  _ValueProvider(type, this.value, [Visibility visibility])
-      : super(type, visibility);
-
-  dynamic get(Injector injector, Injector requestor,
-      ObjectFactory objFactory, resolving) => value;
-}
-
-class _TypeProvider extends _Provider {
-  _TypeProvider(type, [Visibility visibility]) : super(type, visibility);
-
-  dynamic get(Injector injector, Injector requestor,
-      ObjectFactory objFactory, resolving) {
-    return injector.newInstanceOf(
-        type, objFactory, requestor, resolving);
-  }
-}
-
-class _FactoryProvider extends _Provider {
-  final Function factoryFn;
-
-  _FactoryProvider(type, this.factoryFn, [Visibility visibility])
-      : super(type, visibility);
-
-  dynamic get(Injector injector, Injector requestor,
-       ObjectFactory objFactory, resolving) =>
-     factoryFn(new _InjectorDelagate(injector, resolving));
 }

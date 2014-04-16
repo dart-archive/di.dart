@@ -1,8 +1,12 @@
 library di.dynamic_injector;
 
 import 'di.dart';
-import 'mirrors.dart';
-import 'error_helper.dart';
+import 'key.dart';
+import 'src/mirrors.dart';
+import 'src/base_injector.dart';
+import 'src/error_helper.dart';
+
+export 'di.dart';
 
 /**
  * Dynamic implementation of [Injector] that uses mirrors.

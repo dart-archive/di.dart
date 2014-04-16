@@ -19,4 +19,4 @@ dev_dependencies:
 
 transformers:
 - di:
-    injectable_annotations: di.tests.Injectable
+    injectable_annotations: di.tests.InjectableTest

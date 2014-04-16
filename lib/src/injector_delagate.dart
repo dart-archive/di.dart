@@ -1,10 +1,14 @@
-part of di;
+library di.injector_delegate;
 
-class _InjectorDelagate implements Injector, ObjectFactory {
+import 'base_injector.dart';
+import 'package:di/di.dart';
+import 'package:di/key.dart';
+
+class InjectorDelagate implements Injector, ObjectFactory {
   BaseInjector _injector;
   List<Key> _resolving;
 
-  _InjectorDelagate(this._injector, this._resolving);
+  InjectorDelagate(this._injector, this._resolving);
 
   @override
   bool get allowImplicitInjection => _injector.allowImplicitInjection;
@@ -36,18 +40,16 @@ class _InjectorDelagate implements Injector, ObjectFactory {
   @override
   Injector createChild(List<Module> modules,
                        {List forceNewInstances, String name}) =>
-      _injector._createChildWithResolvingHistory(modules, _resolving,
+      _injector.createChildWithResolvingHistory(modules, _resolving,
           forceNewInstances: forceNewInstances,
           name: name);
 
   @override
-  newFromParent(List<Module> modules, String name) {
-    throw new UnimplementedError();
-  }
+  newFromParent(List<Module> modules, String name) =>
+      _injector.newFromParent(modules, name);
 
   @override
   Object newInstanceOf(Type type, ObjectFactory factory,
-                       Injector requestor, resolving) {
-    throw new UnimplementedError();
-  }
+                       Injector requestor, resolving) =>
+      _injector.newInstanceOf(type, factory, requestor, resolving);
 }

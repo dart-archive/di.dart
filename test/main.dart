@@ -13,6 +13,7 @@ library di.tests;
 
 import 'fixed-unittest.dart';
 import 'package:di/di.dart';
+import 'package:di/key.dart';
 import 'package:di/dynamic_injector.dart';
 import 'package:di/static_injector.dart';
 import 'package:di/annotations.dart';
@@ -26,12 +27,12 @@ import 'type_factories_gen.dart' as type_factories_gen;
  * generated. For testing purposes not all classes are marked with this
  * annotation, some classes are included in @Injectables at the top.
  */
-class Injectable {
-  const Injectable();
+class InjectableTest {
+  const InjectableTest();
 }
 
 // just some classes for testing
-@Injectable()
+@InjectableTest()
 class Engine {
   final String id = 'v8-id';
 }
@@ -41,7 +42,7 @@ class MockEngine implements Engine {
   final String id = 'mock-id';
 }
 
-@Injectable()
+@InjectableTest()
 class MockEngine2 implements Engine {
   String id = 'mock-id-2';
 }
@@ -50,17 +51,17 @@ class HiddenConstructor {
   HiddenConstructor._();
 }
 
-@Injectable()
+@InjectableTest()
 class TurboEngine implements Engine {
   String id = 'turbo-engine-id';
 }
 
-@Injectable()
+@InjectableTest()
 class BrokenOldEngine implements Engine {
   String id = 'broken-old-engine-id';
 }
 
-@Injectable()
+@InjectableTest()
 class Car {
   Engine engine;
   Injector injector;
@@ -75,7 +76,7 @@ class Lemon {
   Lemon(this.engine, this.injector);
 }
 
-@Injectable()
+@InjectableTest()
 class Porsche {
   Engine engine;
   Injector injector;
@@ -137,31 +138,31 @@ class ClassOne implements InterfaceOne {
   }
 }
 
-@Injectable()
+@InjectableTest()
 class ParameterizedType<T1, T2> {
   ParameterizedType();
 }
 
-@Injectable()
+@InjectableTest()
 class ParameterizedDependency {
   final ParameterizedType<bool, int> _p;
   ParameterizedDependency(this._p);
 }
 
-@Injectable()
+@InjectableTest()
 class GenericParameterizedDependency {
   final ParameterizedType _p;
   GenericParameterizedDependency(this._p);
 }
 
-@Injectable()
+@InjectableTest()
 class Log {
   var log = [];
 
   add(String message) => log.add(message);
 }
 
-@Injectable()
+@InjectableTest()
 class AnnotatedPrimitiveDependency {
   String strValue;
   AnnotatedPrimitiveDependency(@Turbo() this.strValue);
@@ -172,7 +173,7 @@ class EmulatedMockEngineFactory {
 }
 
 bool throwOnceShouldThrow = true;
-@Injectable()
+@InjectableTest()
 class ThrowOnce {
   ThrowOnce() {
     if (throwOnceShouldThrow) {
@@ -566,8 +567,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
-    it('should instantiate class only once (Issue #18)', () {
-      var injector = injectorFactory([
+    iit('should instantiate class only once (Issue #18)', () {
+      var rootInjector = injectorFactory([]);
+      var injector = rootInjector.createChild([
           new Module()
             ..type(Log)
             ..type(ClassOne)

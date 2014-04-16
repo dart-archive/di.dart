@@ -7,7 +7,7 @@ main(args) => group('generator', () {
 
   test('should codesplit deferred libraries', () {
     Map<generator.Chunk, String> code = generator.generateCode(
-        'test_assets/gen_test1/main.dart', ['annotations.Injectable'],
+        'test_assets/gen_test1/main.dart', ['annotations.InjectableTest'],
         Platform.environment['DART_SDK'], [Platform.packageRoot], 'main.dart');
 
     expect(code.keys.map((chunk) => chunk.library == null ? null : chunk.library.name),

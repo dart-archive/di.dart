@@ -1,6 +1,8 @@
-part of di;
+library di.key;
 
 int _lastKeyId = 0;
+int get lastKeyId => _lastKeyId;
+
 Map<int, int> _hashToKey = {};
 
 class Key {

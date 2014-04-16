@@ -100,7 +100,9 @@ class _Processor {
         injectableMetaConstructors.add(cls.unnamedConstructor);
         continue;
       }
-      logger.warning('Unable to resolve injectable annotation $metaName');
+      if (!DEFAULT_INJECTABLE_ANNOTATIONS.contains(metaName)) {
+        logger.warning('Unable to resolve injectable annotation $metaName');
+      }
     }
   }
 

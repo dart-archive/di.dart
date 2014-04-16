@@ -5,6 +5,9 @@ import 'dart:async';
 import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 
+const List<String> DEFAULT_INJECTABLE_ANNOTATIONS =
+    const ['di.annotations.Injectable'];
+
 /// Returns either a bool or a Future<bool> when complete.
 typedef EntryFilter(Asset asset);
 
@@ -37,7 +40,8 @@ class TransformOptions {
     : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
       sdkDirectory = sdkDirectory,
       injectableAnnotations =
-          injectableAnnotations != null ? injectableAnnotations : [],
+          (injectableAnnotations != null ? injectableAnnotations : [])
+              ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
       injectedTypes =
           new Set.from(injectedTypes != null ? injectedTypes : []) {
     if (sdkDirectory == null)

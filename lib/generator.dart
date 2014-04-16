@@ -13,8 +13,10 @@ import 'dart:io';
 
 const String PACKAGE_PREFIX = 'package:';
 const String DART_PACKAGE_PREFIX = 'dart:';
+const List<String> _DEFAULT_INJECTABLE_ANNOTATIONS =
+    const ['di.annotations.Injectable'];
 
-main(args) {
+main(List<String> args) {
   if (args.length < 4) {
     print('Usage: generator path_to_sdk file_to_resolve annotations output [package_roots+]');
     exit(0);
@@ -22,7 +24,8 @@ main(args) {
 
   var pathToSdk = args[0];
   var entryPoint = args[1];
-  var classAnnotations = args[2].split(',');
+  var classAnnotations = args[2].split(',')
+      ..addAll(_DEFAULT_INJECTABLE_ANNOTATIONS);
   var output = args[3];
   var packageRoots = (args.length < 5) ? [Platform.packageRoot] : args.sublist(4);
 

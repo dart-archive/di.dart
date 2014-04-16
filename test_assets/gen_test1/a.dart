@@ -4,7 +4,7 @@ import 'annotations.dart';
 import 'a2.dart';
 import 'common1.dart';
 
-@Injectable()
+@InjectableTest()
 class ServiceA {
   sayHi() {
     print('Hi ServiceA!');

@@ -1,7 +1,12 @@
 library di.static_injector;
 
 import 'di.dart';
-import 'error_helper.dart';
+import 'key.dart';
+import 'src/error_helper.dart';
+import 'src/base_injector.dart';
+
+export 'annotations.dart';
+export 'di.dart';
 
 /**
  * Static implementation of [Injector] that uses type factories

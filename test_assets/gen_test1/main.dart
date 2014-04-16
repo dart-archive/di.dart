@@ -36,7 +36,7 @@ void onCLoaded(_) {
   c.cStuff();
 }
 
-@Injectable()
+@InjectableTest()
 class ServiceMain {
   sayHi() {
     print('Hi ServiceMain!');
