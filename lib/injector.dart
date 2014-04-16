@@ -83,13 +83,13 @@ abstract class Injector implements ObjectFactory {
   // as an array, but there may be a better solution.
   static const ZERO_DEPTH_RESOLVING = const [0];
 
-  static Iterable<Key> resolvedTypes(resolving) {
+  static List<Key> resolvedTypes(resolving) {
     List resolved = [];
     while (resolving[0] != 0) {
       resolved.add(resolving[1]);
       resolving = resolving[2];
     }
-    return resolved.reversed;
+    return resolved;
   }
 
   static String error(List resolving, message, [appendDependency]) {
@@ -97,7 +97,7 @@ abstract class Injector implements ObjectFactory {
       resolving = [resolving[0] + 1, appendDependency, resolving];
     }
 
-    String graph = resolvedTypes(resolving).join(' -> ');
+    String graph = resolvedTypes(resolving).reversed.join(' -> ');
 
     return '$message (resolving $graph)';
   }
