@@ -10,31 +10,96 @@ abstract class ObjectFactory {
 }
 
 abstract class Injector implements ObjectFactory {
-
   /**
    * Name of the injector or null of none is given.
    */
-  final String name;
+  String get name;
 
   /**
    * The parent injector or null if root.
    */
-  final Injector parent;
+  Injector get parent;
+
+  /**
+   * The root injector.
+   */
+  Injector get root;
+
+  /**
+   * List of all types which the injector can return
+   */
+  Set<Type> get types;
+
+  /**
+   * Indicates whether injector allows implicit injection -- resolving types
+   * that were not explicitly bound in the module(s).
+   */
+  bool get allowImplicitInjection;
+
+  /**
+   * Get an instance for given token ([Type]).
+   *
+   * If the injector already has an instance for this token, it returns this
+   * instance. Otherwise, injector resolves all its dependencies, instantiates
+   * new instance and returns this instance.
+   *
+   * If there is no binding for given token, injector asks parent injector.
+   *
+   * If there is no parent injector, an implicit binding is used. That is,
+   * the token ([Type]) is instantiated.
+   */
+  dynamic get(Type type, [Type annotation]);
+
+  /**
+   * Get an instance for given key ([Key]).
+   *
+   * If the injector already has an instance for this key, it returns this
+   * instance. Otherwise, injector resolves all its dependencies, instantiates
+   * new instance and returns this instance.
+   *
+   * If there is no binding for given key, injector asks parent injector.
+   */
+  dynamic getByKey(Key key);
+
+  /**
+   * Create a child injector.
+   *
+   * Child injector can override any bindings by adding additional modules.
+   *
+   * It also accepts a list of tokens that a new instance should be forced.
+   * That means, even if some parent injector already has an instance for this
+   * token, there will be a new instance created in the child injector.
+   */
+  Injector createChild(List<Module> modules,
+                       {List forceNewInstances, String name});
+
+
+  newFromParent(List<Module> modules, String name);
+
+  Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
+                       resolving);
+}
+
+abstract class BaseInjector implements Injector {
+
+  @override
+  final String name;
+
+  @override
+  final BaseInjector parent;
 
   Injector _root;
 
   List<_Provider> _providers;
   int _providersLen = 0;
 
-  final Map<Key, Object> instances = <Key, Object>{};
+  final Map<Key, Object> _instances = <Key, Object>{};
 
+  @override
   final bool allowImplicitInjection;
 
   Iterable<Type> _typesCache;
 
-  /**
-   * List of all types which the injector can return
-   */
   Iterable<Type> get _types {
     if (_providers == null) return [];
 
@@ -46,13 +111,13 @@ abstract class Injector implements ObjectFactory {
     return _typesCache;
   }
 
-  Injector({List<Module> modules, String name,
+  BaseInjector({List<Module> modules, String name,
            bool allowImplicitInjection: false})
       : this.fromParent(modules, null,
           name: name, allowImplicitInjection: allowImplicitInjection);
 
-  Injector.fromParent(List<Module> modules,
-      Injector this.parent, {this.name, this.allowImplicitInjection}) {
+  BaseInjector.fromParent(List<Module> modules,
+      BaseInjector this.parent, {this.name, this.allowImplicitInjection}) {
     _root = parent == null ? this : parent._root;
     var injectorId = new Key(Injector).id;
     _providers = new List(_lastKeyId + 1);
@@ -67,8 +132,10 @@ abstract class Injector implements ObjectFactory {
     _providers[injectorId] = new _ValueProvider(Injector, this);
   }
 
+  @override
   Injector get root => _root;
 
+  @override
   Set<Type> get types {
     var types = new Set.from(_types);
     var parent = this.parent;
@@ -83,32 +150,13 @@ abstract class Injector implements ObjectFactory {
   // as an array, but there may be a better solution.
   static const ZERO_DEPTH_RESOLVING = const [0];
 
-  static List<Key> resolvedTypes(resolving) {
-    List resolved = [];
-    while (resolving[0] != 0) {
-      resolved.add(resolving[1]);
-      resolving = resolving[2];
-    }
-    return resolved;
-  }
-
-  static String error(List resolving, message, [appendDependency]) {
-    if (appendDependency != null) {
-      resolving = [resolving[0] + 1, appendDependency, resolving];
-    }
-
-    String graph = resolvedTypes(resolving).reversed.join(' -> ');
-
-    return '$message (resolving $graph)';
-  }
-
   Object getInstanceByKey(Key key, Injector requester, List resolving) {
     assert(_checkKeyConditions(key, resolving));
 
     // Do not bother checking the array until we are fairly deep.
     if (resolving[0] > 30 && resolvedTypes(resolving).contains(key)) {
       throw new CircularDependencyError(
-          Injector.error(resolving, 'Cannot resolve a circular dependency!', key));
+          error(resolving, 'Cannot resolve a circular dependency!', key));
     }
 
     var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
@@ -118,13 +166,13 @@ abstract class Injector implements ObjectFactory {
         provider.visibility(requester, injector) :
         _defaultVisibility(requester, injector);
 
-    if (visible && instances.containsKey(key)) return instances[key];
+    if (visible && _instances.containsKey(key)) return _instances[key];
 
     if (providerWithInjector.injector != this || !visible) {
       if (!visible) {
         if (injector.parent == null) {
           throw new NoProviderError(
-              Injector.error(resolving, 'No provider found for ${key}!', key));
+              error(resolving, 'No provider found for ${key}!', key));
         }
         injector =
             injector.parent._getProviderWithInjectorForKey(key, resolving).injector;
@@ -136,7 +184,7 @@ abstract class Injector implements ObjectFactory {
     var value = provider.get(this, requester, this, resolving);
 
     // cache the value.
-    providerWithInjector.injector.instances[key] = value;
+    providerWithInjector.injector._instances[key] = value;
     return value;
   }
 
@@ -159,58 +207,28 @@ abstract class Injector implements ObjectFactory {
           new _TypeProvider(key.type), this);
     }
 
-    throw new NoProviderError(Injector.error(resolving, 'No provider found for ${key}!', key));
+    throw new NoProviderError(error(resolving, 'No provider found for ${key}!', key));
   }
 
   bool _checkKeyConditions(Key key, List resolving) {
     if (_PRIMITIVE_TYPES.contains(key)) {
-      throw new NoProviderError(Injector.error(resolving, 'Cannot inject a primitive type '
+      throw new NoProviderError(error(resolving, 'Cannot inject a primitive type '
           'of ${key.type}!', key));
     }
     return true;
   }
 
-
-  // PUBLIC API
-
-  /**
-   * Get an instance for given token ([Type]).
-   *
-   * If the injector already has an instance for this token, it returns this
-   * instance. Otherwise, injector resolves all its dependencies, instantiates
-   * new instance and returns this instance.
-   *
-   * If there is no binding for given token, injector asks parent injector.
-   *
-   * If there is no parent injector, an implicit binding is used. That is,
-   * the token ([Type]) is instantiated.
-   */
+  @override
   dynamic get(Type type, [Type annotation]) =>
-      getInstanceByKey(new Key(type, annotation), this, Injector.ZERO_DEPTH_RESOLVING);
+      getInstanceByKey(new Key(type, annotation), this, BaseInjector.ZERO_DEPTH_RESOLVING);
 
-  /**
-   * Get an instance for given key ([Key]).
-   *
-   * If the injector already has an instance for this key, it returns this
-   * instance. Otherwise, injector resolves all its dependencies, instantiates
-   * new instance and returns this instance.
-   *
-   * If there is no binding for given key, injector asks parent injector.
-   */
-  dynamic getByKey(Key key) => getInstanceByKey(key, this, Injector.ZERO_DEPTH_RESOLVING);
+  @override
+  dynamic getByKey(Key key) => getInstanceByKey(key, this, BaseInjector.ZERO_DEPTH_RESOLVING);
 
-  /**
-   * Create a child injector.
-   *
-   * Child injector can override any bindings by adding additional modules.
-   *
-   * It also accepts a list of tokens that a new instance should be forced.
-   * That means, even if some parent injector already has an instance for this
-   * token, there will be a new instance created in the child injector.
-   */
+  @override
   Injector createChild(List<Module> modules,
                        {List forceNewInstances, String name}) =>
-      _createChildWithResolvingHistory(modules, Injector.ZERO_DEPTH_RESOLVING,
+      _createChildWithResolvingHistory(modules, BaseInjector.ZERO_DEPTH_RESOLVING,
           forceNewInstances: forceNewInstances,
           name: name);
 
@@ -240,15 +258,10 @@ abstract class Injector implements ObjectFactory {
 
     return newFromParent(modules, name);
   }
-
-  newFromParent(List<Module> modules, String name);
-
-  Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
-                       resolving);
 }
 
 class _ProviderWithDefiningInjector {
   final _Provider provider;
-  final Injector injector;
+  final BaseInjector injector;
   _ProviderWithDefiningInjector(this.provider, this.injector);
 }

@@ -1,11 +1,12 @@
 library di.static_injector;
 
 import 'di.dart';
+import 'error_helper.dart';
 
 /**
  * Static implementation of [Injector] that uses type factories
  */
-class StaticInjector extends Injector {
+class StaticInjector extends BaseInjector {
   Map<Type, TypeFactory> typeFactories;
 
   StaticInjector({List<Module> modules, String name,
@@ -28,10 +29,11 @@ class StaticInjector extends Injector {
     TypeFactory typeFactory = _getFactory(type);
     if (typeFactory == null) {
       throw new NoProviderError(
-          Injector.error(resolving, 'No type factory provided for $type!'));
+          error(resolving, 'No type factory provided for $type!'));
     }
     return typeFactory((type, [annotation]) =>
-        objFactory.getInstanceByKey(new Key(type, annotation), requestor, resolving));
+        objFactory.getInstanceByKey(
+            new Key(type, annotation), requestor, resolving));
   }
 
   TypeFactory _getFactory(Type key) {

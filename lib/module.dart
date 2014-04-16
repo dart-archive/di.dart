@@ -155,5 +155,5 @@ class _FactoryProvider extends _Provider {
 
   dynamic get(Injector injector, Injector requestor,
        ObjectFactory objFactory, resolving) =>
-     factoryFn(new InjectorDelagate(injector, resolving));
+     factoryFn(new _InjectorDelagate(injector, resolving));
 }

@@ -2,11 +2,12 @@ library di.dynamic_injector;
 
 import 'di.dart';
 import 'mirrors.dart';
+import 'error_helper.dart';
 
 /**
  * Dynamic implementation of [Injector] that uses mirrors.
  */
-class DynamicInjector extends Injector {
+class DynamicInjector extends BaseInjector {
 
   DynamicInjector({List<Module> modules, String name,
                   bool allowImplicitInjection: false})
@@ -23,7 +24,7 @@ class DynamicInjector extends Injector {
                        resolving) {
     var classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
-      throw new NoProviderError(Injector.error(resolving, 'No implementation provided '
+      throw new NoProviderError(error(resolving, 'No implementation provided '
           'for ${getSymbolName(classMirror.qualifiedName)} typedef!'));
     }
 
@@ -39,19 +40,23 @@ class DynamicInjector extends Injector {
       ParameterMirror p = ctor.parameters[pos];
       if (p.type.qualifiedName == #dynamic) {
         var name = MirrorSystem.getName(p.simpleName);
-        throw new NoProviderError(Injector.error(resolving, "The '$name' parameter must be typed"));
+        throw new NoProviderError(
+            error(resolving, "The '$name' parameter must be typed"));
       }
       if (p.type is TypedefMirror) {
         throw new NoProviderError(
-            Injector.error(resolving, 'Cannot create new instance of a typedef ${p.type}'));
+            error(resolving,
+                  'Cannot create new instance of a typedef ${p.type}'));
       }
       if (p.metadata.isNotEmpty) {
         assert(p.metadata.length == 1);
         var type = p.metadata.first.type.reflectedType;
-        return objFactory.getInstanceByKey(new Key((p.type as ClassMirror).reflectedType,
-            type), requestor, resolving);
+        return objFactory.getInstanceByKey(
+            new Key((p.type as ClassMirror).reflectedType, type),
+            requestor, resolving);
       } else {
-        return objFactory.getInstanceByKey(new Key((p.type as ClassMirror).reflectedType),
+        return objFactory.getInstanceByKey(
+            new Key((p.type as ClassMirror).reflectedType),
             requestor, resolving);
       }
     }
