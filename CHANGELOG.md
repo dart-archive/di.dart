@@ -2,6 +2,7 @@
 
 Combined with previous release (0.0.36) injector is on average 2x faster.
 
+Before:
 ```
 VM:
 DynamicInjectorBenchmark(RunTime): 231.93784065870346 us.
@@ -14,8 +15,8 @@ StaticInjectorBenchmark(RunTime): 765.1109410864575 us.
 
 After:
 
-VM:
 ```
+VM:
 DynamicInjectorBenchmark(RunTime): 156.3721657544957 us.
 StaticInjectorBenchmark(RunTime): 54.246114622040196 us.
 
