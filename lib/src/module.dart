@@ -13,9 +13,12 @@ typedef bool Visibility(Injector requesting, Injector defining);
 typedef Object TypeFactory(factory(Type type, Type annotation));
 
 /**
- * A collection of type bindings. Once the module is passed into the injector,
- * the injector creates a copy of the module and all subsequent changes to the
- * module have no effect.
+ * Module contributes configuration information to an [Injector] by providing a collection of type
+ * bindings that specify how each type is created.
+ *
+ * When an injector is created, it copies its configuration information from a module.
+ * Defining additional type bindings after an injector is created have no effect on that injector.
+ *
  */
 class Module {
   final _providers = <int, Provider>{};
@@ -41,7 +44,7 @@ class Module {
   Map<int, Provider> _providersCache;
 
   /**
-   * Compiles and returs bindings map by performing depth-first traversal of the
+   * Compiles and returns a map of type bindings by performing depth-first traversal of the
    * child (installed) modules.
    */
   Map<int, Provider> get bindings {
@@ -54,7 +57,7 @@ class Module {
   }
 
   /**
-   * Register binding to a concrete value.
+   * Register a binding to a concrete value.
    *
    * The [value] is what actually will be injected.
    */
@@ -65,22 +68,28 @@ class Module {
   }
 
   /**
-   * Register binding to a [Type].
+   * Registers a binding for a [Type].
    *
-   * The [implementedBy] will be instantiated using [new] operator and the
-   * resulting instance will be injected. If no type is provided, then it's
-   * implied that [id] should be instantiated.
+   * The default behavior is to simply instantiate the type.
+   *
+   * The following parameters can be specified:
+   *
+   * * [withAnnotation]: Type decorated with additional annotation.
+   * * [implementedBy]: The type will be instantiated using the [new] operator and the
+   *   resulting instance will be injected. If no type is provided, then it's
+   *   implied that [type] should be instantiated.
+   * * [visibility]: Function which determines fi the requesting injector can see the type in the
+   *   current injector.
    */
-  void type(Type id, {Type withAnnotation, Type implementedBy,
-      Visibility visibility}) {
+  void type(Type type, {Type withAnnotation, Type implementedBy, Visibility visibility}) {
     _dirty();
-    Key key = new Key(id, withAnnotation);
+    Key key = new Key(type, withAnnotation);
     _providers[key.id] = new TypeProvider(
-        implementedBy == null ? id : implementedBy, visibility);
+        implementedBy == null ? type : implementedBy, visibility);
   }
 
   /**
-   * Register binding to a factory function.abstract
+   * Register a binding to a factory function.
    *
    * The [factoryFn] will be called and all its arguments will get injected.
    * The result of that function is the value that will be injected.
