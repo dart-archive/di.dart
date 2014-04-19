@@ -1,7 +1,6 @@
 library di.static_injector;
 
 import 'di.dart';
-import 'key.dart';
 import 'src/error_helper.dart';
 import 'src/base_injector.dart';
 

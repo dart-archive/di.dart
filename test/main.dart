@@ -13,7 +13,6 @@ library di.tests;
 
 import 'fixed-unittest.dart';
 import 'package:di/di.dart';
-import 'package:di/key.dart';
 import 'package:di/dynamic_injector.dart';
 import 'package:di/static_injector.dart';
 import 'package:di/annotations.dart';
@@ -567,7 +566,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
-    iit('should instantiate class only once (Issue #18)', () {
+    it('should instantiate class only once (Issue #18)', () {
       var rootInjector = injectorFactory([]);
       var injector = rootInjector.createChild([
           new Module()

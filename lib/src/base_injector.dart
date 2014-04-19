@@ -4,7 +4,6 @@ import 'provider.dart';
 import 'error_helper.dart';
 
 import 'package:collection/collection.dart';
-import 'package:di/key.dart';
 import 'package:di/di.dart';
 
 List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[

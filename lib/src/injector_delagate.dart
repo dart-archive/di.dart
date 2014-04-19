@@ -2,7 +2,6 @@ library di.injector_delegate;
 
 import 'base_injector.dart';
 import 'package:di/di.dart';
-import 'package:di/key.dart';
 
 class InjectorDelagate implements Injector, ObjectFactory {
   BaseInjector _injector;

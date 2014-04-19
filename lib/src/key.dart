@@ -1,4 +1,4 @@
-library di.key;
+part of di;
 
 int _lastKeyId = 0;
 int get lastKeyId => _lastKeyId;
