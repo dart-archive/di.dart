@@ -1,3 +1,11 @@
+# 0.0.38
+
+## Fixes
+
+- **key:** made Key part of di.dart again
+  ([fe390ddf](https://github.com/angular/di.dart/commit/fe390ddf25c230e2c98cff0628297e42584f6945))
+
+
 # 0.0.37
 
 Combined with previous release (0.0.36) injector is on average 2x faster.
