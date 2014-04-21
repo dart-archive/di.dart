@@ -1,9 +1,10 @@
 library di.injector_delegate;
 
 import 'base_injector.dart';
+import 'provider.dart';
 import 'package:di/di.dart';
 
-class InjectorDelagate implements Injector, ObjectFactory {
+class InjectorDelagate implements BaseInjector, ObjectFactory {
   BaseInjector _injector;
   List<Key> _resolving;
 
@@ -51,4 +52,11 @@ class InjectorDelagate implements Injector, ObjectFactory {
   Object newInstanceOf(Type type, ObjectFactory factory,
                        Injector requestor, resolving) =>
       _injector.newInstanceOf(type, factory, requestor, resolving);
+
+  @override
+  Injector createChildWithResolvingHistory(List<Module> modules, resolving,
+      {List forceNewInstances, String name}) {
+    throw new UnsupportedError(
+        'can\'t call createChildWithResolvingHistory on delegate');
+  }
 }

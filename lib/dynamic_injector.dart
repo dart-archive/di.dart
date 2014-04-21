@@ -4,6 +4,7 @@ import 'di.dart';
 import 'src/mirrors.dart';
 import 'src/base_injector.dart';
 import 'src/error_helper.dart';
+import 'src/provider.dart';
 
 export 'di.dart';
 

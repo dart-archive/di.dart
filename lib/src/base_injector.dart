@@ -13,7 +13,7 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
 
 bool _defaultVisibility(_, __) => true;
 
-abstract class BaseInjector implements Injector {
+abstract class BaseInjector implements Injector, ObjectFactory {
 
   @override
   final String name;
@@ -181,7 +181,7 @@ abstract class BaseInjector implements Injector {
         var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
         var provider = providerWithInjector.provider;
         forceNew.factoryByKey(key, (Injector inj) => provider.get(this,
-            inj, inj, resolving),
+            inj, inj as ObjectFactory, resolving),
             visibility: provider.visibility);
       });
 
@@ -191,6 +191,11 @@ abstract class BaseInjector implements Injector {
 
     return newFromParent(modules, name);
   }
+
+  newFromParent(List<Module> modules, String name);
+
+  Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
+                       resolving);
 }
 
 class _ProviderWithDefiningInjector {
