@@ -13,6 +13,9 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
 
 bool _defaultVisibility(_, __) => true;
 
+const ResolutionContext _ZERO_DEPTH_RESOLVING =
+    const ResolutionContext(0, null, null);
+
 abstract class BaseInjector implements Injector, ObjectFactory {
 
   @override
@@ -79,15 +82,11 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     return types;
   }
 
-  // 'resolving' is a tuple of (depth, Key, cdr), I implemented it
-  // as an array, but there may be a better solution.
-  static const ZERO_DEPTH_RESOLVING = const [0];
-
-  Object getInstanceByKey(Key key, Injector requester, List resolving) {
+  Object getInstanceByKey(Key key, Injector requester, ResolutionContext resolving) {
     assert(_checkKeyConditions(key, resolving));
 
     // Do not bother checking the array until we are fairly deep.
-    if (resolving[0] > 30 && resolvedTypes(resolving).contains(key)) {
+    if (resolving.depth > 30 && resolvedTypes(resolving).contains(key)) {
       throw new CircularDependencyError(
           error(resolving, 'Cannot resolve a circular dependency!', key));
     }
@@ -107,13 +106,13 @@ abstract class BaseInjector implements Injector, ObjectFactory {
           throw new NoProviderError(
               error(resolving, 'No provider found for ${key}!', key));
         }
-        injector =
-            injector.parent._getProviderWithInjectorForKey(key, resolving).injector;
+        injector = injector.parent
+            ._getProviderWithInjectorForKey(key, resolving).injector;
       }
       return injector.getInstanceByKey(key, requester, resolving);
     }
 
-    resolving = [resolving[0] + 1, key, resolving];
+    resolving = new ResolutionContext(resolving.depth + 1, key, resolving);
     var value = provider.get(this, requester, this, resolving);
 
     // cache the value.
@@ -123,7 +122,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
   /// Returns a pair for provider and the injector where it's defined.
   _ProviderWithDefiningInjector _getProviderWithInjectorForKey(
-      Key key, List resolving) {
+      Key key, ResolutionContext resolving) {
     if (key.id < _providersLen) {
       var provider = _providers[key.id];
       if (provider != null) {
@@ -140,28 +139,31 @@ abstract class BaseInjector implements Injector, ObjectFactory {
           new TypeProvider(key.type), this);
     }
 
-    throw new NoProviderError(error(resolving, 'No provider found for ${key}!', key));
+    throw new NoProviderError(
+        error(resolving, 'No provider found for ${key}!', key));
   }
 
-  bool _checkKeyConditions(Key key, List resolving) {
+  bool _checkKeyConditions(Key key, ResolutionContext resolving) {
     if (_PRIMITIVE_TYPES.contains(key)) {
-      throw new NoProviderError(error(resolving, 'Cannot inject a primitive type '
-          'of ${key.type}!', key));
+      throw new NoProviderError(
+          error(resolving,
+                'Cannot inject a primitive type of ${key.type}!', key));
     }
     return true;
   }
 
   @override
   dynamic get(Type type, [Type annotation]) =>
-      getInstanceByKey(new Key(type, annotation), this, BaseInjector.ZERO_DEPTH_RESOLVING);
+      getInstanceByKey(new Key(type, annotation), this, _ZERO_DEPTH_RESOLVING);
 
   @override
-  dynamic getByKey(Key key) => getInstanceByKey(key, this, BaseInjector.ZERO_DEPTH_RESOLVING);
+  dynamic getByKey(Key key) =>
+      getInstanceByKey(key, this, _ZERO_DEPTH_RESOLVING);
 
   @override
   Injector createChild(List<Module> modules,
                        {List forceNewInstances, String name}) =>
-      createChildWithResolvingHistory(modules, BaseInjector.ZERO_DEPTH_RESOLVING,
+      createChildWithResolvingHistory(modules, _ZERO_DEPTH_RESOLVING,
           forceNewInstances: forceNewInstances,
           name: name);
 
@@ -178,7 +180,8 @@ abstract class BaseInjector implements Injector, ObjectFactory {
           throw 'forceNewInstances must be List<Key|Type>';
         }
         assert(key is Key);
-        var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
+        var providerWithInjector =
+            _getProviderWithInjectorForKey(key, resolving);
         var provider = providerWithInjector.provider;
         forceNew.factoryByKey(key, (Injector inj) => provider.get(this,
             inj, inj as ObjectFactory, resolving),
@@ -202,4 +205,17 @@ class _ProviderWithDefiningInjector {
   final Provider provider;
   final BaseInjector injector;
   _ProviderWithDefiningInjector(this.provider, this.injector);
+}
+
+/**
+ * Information about the context in which the [key] is being resolved, including
+ * dependency tree [depth] at which the key is being resolved, as well as
+ * [parent] context (used to determine circular dependencies).
+ */
+class ResolutionContext {
+  final int depth;
+  final Key key;
+  final ResolutionContext parent;
+
+  const ResolutionContext(this.depth, this.key, this.parent);
 }

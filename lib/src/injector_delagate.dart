@@ -6,7 +6,7 @@ import 'package:di/di.dart';
 
 class InjectorDelagate implements BaseInjector, ObjectFactory {
   BaseInjector _injector;
-  List<Key> _resolving;
+  ResolutionContext _resolving;
 
   InjectorDelagate(this._injector, this._resolving);
 
@@ -30,7 +30,7 @@ class InjectorDelagate implements BaseInjector, ObjectFactory {
       _injector.getInstanceByKey(new Key(type, annotation), this, _resolving);
 
   @override
-  dynamic getInstanceByKey(Key key, Injector requester, List<Key> resolving) =>
+  dynamic getInstanceByKey(Key key, Injector requester, ResolutionContext resolving) =>
         _injector.getInstanceByKey(key, requester, resolving);
 
   @override

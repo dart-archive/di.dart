@@ -5,7 +5,7 @@ import 'base_injector.dart';
 import 'package:di/di.dart';
 
 abstract class ObjectFactory {
-  Object getInstanceByKey(Key key, BaseInjector requester, List resolving);
+  Object getInstanceByKey(Key key, BaseInjector requester, ResolutionContext resolving);
 }
 
 abstract class Provider {
