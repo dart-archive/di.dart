@@ -252,11 +252,11 @@ class _Processor {
     }
     if (resolver.getImportUri(cls.library, from: _generatedAssetId) == null) {
       _warn('${cls.name} cannot be injected because '
-          'the containing file cannot be imported.', ctor);
+          'the containing file cannot be imported.', cls);
       return false;
     }
     if (!cls.typeParameters.isEmpty) {
-      _warn('${cls.name} is a parameterized type.', ctor);
+      _warn('${cls.name} is a parameterized type.', cls);
       // Only warn.
     }
     if (ctor.name != '') {

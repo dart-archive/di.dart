@@ -1,12 +1,12 @@
 library di.injector_delegate;
 
 import 'base_injector.dart';
+import 'provider.dart';
 import 'package:di/di.dart';
-import 'package:di/key.dart';
 
-class InjectorDelagate implements Injector, ObjectFactory {
+class InjectorDelagate implements BaseInjector, ObjectFactory {
   BaseInjector _injector;
-  List<Key> _resolving;
+  ResolutionContext _resolving;
 
   InjectorDelagate(this._injector, this._resolving);
 
@@ -30,7 +30,7 @@ class InjectorDelagate implements Injector, ObjectFactory {
       _injector.getInstanceByKey(new Key(type, annotation), this, _resolving);
 
   @override
-  dynamic getInstanceByKey(Key key, Injector requester, List<Key> resolving) =>
+  dynamic getInstanceByKey(Key key, Injector requester, ResolutionContext resolving) =>
         _injector.getInstanceByKey(key, requester, resolving);
 
   @override
@@ -52,4 +52,11 @@ class InjectorDelagate implements Injector, ObjectFactory {
   Object newInstanceOf(Type type, ObjectFactory factory,
                        Injector requestor, resolving) =>
       _injector.newInstanceOf(type, factory, requestor, resolving);
+
+  @override
+  Injector createChildWithResolvingHistory(List<Module> modules, resolving,
+      {List forceNewInstances, String name}) {
+    throw new UnsupportedError(
+        'can\'t call createChildWithResolvingHistory on delegate');
+  }
 }

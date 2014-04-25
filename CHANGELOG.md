@@ -1,3 +1,38 @@
+# 0.0.39
+
+## Bug Fixes
+
+- **transformer:** Exception on parameterized types with implicit constructors
+  ([ed0a2b02](https://github.com/angular/di.dart/commit/ed0a2b0222bb4bb3a4bd83173a3101d4196e6005))
+
+
+## Features
+
+- **module:** new binding syntax
+  ([36357b5c](https://github.com/angular/di.dart/commit/36357b5c3ea0c9c81da404169166bf0aa0e957b5),
+   [#90](https://github.com/angular/di.dart/issues/90))
+
+
+## Breaking Changes
+
+Module has a new API:
+```dart
+new Module()
+    ..bind(Foo, toValue: new Foo())
+    ..bind(Foo, toFactory: (i) => new Foo())
+    ..bind(Foo, toImplementation: FooImpl);
+```
+
+Old methods `type`, `value` and `factory` were deprecated and will be removed in the next release.
+
+# 0.0.38
+
+## Fixes
+
+- **key:** made Key part of di.dart again
+  ([fe390ddf](https://github.com/angular/di.dart/commit/fe390ddf25c230e2c98cff0628297e42584f6945))
+
+
 # 0.0.37
 
 Combined with previous release (0.0.36) injector is on average 2x faster.

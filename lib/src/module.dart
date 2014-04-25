@@ -16,9 +16,12 @@ typedef bool Visibility(Injector requesting, Injector defining);
 typedef Object TypeFactory(factory(Type type, Type annotation));
 
 /**
- * A collection of type bindings. Once the module is passed into the injector,
- * the injector creates a copy of the module and all subsequent changes to the
- * module have no effect.
+ * Module contributes configuration information to an [Injector] by providing a collection of type
+ * bindings that specify how each type is created.
+ *
+ * When an injector is created, it copies its configuration information from a module.
+ * Defining additional type bindings after an injector is created have no effect on that injector.
+ *
  */
 class Module {
   final _providers = <int, Provider>{};
@@ -44,7 +47,7 @@ class Module {
   Map<int, Provider> _providersCache;
 
   /**
-   * Compiles and returs bindings map by performing depth-first traversal of the
+   * Compiles and returns a map of type bindings by performing depth-first traversal of the
    * child (installed) modules.
    */
   Map<int, Provider> get bindings {
@@ -57,46 +60,108 @@ class Module {
   }
 
   /**
-   * Register binding to a concrete value.
+   * Registers a binding for a given [type].
    *
-   * The [value] is what actually will be injected.
-   */
-  void value(Type id, value, {Type withAnnotation, Visibility visibility}) {
-    _dirty();
-    Key key = new Key(id, withAnnotation);
-    _providers[key.id] = new ValueProvider(id, value, visibility);
-  }
-
-  /**
-   * Register binding to a [Type].
+   * The default behavior is to simply instantiate the type.
    *
-   * The [implementedBy] will be instantiated using [new] operator and the
-   * resulting instance will be injected. If no type is provided, then it's
-   * implied that [id] should be instantiated.
-   */
-  void type(Type id, {Type withAnnotation, Type implementedBy,
-      Visibility visibility}) {
-    _dirty();
-    Key key = new Key(id, withAnnotation);
-    _providers[key.id] = new TypeProvider(
-        implementedBy == null ? id : implementedBy, visibility);
-  }
-
-  /**
-   * Register binding to a factory function.abstract
+   * The following parameters can be specified:
    *
-   * The [factoryFn] will be called and all its arguments will get injected.
-   * The result of that function is the value that will be injected.
+   * * [toImplementation]: The given type will be instantiated using the [new]
+   *   operator and the resulting instance will be injected.
+   * * [toFactory]: The result of the factory function is the value that will
+   *   be injected.
+   * * [toValue]: The given value will be injected.
+   * * [withAnnotation]: Type decorated with additional annotation.
+   * * [visibility]: Function which determines if the requesting injector can
+   *   see the type in the current injector.
+   *
+   * Up to one (0 or 1) of the following parameters can be specified at the
+   * same time: [toImplementation], [toFactory], [toValue].
    */
-  void factory(Type id, FactoryFn factoryFn, {Type withAnnotation,
-      Visibility visibility}) {
-    factoryByKey(new Key(id, withAnnotation), factoryFn,
+  void bind(Type type, {dynamic toValue, FactoryFn toFactory,
+      Type toImplementation, Type withAnnotation, Visibility visibility}) {
+    bindByKey(new Key(type, withAnnotation), toValue: toValue,
+        toFactory: toFactory, toImplementation: toImplementation,
         visibility: visibility);
   }
 
-  void factoryByKey(Key key, FactoryFn factoryFn, {Visibility visibility}) {
+  /**
+   * Same as [bind] except it takes [Key] instead of
+   * [Type] [withAnnotation] combination.
+   */
+  void bindByKey(Key key, {dynamic toValue, FactoryFn toFactory,
+      Type toImplementation, Visibility visibility}) {
+    _checkBindArgs(toValue, toFactory, toImplementation);
     _dirty();
-    _providers[key.id] = new FactoryProvider(key.type, factoryFn, visibility);
+    if (toValue != null) {
+      _providers[key.id] = new ValueProvider(key.type, toValue, visibility);
+    } else if (toFactory != null) {
+      _providers[key.id] = new FactoryProvider(key.type, toFactory, visibility);
+    } else {
+      _providers[key.id] = new TypeProvider(
+          toImplementation == null ? key.type : toImplementation, visibility);
+    }
+  }
+
+  _checkBindArgs(toValue, toFactory, toImplementation) {
+    int count = 0;
+    if (toValue != null) count++;
+    if (toFactory != null) count++;
+    if (toImplementation != null) count++;
+    if (count > 1) {
+      throw 'Only one of following parameters can be specified: '
+            'toValue, toFactory, toImplementation';
+    }
+    return true;
+  }
+
+  /**
+   * Register a binding to a concrete value.
+   *
+   * The [value] is what actually will be injected.
+   */
+  @Deprecated("Use bind(type, toValue: value)")
+  void value(Type id, value, {Type withAnnotation, Visibility visibility}) {
+    bind(id, toValue: value, withAnnotation: withAnnotation,
+        visibility: visibility);
+  }
+
+  /**
+   * Registers a binding for a [Type].
+   *
+   * The default behavior is to simply instantiate the type.
+   *
+   * The following parameters can be specified:
+   *
+   * * [withAnnotation]: Type decorated with additional annotation.
+   * * [implementedBy]: The type will be instantiated using the [new] operator and the
+   *   resulting instance will be injected. If no type is provided, then it's
+   *   implied that [type] should be instantiated.
+   * * [visibility]: Function which determines fi the requesting injector can see the type in the
+   *   current injector.
+   */
+  @Deprecated("Use bind(type, implementedBy: impl)")
+  void type(Type type, {Type withAnnotation, Type implementedBy, Visibility visibility}) {
+    bind(type, withAnnotation: withAnnotation, visibility: visibility,
+        toImplementation: implementedBy);
+  }
+
+  /**
+   * Register a binding to a factory function.
+   *
+   * The [factoryFn] will be called and the result of that function is the value
+   * that will be injected.
+   */
+  @Deprecated("Use bind(type, toFactory: factory)")
+  void factory(Type id, FactoryFn factoryFn, {Type withAnnotation,
+      Visibility visibility}) {
+    bind(id, withAnnotation: withAnnotation, visibility: visibility,
+        toFactory: factoryFn);
+  }
+
+  @Deprecated("Use bindByKey(type, toFactory: factory)")
+  void factoryByKey(Key key, FactoryFn factoryFn, {Visibility visibility}) {
+    bindByKey(key, visibility: visibility, toFactory: factoryFn);
   }
 
   /**

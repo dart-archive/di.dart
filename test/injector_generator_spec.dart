@@ -79,7 +79,7 @@ main() {
           ],
           messages: [
             'warning: Parameterized is a parameterized type. '
-            '(package:a/a.dart 2 18)',
+            '(package:a/a.dart 1 16)',
           ]);
     });
 

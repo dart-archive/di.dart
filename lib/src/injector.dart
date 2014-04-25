@@ -1,10 +1,6 @@
 part of di;
 
-abstract class ObjectFactory {
-  Object getInstanceByKey(Key key, Injector requester, List resolving);
-}
-
-abstract class Injector implements ObjectFactory {
+abstract class Injector {
   /**
    * Name of the injector or null of none is given.
    */
@@ -67,10 +63,4 @@ abstract class Injector implements ObjectFactory {
    */
   Injector createChild(List<Module> modules,
                        {List forceNewInstances, String name});
-
-
-  newFromParent(List<Module> modules, String name);
-
-  Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
-                       resolving);
 }

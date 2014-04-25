@@ -1,6 +1,7 @@
 library di.error_helper;
 
-import 'package:di/key.dart';
+import 'package:di/di.dart';
+import 'package:di/src/base_injector.dart';
 
 /**
  * Returns an error message for the given dependency chain.
@@ -13,9 +14,9 @@ import 'package:di/key.dart';
  * then this looks like
  * 'foo (resolving k3 -> k2 -> k1)'
  */
-String error(List resolving, String message, [Key appendDependency]) {
+String error(ResolutionContext resolving, String message, [Key appendDependency]) {
   if (appendDependency != null) {
-    resolving = [resolving[0] + 1, appendDependency, resolving];
+    resolving = new ResolutionContext(resolving.depth + 1, appendDependency, resolving);
   }
   String graph = resolvedTypes(resolving).reversed.join(' -> ');
   return '$message (resolving $graph)';
@@ -29,11 +30,11 @@ String error(List resolving, String message, [Key appendDependency]) {
  * So effectively, [resolving] is a non-empty, singly-linked list of pairs
  * (i, key) where the list is considered terminated when i == 0.
  */
-List<Key> resolvedTypes(List resolving) {
-  List<Key> resolved = [];
-  while (resolving[0] != 0) {
-    resolved.add(resolving[1]);
-    resolving = resolving[2];
+List<Key> resolvedTypes(ResolutionContext resolving) {
+  List resolved = [];
+  while (resolving.depth != 0) {
+    resolved.add(resolving.key);
+    resolving = resolving.parent;
   }
   return resolved;
 }

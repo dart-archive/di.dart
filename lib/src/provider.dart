@@ -1,7 +1,12 @@
 library di.provider;
 
 import 'injector_delagate.dart';
+import 'base_injector.dart';
 import 'package:di/di.dart';
+
+abstract class ObjectFactory {
+  Object getInstanceByKey(Key key, BaseInjector requester, ResolutionContext resolving);
+}
 
 abstract class Provider {
   final Visibility visibility;
@@ -9,7 +14,7 @@ abstract class Provider {
 
   Provider(this.type, this.visibility);
 
-  dynamic get(Injector injector, Injector requestor,
+  dynamic get(BaseInjector injector, BaseInjector requestor,
       ObjectFactory objFactory, resolving);
 }
 
@@ -19,16 +24,18 @@ class ValueProvider extends Provider {
   ValueProvider(type, this.value, [Visibility visibility])
       : super(type, visibility);
 
-  dynamic get(Injector injector, Injector requestor,
+  dynamic get(BaseInjector injector, BaseInjector requestor,
       ObjectFactory objFactory, resolving) => value;
 }
 
 class TypeProvider extends Provider {
   TypeProvider(type, [Visibility visibility]) : super(type, visibility);
 
-  dynamic get(Injector injector, Injector requestor,
-      ObjectFactory objFactory, resolving) =>
-          injector.newInstanceOf(type, objFactory, requestor, resolving);
+  dynamic get(BaseInjector injector, BaseInjector requestor,
+      ObjectFactory objFactory, resolving) {
+    return injector.newInstanceOf(
+        type, objFactory, requestor, resolving);
+  }
 }
 
 class FactoryProvider extends Provider {
@@ -37,7 +44,7 @@ class FactoryProvider extends Provider {
   FactoryProvider(type, this.factoryFn, [Visibility visibility])
       : super(type, visibility);
 
-  dynamic get(Injector injector, Injector requestor,
-      ObjectFactory objFactory, resolving) =>
-          factoryFn(new InjectorDelagate(injector, resolving));
+  dynamic get(BaseInjector injector, BaseInjector requestor,
+       ObjectFactory objFactory, resolving) =>
+     factoryFn(new InjectorDelagate(injector, resolving));
 }
