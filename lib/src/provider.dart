@@ -27,10 +27,8 @@ class TypeProvider extends Provider {
   TypeProvider(type, [Visibility visibility]) : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
-      ObjectFactory objFactory, resolving) {
-    return injector.newInstanceOf(
-        type, objFactory, requestor, resolving);
-  }
+      ObjectFactory objFactory, resolving) =>
+          injector.newInstanceOf(type, objFactory, requestor, resolving);
 }
 
 class FactoryProvider extends Provider {
@@ -40,6 +38,6 @@ class FactoryProvider extends Provider {
       : super(type, visibility);
 
   dynamic get(Injector injector, Injector requestor,
-       ObjectFactory objFactory, resolving) =>
-     factoryFn(new InjectorDelagate(injector, resolving));
+      ObjectFactory objFactory, resolving) =>
+          factoryFn(new InjectorDelagate(injector, resolving));
 }

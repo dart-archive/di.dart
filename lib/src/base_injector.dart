@@ -123,12 +123,12 @@ abstract class BaseInjector implements Injector {
   }
 
   /// Returns a pair for provider and the injector where it's defined.
-  _ProviderWithDefiningInjector _getProviderWithInjectorForKey(
+  _ProviderWithInjector _getProviderWithInjectorForKey(
       Key key, List resolving) {
     if (key.id < _providersLen) {
       var provider = _providers[key.id];
       if (provider != null) {
-        return new _ProviderWithDefiningInjector(provider, this);
+        return new _ProviderWithInjector(provider, this);
       }
     }
 
@@ -137,7 +137,7 @@ abstract class BaseInjector implements Injector {
     }
 
     if (allowImplicitInjection) {
-      return new _ProviderWithDefiningInjector(
+      return new _ProviderWithInjector(
           new TypeProvider(key.type), this);
     }
 
@@ -194,8 +194,8 @@ abstract class BaseInjector implements Injector {
   }
 }
 
-class _ProviderWithDefiningInjector {
+class _ProviderWithInjector {
   final Provider provider;
   final BaseInjector injector;
-  _ProviderWithDefiningInjector(this.provider, this.injector);
+  _ProviderWithInjector(this.provider, this.injector);
 }
