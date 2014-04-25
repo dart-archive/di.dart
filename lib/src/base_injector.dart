@@ -5,6 +5,7 @@ import 'error_helper.dart';
 
 import 'package:collection/collection.dart';
 import 'package:di/di.dart';
+import 'package:di/key.dart';
 
 List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
   new Key(num), new Key(int), new Key(double), new Key(String),
