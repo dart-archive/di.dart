@@ -355,6 +355,17 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     });
 
 
+    it('should allow providing null values', () {
+      var module = new Module()
+        ..bind(Engine, toValue: null);
+
+      var injector = injectorFactory([module]);
+      var engineInstance = injector.get(Engine);
+
+      expect(engineInstance, isNull);
+    });
+
+
     it('should allow providing factory functions', () {
       var module = new Module()..bind(Engine, toFactory: (Injector injector) {
         return 'factory-product';
