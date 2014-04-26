@@ -1,5 +1,7 @@
 part of di;
 
+_DEFAULT_VALUE(_) => null;
+
 typedef dynamic FactoryFn(Injector injector);
 
 /**
@@ -75,8 +77,9 @@ class Module {
    * Up to one (0 or 1) of the following parameters can be specified at the
    * same time: [toImplementation], [toFactory], [toValue].
    */
-  void bind(Type type, {dynamic toValue, FactoryFn toFactory,
-      Type toImplementation, Type withAnnotation, Visibility visibility}) {
+  void bind(Type type, {dynamic toValue: _DEFAULT_VALUE,
+      FactoryFn toFactory: _DEFAULT_VALUE, Type toImplementation,
+      Type withAnnotation, Visibility visibility}) {
     bindByKey(new Key(type, withAnnotation), toValue: toValue,
         toFactory: toFactory, toImplementation: toImplementation,
         visibility: visibility);
@@ -86,13 +89,14 @@ class Module {
    * Same as [bind] except it takes [Key] instead of
    * [Type] [withAnnotation] combination.
    */
-  void bindByKey(Key key, {dynamic toValue, FactoryFn toFactory,
-      Type toImplementation, Visibility visibility}) {
+  void bindByKey(Key key, {dynamic toValue: _DEFAULT_VALUE,
+      FactoryFn toFactory: _DEFAULT_VALUE, Type toImplementation,
+      Visibility visibility}) {
     _checkBindArgs(toValue, toFactory, toImplementation);
     _dirty();
-    if (toValue != null) {
+    if (!identical(toValue, _DEFAULT_VALUE)) {
       _providers[key.id] = new ValueProvider(key.type, toValue, visibility);
-    } else if (toFactory != null) {
+    } else if (!identical(toFactory, _DEFAULT_VALUE)) {
       _providers[key.id] = new FactoryProvider(key.type, toFactory, visibility);
     } else {
       _providers[key.id] = new TypeProvider(
@@ -102,8 +106,8 @@ class Module {
 
   _checkBindArgs(toValue, toFactory, toImplementation) {
     int count = 0;
-    if (toValue != null) count++;
-    if (toFactory != null) count++;
+    if (!identical(toValue, _DEFAULT_VALUE)) count++;
+    if (!identical(toFactory, _DEFAULT_VALUE)) count++;
     if (toImplementation != null) count++;
     if (count > 1) {
       throw 'Only one of following parameters can be specified: '
