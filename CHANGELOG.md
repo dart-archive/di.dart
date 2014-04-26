@@ -1,3 +1,12 @@
+# 0.0.40
+
+## Bug Fixes
+
+- **module:** correctly handle null value binding
+  ([ada47b36](https://github.com/angular/di.dart/commit/ada47b36f88ed4f31204baa647f957fe2547c355),
+   [#93](https://github.com/angular/di.dart/issues/93))
+
+
 # 0.0.39
 
 ## Bug Fixes
