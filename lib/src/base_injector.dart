@@ -14,8 +14,7 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
 
 bool _defaultVisibility(_, __) => true;
 
-const ResolutionContext _ZERO_DEPTH_RESOLVING =
-    const ResolutionContext(0, null, null);
+ResolutionContext _ZERO_DEPTH_RESOLVING = new ResolutionContext(0, null, null);
 
 abstract class BaseInjector implements Injector, ObjectFactory {
 
@@ -57,8 +56,8 @@ abstract class BaseInjector implements Injector, ObjectFactory {
       BaseInjector this.parent, {this.name, this.allowImplicitInjection}) {
     _root = parent == null ? this : parent._root;
     var injectorId = new Key(Injector).id;
-    _providers = new List(lastKeyId + 1);
-    _providersLen = lastKeyId + 1;
+    _providers = new List(numKeyIds);
+    _providersLen = numKeyIds;
     if (modules != null) {
       modules.forEach((module) {
         module.bindings.forEach((k, v) {
@@ -170,7 +169,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
   Injector createChildWithResolvingHistory(
                         List<Module> modules,
-                        resolving,
+                        ResolutionContext resolving,
                         {List forceNewInstances, String name}) {
     if (forceNewInstances != null) {
       Module forceNew = new Module();
@@ -199,7 +198,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
   newFromParent(List<Module> modules, String name);
 
   Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
-                       resolving);
+                       ResolutionContext resolving);
 }
 
 class _ProviderWithInjector {
@@ -209,14 +208,16 @@ class _ProviderWithInjector {
 }
 
 /**
- * Information about the context in which the [key] is being resolved, including
- * dependency tree [depth] at which the key is being resolved, as well as
- * [parent] context (used to determine circular dependencies).
+ * A node in a depth-first search tree of the dependency DAG.
  */
 class ResolutionContext {
+  /// Distance from the root.
   final int depth;
+  /// Key at this node or null if this is the root.
   final Key key;
+  /// Parent node or null if this is the root.  This node is a dependency of the
+  /// parent.
   final ResolutionContext parent;
 
-  const ResolutionContext(this.depth, this.key, this.parent);
+  ResolutionContext(this.depth, this.key, this.parent);
 }

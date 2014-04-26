@@ -31,7 +31,7 @@ class InjectorDelagate implements BaseInjector, ObjectFactory {
 
   @override
   dynamic getInstanceByKey(Key key, Injector requester, ResolutionContext resolving) =>
-        _injector.getInstanceByKey(key, requester, resolving);
+      _injector.getInstanceByKey(key, requester, resolving);
 
   @override
   dynamic getByKey(Key key) =>
@@ -50,11 +50,12 @@ class InjectorDelagate implements BaseInjector, ObjectFactory {
 
   @override
   Object newInstanceOf(Type type, ObjectFactory factory,
-                       Injector requestor, resolving) =>
+                       Injector requestor, ResolutionContext resolving) =>
       _injector.newInstanceOf(type, factory, requestor, resolving);
 
   @override
-  Injector createChildWithResolvingHistory(List<Module> modules, resolving,
+  Injector createChildWithResolvingHistory(
+      List<Module> modules, ResolutionContext resolving,
       {List forceNewInstances, String name}) {
     throw new UnsupportedError(
         'can\'t call createChildWithResolvingHistory on delegate');
