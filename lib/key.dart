@@ -12,7 +12,7 @@ class Key {
   final int id;
 
   factory Key(Type type, [Type annotation]) {
-    var _hashCode = type.hashCode + annotation.hashCode;
+    var _hashCode = type.hashCode + 2339 * annotation.hashCode;
     var _id = _hashToKey.putIfAbsent(_hashCode, () => _lastKeyId++);
     return new Key._newKey(type, annotation, _hashCode, _id);
   }

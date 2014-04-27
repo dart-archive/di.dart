@@ -25,26 +25,7 @@ Matcher toThrow(Type exceptionClass, [message]) => message == null
           instanceOf(exceptionClass),
           message is Matcher ? message : toContain(message)));
 
-Matcher not(Matcher matcher) => new NegateMatcher(matcher);
-
-
-class NegateMatcher extends Matcher {
-  final Matcher _matcher;
-
-  const NegateMatcher(this._matcher);
-
-  bool matches(obj, Map ms) => !_matcher.matches(obj, ms);
-
-  Description describe(Description description) =>
-      _matcher.describe(description.add('NOT'));
-
-  Description describeMismatch(item, Description mismatchDescription,
-      Map matchState, bool verbose) {
-    return _matcher.describeMismatch(
-        item, mismatchDescription, matchState, verbose);
-  }
-}
-
+Matcher not(Matcher matcher) => isNot(matcher);
 
 class ThrowsMatcher extends Throws {
   final Matcher _matcher;
