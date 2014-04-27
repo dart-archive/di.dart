@@ -12,10 +12,6 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
   new Key(bool)
 ]);
 
-bool _defaultVisibility(_, __) => true;
-
-ResolutionContext _ZERO_DEPTH_RESOLVING = new ResolutionContext(0, null, null);
-
 abstract class BaseInjector implements Injector, ObjectFactory {
 
   @override
@@ -27,7 +23,6 @@ abstract class BaseInjector implements Injector, ObjectFactory {
   Injector _root;
 
   List<Provider> _providers;
-  int _providersLen = 0;
 
   final Map<Key, Object> _instances = <Key, Object>{};
 
@@ -56,8 +51,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
       BaseInjector this.parent, {this.name, this.allowImplicitInjection}) {
     _root = parent == null ? this : parent._root;
     var injectorId = new Key(Injector).id;
-    _providers = new List(numKeyIds);
-    _providersLen = numKeyIds;
+    _providers = new List(Key.numInstances);
     if (modules != null) {
       modules.forEach((module) {
         module.bindings.forEach((k, v) {
@@ -73,20 +67,19 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
   @override
   Set<Type> get types {
-    var types = new Set.from(_types);
-    var parent = this.parent;
-    while (parent != null) {
-      types.addAll(parent._types);
-      parent = parent.parent;
+    var types = new Set<Type>();
+    for (var node = this; node != null; node = node.parent) {
+      types.addAll(node._types);
     }
     return types;
   }
 
+  @override
   Object getInstanceByKey(Key key, Injector requester, ResolutionContext resolving) {
     assert(_checkKeyConditions(key, resolving));
 
     // Do not bother checking the array until we are fairly deep.
-    if (resolving.depth > 30 && resolvedTypes(resolving).contains(key)) {
+    if (resolving.depth > 30 && resolving.ancestorKeys().contains(key)) {
       throw new CircularDependencyError(
           error(resolving, 'Cannot resolve a circular dependency!', key));
     }
@@ -94,13 +87,12 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
     var provider = providerWithInjector.provider;
     var injector = providerWithInjector.injector;
-    var visible = provider.visibility != null ?
-        provider.visibility(requester, injector) :
-        _defaultVisibility(requester, injector);
+    var visible = provider.visibility == null ||
+        provider.visibility(requester, injector);
 
     if (visible && _instances.containsKey(key)) return _instances[key];
 
-    if (providerWithInjector.injector != this || !visible) {
+    if (injector != this || !visible) {
       if (!visible) {
         if (injector.parent == null) {
           throw new NoProviderError(
@@ -120,25 +112,32 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     return value;
   }
 
-  /// Returns a pair for provider and the injector where it's defined.
+  /**
+   * Finds the nearest ancestor injector that binds a [Provider] to [key] and
+   * returns that [Provider] and its binding [Injector].  If there is no such
+   * [Injector], then
+   *
+   * - if [allowImplicitInjection] is true for the root injector (not this
+   *   injector), returns a default [Provider] and the root injector.
+   * - if [allowImplicitInjector] is false for the root injector, throws
+   *   [NoProviderError].
+   *
+   * [resolving] is only used for error reporting.
+   */
   _ProviderWithInjector _getProviderWithInjectorForKey(
       Key key, ResolutionContext resolving) {
-    if (key.id < _providersLen) {
+    if (key.id < _providers.length) {
       var provider = _providers[key.id];
       if (provider != null) {
         return new _ProviderWithInjector(provider, this);
       }
     }
-
     if (parent != null) {
       return parent._getProviderWithInjectorForKey(key, resolving);
     }
-
     if (allowImplicitInjection) {
-      return new _ProviderWithInjector(
-          new TypeProvider(key.type), this);
+      return new _ProviderWithInjector(new TypeProvider(key.type), this);
     }
-
     throw new NoProviderError(
         error(resolving, 'No provider found for ${key}!', key));
   }
@@ -154,16 +153,16 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
   @override
   dynamic get(Type type, [Type annotation]) =>
-      getInstanceByKey(new Key(type, annotation), this, _ZERO_DEPTH_RESOLVING);
+      getInstanceByKey(new Key(type, annotation), this, ResolutionContext.ROOT);
 
   @override
   dynamic getByKey(Key key) =>
-      getInstanceByKey(key, this, _ZERO_DEPTH_RESOLVING);
+      getInstanceByKey(key, this, ResolutionContext.ROOT);
 
   @override
   Injector createChild(List<Module> modules,
                        {List forceNewInstances, String name}) =>
-      createChildWithResolvingHistory(modules, _ZERO_DEPTH_RESOLVING,
+      createChildWithResolvingHistory(modules, ResolutionContext.ROOT,
           forceNewInstances: forceNewInstances,
           name: name);
 
@@ -179,7 +178,6 @@ abstract class BaseInjector implements Injector, ObjectFactory {
         } else if (key is! Key) {
           throw 'forceNewInstances must be List<Key|Type>';
         }
-        assert(key is Key);
         var providerWithInjector =
             _getProviderWithInjectorForKey(key, resolving);
         var provider = providerWithInjector.provider;
@@ -211,13 +209,25 @@ class _ProviderWithInjector {
  * A node in a depth-first search tree of the dependency DAG.
  */
 class ResolutionContext {
-  /// Distance from the root.
+  static final ResolutionContext ROOT = new ResolutionContext(0, null, null);
+
+  /// Distance from the [ROOT].
   final int depth;
-  /// Key at this node or null if this is the root.
+  /// Key at this node or null if this is the [ROOT].
   final Key key;
-  /// Parent node or null if this is the root.  This node is a dependency of the
-  /// parent.
+  /// Parent node or null if this is the [ROOT].  This node is a dependency of
+  /// the parent.
   final ResolutionContext parent;
 
   ResolutionContext(this.depth, this.key, this.parent);
+
+  /// Returns the [key]s of the ancestors of this node (including this node) in
+  /// the order that ascends the tree.  Note that [ROOT] has no [key].
+  List<Key> ancestorKeys() {
+    var keys = [];
+    for (var node = this; node.parent != null; node = node.parent) {
+      keys.add(node.key);
+    }
+    return keys;
+  }
 }

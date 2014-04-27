@@ -3,15 +3,15 @@ part of di;
 typedef dynamic FactoryFn(Injector injector);
 
 /**
- * Determines whether the instance in the [defining] injector is visible to
- * the [requesting] injector. If true is returned, then the instance from the
- * [defining] injector is provided. If false is returned, the injector keeps
- * walking up the tree to find another visible instance.
+ * If owned by a [Provider] P bound by the [defining] injector, then this
+ * returns whether P is visible to the [requesting] injector.
+ * See [Injector].get.
  */
 typedef bool Visibility(Injector requesting, Injector defining);
 
 /**
- * [factory] is meant to produce the dependencies that this type factory produces.
+ * Produces an instance of some type, provided [factory] produces instances of
+ * the dependencies that type.
  */
 typedef Object TypeFactory(factory(Type type, Type annotation));
 
