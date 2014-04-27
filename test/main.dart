@@ -856,5 +856,12 @@ createKeySpec() {
       expect(k1, not(equals(k2)));
       expect(k1.hashCode, not(equals(k2.hashCode)));
     });
+
+    it('should not be symmetrically equal', () {
+      Key k1 = new Key(Engine, Old);
+      Key k2 = new Key(Old, Engine);
+      expect(k1, not(equals(k2)));
+      expect(k1.hashCode, not(equals(k2.hashCode)));
+    });
   });
 }
