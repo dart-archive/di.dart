@@ -17,8 +17,8 @@ class Key {
   final int id;
 
   /**
-   * Instance controlled in the sense that 2 [Key]s with the same [type] and
-   * [annotation] will be identical.
+   * Creates a new key or returns one from a cache if given the same inputs that
+   * a previous call had.  E.g. `identical(new Key(t, a), new Key(t, a))` holds.
    */
   factory Key(Type type, [Type annotation]) {
     var annotationToKey = _typeToAnnotationToKey.putIfAbsent(type, () => {});

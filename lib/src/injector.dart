@@ -17,7 +17,7 @@ abstract class Injector {
   Injector get root;
 
   /**
-   * [Type]s of the [Providers] explicitly bound to the injector or an ancestor.
+   * [Type]s of the [Provider]s explicitly bound to the injector or an ancestor.
    * If the root injector sets [allowImplicitInjection] to false, then this
    * is simply all the types that the injector can return.
    */
