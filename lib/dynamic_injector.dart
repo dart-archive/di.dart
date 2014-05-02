@@ -25,7 +25,7 @@ class DynamicInjector extends BaseInjector {
       new DynamicInjector._fromParent(modules, this, name: name);
 
   Object newInstanceOf(Type type, ObjectFactory objFactory, Injector requestor,
-                       resolving) {
+                       ResolutionContext resolving) {
     var classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
       throw new NoProviderError(error(resolving, 'No implementation provided '

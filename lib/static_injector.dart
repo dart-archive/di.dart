@@ -30,7 +30,7 @@ class StaticInjector extends BaseInjector {
       new StaticInjector._fromParent(modules, this, name: name);
 
   Object newInstanceOf(Type type, ObjectFactory objFactory,
-                       Injector requestor, resolving) {
+                       Injector requestor, ResolutionContext resolving) {
     TypeFactory typeFactory = _getFactory(type);
     if (typeFactory == null) {
       throw new NoProviderError(

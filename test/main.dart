@@ -821,40 +821,31 @@ void staticInjectorTest() {
 
 createKeySpec() {
   describe('Key', () {
+    void expectEquals(x, y, bool truthValue) {
+      expect(x == y, truthValue);
+      expect(identical(x, y), truthValue);
+      expect(x.hashCode == y.hashCode, truthValue);
+    }
+
     it('should be equal to another key if type is the same', () {
-      Key k1 = new Key(Car);
-      Key k2 = new Key(Car);
-      expect(k1, equals(k2));
-      expect(k1.hashCode,  equals(k2.hashCode));
+      expectEquals(new Key(Car), new Key(Car), true);
     });
 
     it('should be equal to another key if type and annotation are the same', () {
-      Key k1 = new Key(Car, Turbo);
-      Key k2 = new Key(Car, Turbo);
-      expect(k1, equals(k2));
-      expect(k1.hashCode,  equals(k2.hashCode));
+      expectEquals(new Key(Car, Turbo), new Key(Car, Turbo), true);
     });
 
     it('should not be equal to another key if types are different', () {
-      Key k1 = new Key(Car);
-      Key k2 = new Key(Porsche);
-      expect(k1, not(equals(k2)));
-      expect(k1.hashCode, not(equals(k2.hashCode)));
+      expectEquals(new Key(Car), new Key(Porsche), false);
     });
 
     it('should not be equal to another key if annotations are different', () {
-      Key k1 = new Key(Car, Turbo);
-      Key k2 = new Key(Car, Old);
-      expect(k1, not(equals(k2)));
-      expect(k1.hashCode, not(equals(k2.hashCode)));
+      expectEquals(new Key(Car, Turbo), new Key(Car, Old), false);
     });
 
     it('should not be equal to another key if type is different and annotation'
         ' is same', () {
-      Key k1 = new Key(Engine, Old);
-      Key k2 = new Key(Car, Old);
-      expect(k1, not(equals(k2)));
-      expect(k1.hashCode, not(equals(k2.hashCode)));
+      expectEquals(new Key(Engine, Old), new Key(Car, Old), false);
     });
   });
 }

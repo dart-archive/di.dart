@@ -1,31 +1,37 @@
 library di.key;
 
-int _lastKeyId = 0;
-int get lastKeyId => _lastKeyId;
-
-Map<int, int> _hashToKey = {};
-
+/**
+ * Key to which an [Injector] binds a [Provider].  This is a pair consisting of
+ * a [type] and an optional [annotation].
+ */
 class Key {
+  static Map<Type, Map<Type, Key>> _typeToAnnotationToKey = {};
+  static int _numInstances = 0;
+  /// The number of instances of [Key] created.
+  static int get numInstances => _numInstances;
+
   final Type type;
+  /// Optional.
   final Type annotation;
-  final int hashCode;
+  /// Assigned via auto-increment.
   final int id;
 
+  /**
+   * Creates a new key or returns one from a cache if given the same inputs that
+   * a previous call had.  E.g. `identical(new Key(t, a), new Key(t, a))` holds.
+   */
   factory Key(Type type, [Type annotation]) {
-    var _hashCode = type.hashCode + annotation.hashCode;
-    var _id = _hashToKey.putIfAbsent(_hashCode, () => _lastKeyId++);
-    return new Key._newKey(type, annotation, _hashCode, _id);
+    var annotationToKey = _typeToAnnotationToKey.putIfAbsent(type, () => {});
+    return annotationToKey.putIfAbsent(
+        annotation, () => new Key._(type, annotation, _numInstances++));
   }
-
-  Key._newKey(this.type, this.annotation, this.hashCode, this.id);
-
-  bool operator ==(other) =>
-      other is Key && other.hashCode == hashCode;
+  
+  Key._(this.type, this.annotation, this.id);
 
   String toString() {
     String asString = type.toString();
     if (annotation != null) {
-      asString += ' annotated with: ${annotation.toString()}';
+      asString += ' annotated with: $annotation';
     }
     return asString;
   }

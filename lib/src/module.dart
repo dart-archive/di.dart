@@ -5,13 +5,16 @@ _DEFAULT_VALUE(_) => null;
 typedef dynamic FactoryFn(Injector injector);
 
 /**
- * Visibility determines if the instance in the defining module is visible to
- * the requesting injector. If true is returned, then the instance from the
- * defining injector is provided. If false is returned, the injector keeps
- * walking up the tree to find another visible instance.
+ * If owned by a [Provider] P bound by the [defining] injector, then this
+ * returns whether P is visible to the [requesting] injector.
+ * See [Injector].get.
  */
 typedef bool Visibility(Injector requesting, Injector defining);
 
+/**
+ * Produces an instance of some type, provided [factory] produces instances of
+ * the dependencies that type.
+ */
 typedef Object TypeFactory(factory(Type type, Type annotation));
 
 /**

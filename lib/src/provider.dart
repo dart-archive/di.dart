@@ -15,7 +15,7 @@ abstract class Provider {
   Provider(this.type, this.visibility);
 
   dynamic get(BaseInjector injector, BaseInjector requestor,
-      ObjectFactory objFactory, resolving);
+      ObjectFactory objFactory, ResolutionContext resolving);
 }
 
 class ValueProvider extends Provider {
@@ -23,19 +23,19 @@ class ValueProvider extends Provider {
 
   ValueProvider(type, this.value, [Visibility visibility])
       : super(type, visibility);
-
+  
+  @override
   dynamic get(BaseInjector injector, BaseInjector requestor,
-      ObjectFactory objFactory, resolving) => value;
+      ObjectFactory objFactory, ResolutionContext resolving) => value;
 }
 
 class TypeProvider extends Provider {
   TypeProvider(type, [Visibility visibility]) : super(type, visibility);
 
+  @override
   dynamic get(BaseInjector injector, BaseInjector requestor,
-      ObjectFactory objFactory, resolving) {
-    return injector.newInstanceOf(
-        type, objFactory, requestor, resolving);
-  }
+      ObjectFactory objFactory, ResolutionContext resolving) =>
+    injector.newInstanceOf(type, objFactory, requestor, resolving);
 }
 
 class FactoryProvider extends Provider {
@@ -44,7 +44,8 @@ class FactoryProvider extends Provider {
   FactoryProvider(type, this.factoryFn, [Visibility visibility])
       : super(type, visibility);
 
+  @override
   dynamic get(BaseInjector injector, BaseInjector requestor,
-       ObjectFactory objFactory, resolving) =>
-     factoryFn(new InjectorDelagate(injector, resolving));
+      ObjectFactory objFactory, ResolutionContext resolving) =>
+    factoryFn(new InjectorDelagate(injector, resolving));
 }
