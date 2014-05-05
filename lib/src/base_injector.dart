@@ -181,8 +181,9 @@ abstract class BaseInjector implements Injector, ObjectFactory {
         var providerWithInjector =
             _getProviderWithInjectorForKey(key, resolving);
         var provider = providerWithInjector.provider;
-        forceNew.factoryByKey(key, (Injector inj) => provider.get(this,
-            inj, inj as ObjectFactory, resolving),
+        forceNew.bindByKey(key,
+            toFactory: (Injector inj) =>
+                provider.get(this, inj, inj as ObjectFactory, resolving),
             visibility: provider.visibility);
       });
 

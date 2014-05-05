@@ -7,7 +7,7 @@ typedef dynamic FactoryFn(Injector injector);
 /**
  * If owned by a [Provider] P bound by the [defining] injector, then this
  * returns whether P is visible to the [requesting] injector.
- * See [Injector].get.
+ * See [Injector.get].
  */
 typedef bool Visibility(Injector requesting, Injector defining);
 
@@ -18,12 +18,12 @@ typedef bool Visibility(Injector requesting, Injector defining);
 typedef Object TypeFactory(factory(Type type, Type annotation));
 
 /**
- * Module contributes configuration information to an [Injector] by providing a collection of type
- * bindings that specify how each type is created.
+ * Module contributes configuration information to an [Injector] by providing
+ * a collection of type bindings that specify how each type is created.
  *
- * When an injector is created, it copies its configuration information from a module.
- * Defining additional type bindings after an injector is created have no effect on that injector.
- *
+ * When an injector is created, it copies its configuration information from a
+ * module. Defining additional type bindings after an injector is created have
+ * no effect on that injector.
  */
 class Module {
   final _providers = <int, Provider>{};
@@ -49,8 +49,8 @@ class Module {
   Map<int, Provider> _providersCache;
 
   /**
-   * Compiles and returns a map of type bindings by performing depth-first traversal of the
-   * child (installed) modules.
+   * Compiles and returns a map of type bindings by performing depth-first
+   * traversal of the child (installed) modules.
    */
   Map<int, Provider> get bindings {
     if (_isDirty) {
@@ -138,11 +138,11 @@ class Module {
    * The following parameters can be specified:
    *
    * * [withAnnotation]: Type decorated with additional annotation.
-   * * [implementedBy]: The type will be instantiated using the [new] operator and the
-   *   resulting instance will be injected. If no type is provided, then it's
-   *   implied that [type] should be instantiated.
-   * * [visibility]: Function which determines fi the requesting injector can see the type in the
-   *   current injector.
+   * * [implementedBy]: The type will be instantiated using the [new] operator
+   *   and the resulting instance will be injected. If no type is provided,
+   *   then it's implied that [type] should be instantiated.
+   * * [visibility]: Function which determines fi the requesting injector can
+   *   see the type in the current injector.
    */
   @Deprecated("Use bind(type, implementedBy: impl)")
   void type(Type type, {Type withAnnotation, Type implementedBy, Visibility visibility}) {
