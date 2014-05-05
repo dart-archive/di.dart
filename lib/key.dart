@@ -21,11 +21,19 @@ class Key {
    * a previous call had.  E.g. `identical(new Key(t, a), new Key(t, a))` holds.
    */
   factory Key(Type type, [Type annotation]) {
-    var annotationToKey = _typeToAnnotationToKey.putIfAbsent(type, () => {});
-    return annotationToKey.putIfAbsent(
-        annotation, () => new Key._(type, annotation, _numInstances++));
+    // Don't use Map.putIfAbsent -- too slow!
+    var annotationToKey = _typeToAnnotationToKey[type];
+    if (annotationToKey == null) {
+      _typeToAnnotationToKey[type] = annotationToKey = {};
+    }
+    Key key = annotationToKey[annotation];
+    if (key == null) {
+      annotationToKey[annotation] =
+          key = new Key._(type, annotation, _numInstances++);
+    }
+    return key;
   }
-  
+
   Key._(this.type, this.annotation, this.id);
 
   String toString() {

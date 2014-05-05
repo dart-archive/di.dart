@@ -835,6 +835,11 @@ createKeySpec() {
       expectEquals(new Key(Car, Turbo), new Key(Car, Turbo), true);
     });
 
+    it('should not be equal to another key where type and annotation are same '
+        'but reversed', () {
+      expectEquals(new Key(Car, Turbo), new Key(Turbo, Car), false);
+    });
+
     it('should not be equal to another key if types are different', () {
       expectEquals(new Key(Car), new Key(Porsche), false);
     });
