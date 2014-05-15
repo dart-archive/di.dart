@@ -1,6 +1,6 @@
 library di.provider;
 
-import 'injector_delagate.dart';
+import 'injector_delegate.dart';
 import 'base_injector.dart';
 import 'package:di/di.dart';
 
@@ -23,7 +23,7 @@ class ValueProvider extends Provider {
 
   ValueProvider(type, this.value, [Visibility visibility])
       : super(type, visibility);
-  
+
   @override
   dynamic get(BaseInjector injector, BaseInjector requestor,
       ObjectFactory objFactory, ResolutionContext resolving) => value;
@@ -47,5 +47,5 @@ class FactoryProvider extends Provider {
   @override
   dynamic get(BaseInjector injector, BaseInjector requestor,
       ObjectFactory objFactory, ResolutionContext resolving) =>
-    factoryFn(new InjectorDelagate(injector, resolving));
+    factoryFn(new InjectorDelegate(injector, resolving));
 }
