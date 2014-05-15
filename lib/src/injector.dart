@@ -71,7 +71,7 @@ abstract class Injector {
    *
    * Thus, if a descendant D of the child requests an instance for K, the child
    * will mask any binding for K made by a proper ancestor injector, provided
-   * that P's visbility reveals the child's binding to D.
+   * that P's visibility reveals the child's binding to D.
    * For example, if the child has no proper descendant and P's visibility
    * deems that the child is visible to the child itself, then the first
    * request for the child to get an instance for K will trigger the creation of
