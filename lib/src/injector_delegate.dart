@@ -45,7 +45,7 @@ class InjectorDelegate implements BaseInjector, ObjectFactory {
           name: name);
 
   @override
-  newFromParent(List<Module> modules, String name) =>
+  Injector newFromParent(List<Module> modules, String name) =>
       _injector.newFromParent(modules, name);
 
   @override

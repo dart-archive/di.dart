@@ -42,7 +42,7 @@ class Module {
     return factories;
   }
 
-  set typeFactories(Map<Type, TypeFactory> factories) {
+  void set typeFactories(Map<Type, TypeFactory> factories) {
     _typeFactories = factories;
   }
 
@@ -107,7 +107,7 @@ class Module {
     }
   }
 
-  _checkBindArgs(toValue, toFactory, toImplementation) {
+  bool _checkBindArgs(toValue, toFactory, toImplementation) {
     int count = 0;
     if (!identical(toValue, _DEFAULT_VALUE)) count++;
     if (!identical(toFactory, _DEFAULT_VALUE)) count++;
@@ -177,7 +177,7 @@ class Module {
     _dirty();
   }
 
-  _dirty() {
+  void _dirty() {
     _providersCache = null;
   }
 

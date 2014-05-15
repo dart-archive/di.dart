@@ -87,7 +87,7 @@ void _addImport(TextEditTransaction transaction, CompilationUnit unit,
   }
 }
 
-/// Vistior which changes every reference to a resolved element to a specific
+/// Visitor which changes every reference to a resolved element to a specific
 /// string value.
 class _IdentifierTransformer extends GeneralizingAstVisitor {
   final TextEditTransaction transaction;
@@ -101,7 +101,7 @@ class _IdentifierTransformer extends GeneralizingAstVisitor {
   _IdentifierTransformer(this.transaction, this.original, this.replacement,
       this.logger);
 
-  visitIdentifier(Identifier node) {
+  void visitIdentifier(Identifier node) {
     if (node.bestElement == original) {
       transaction.edit(node.beginToken.offset, node.endToken.end, replacement);
       return;
@@ -112,7 +112,7 @@ class _IdentifierTransformer extends GeneralizingAstVisitor {
 
   // Top-level methods are not treated as prefixed identifiers, so handle those
   // here.
-  visitMethodInvocation(MethodInvocation m) {
+  void visitMethodInvocation(MethodInvocation m) {
     if (m.methodName.bestElement == original) {
       if (m.target is SimpleIdentifier) {
         // Include the prefix in the rename.
@@ -128,9 +128,9 @@ class _IdentifierTransformer extends GeneralizingAstVisitor {
   }
 
   // Skip the contents of imports/exports/parts
-  visitUriBasedDirective(ImportDirective d) {}
+  void visitUriBasedDirective(ImportDirective d) {}
 
-  visitPartDirective(PartDirective node) {
+  void visitPartDirective(PartDirective node) {
     logger.warning('Not transforming code within ${node.uri}.');
   }
 }

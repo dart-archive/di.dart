@@ -52,7 +52,7 @@ import 'dart:mirrors' show MirrorsUsed;
 
 Injector defaultInjector({List<Module> modules, String name,
     bool allowImplicitInjection: false}) =>
-    new DynamicInjector(
-      modules: modules,
-      name: name,
-      allowImplicitInjection: allowImplicitInjection);
+        new DynamicInjector(
+            modules: modules,
+            name: name,
+            allowImplicitInjection: allowImplicitInjection);

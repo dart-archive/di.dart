@@ -26,7 +26,7 @@ class StaticInjector extends BaseInjector {
     this.typeFactories = _extractTypeFactories(modules);
   }
 
-  newFromParent(List<Module> modules, String name) =>
+  StaticInjector newFromParent(List<Module> modules, String name) =>
       new StaticInjector._fromParent(modules, this, name: name);
 
   Object newInstanceOf(Type type, ObjectFactory objFactory,
