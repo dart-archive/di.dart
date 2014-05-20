@@ -23,6 +23,7 @@ String error(ResolutionContext resolving, String message, [Key appendDependency]
   for (var i = 1; i < resolvingKeys.length - 1; i++) {
     if (resolvingKeys[i] == resolvingKeys.first) {
       resolvingKeys = resolvingKeys.sublist(0, i + 1);
+      break;
     }
   }
 
