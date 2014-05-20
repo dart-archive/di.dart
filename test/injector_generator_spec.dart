@@ -56,6 +56,10 @@ main() {
                 'f(import_2.Seat)),',
             'import_1.Engine: (f) => new import_1.Engine(),',
             'import_2.Seat: (f) => new import_2.Seat(),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -80,6 +84,8 @@ main() {
           messages: [
             'warning: Parameterized is a parameterized type. '
             '(package:a/a.dart 1 16)',
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -98,7 +104,9 @@ main() {
           },
           messages: [
             'warning: Bar cannot be injected because Foo<bool> is a '
-            'parameterized type. (package:a/a.dart 3 18)'
+            'parameterized type. (package:a/a.dart 3 18)',
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -120,6 +128,10 @@ main() {
           ],
           generators: [
             'import_0.Bar: (f) => new import_0.Bar(f(import_0.Foo)),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -135,6 +147,10 @@ main() {
           ],
           generators: [
             'import_0.Engine: (f) => new import_0.Engine(),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -158,6 +174,10 @@ main() {
           ],
           generators: [
             'import_0.Engine: (f) => new import_0.Engine(),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -173,6 +193,10 @@ main() {
           ],
           generators: [
             'import_0.Engine: (f) => new import_0.Engine(),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -197,6 +221,10 @@ main() {
           generators: [
             'import_0.Car: (f) => new import_0.Car(f(import_1.Engine)),',
             'import_1.Engine: (f) => new import_1.Engine(),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -211,6 +239,10 @@ main() {
           ],
           generators: [
             'import_0.Engine: (f) => new import_0.Engine(),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -227,6 +259,10 @@ main() {
           ],
           generators: [
             'import_0.Engine: (f) => new import_0.Engine(),',
+          ],
+          messages: [
+            'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+            'not transforming entry point.',
           ]);
     });
 
@@ -243,8 +279,12 @@ main() {
                   main() {}
                   '''
             },
-            messages: ['warning: Named constructors cannot be injected. '
-                '(web/main.dart 2 20)']);
+            messages: [
+                'warning: Named constructors cannot be injected. '
+                '(web/main.dart 2 20)',
+                'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+                'not transforming entry point.',
+            ]);
       });
 
       it('handles inject on classes', () {
@@ -263,6 +303,10 @@ main() {
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
 
@@ -278,8 +322,12 @@ main() {
                   main() {}
                   '''
             },
-            messages: ['warning: Engine cannot be injected because it does not '
-                'have a default constructor. (web/main.dart 1 18)']);
+            messages: [
+                'warning: Engine cannot be injected because it does not '
+                'have a default constructor. (web/main.dart 1 18)',
+                'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+                'not transforming entry point.',
+            ]);
       });
 
       it('skips and warns on abstract types with no factory constructor', () {
@@ -293,9 +341,13 @@ main() {
                   main() {}
                   '''
             },
-            messages: ['warning: Engine cannot be injected because it is an '
+            messages: [
+                'warning: Engine cannot be injected because it is an '
                 'abstract type with no factory constructor. '
-                '(web/main.dart 1 18)']);
+                '(web/main.dart 1 18)',
+                'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+                'not transforming entry point.',
+            ]);
       });
 
       it('skips and warns on abstract types with implicit constructor', () {
@@ -310,9 +362,13 @@ main() {
                   main() {}
                   '''
             },
-            messages: ['warning: Engine cannot be injected because it is an '
+            messages: [
+                'warning: Engine cannot be injected because it is an '
                 'abstract type with no factory constructor. '
-                '(web/main.dart 1 18)']);
+                '(web/main.dart 1 18)',
+                'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+                'not transforming entry point.',
+            ]);
       });
 
       it('injects abstract types with factory constructors', () {
@@ -335,6 +391,10 @@ main() {
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
 
@@ -359,6 +419,10 @@ main() {
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(f(import_0.Fuel)),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
 
@@ -385,6 +449,10 @@ main() {
             generators: [
               'import_0.Engine: (f) => '
                   'new import_0.Engine(f(import_0.JetFuel)),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
 
@@ -407,10 +475,14 @@ main() {
                   main() {}
                   '''
             },
-            messages: ['warning: Engine cannot be injected because parameter '
+            messages: [
+                'warning: Engine cannot be injected because parameter '
                 'type foo cannot be resolved. (web/main.dart 3 20)',
                 'warning: Car cannot be injected because parameter type '
-                'foo cannot be resolved. (web/main.dart 9 20)']);
+                'foo cannot be resolved. (web/main.dart 9 20)',
+                'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+                'not transforming entry point.',
+            ]);
       });
 
       it('supports custom annotations', () {
@@ -439,6 +511,10 @@ main() {
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
               'import_0.Car: (f) => new import_0.Car(),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]).whenComplete(() {
               injectableAnnotations.clear();
             });
@@ -470,6 +546,10 @@ main() {
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(f(import_0.Car)),',
               'import_0.Car: (f) => new import_0.Car(),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
 
@@ -495,6 +575,10 @@ main() {
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
 
@@ -516,6 +600,10 @@ main() {
             ],
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(f(int)),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
 
@@ -532,8 +620,12 @@ main() {
                   main() {}
                   '''
             },
-            messages: ['warning: _Engine cannot be injected because it is a '
-                'private type. (web/main.dart 1 18)']);
+            messages: [
+                'warning: _Engine cannot be injected because it is a '
+                'private type. (web/main.dart 1 18)',
+                'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+                'not transforming entry point.',
+            ]);
       });
 
       it('warns on multiple constructors', () {
@@ -553,8 +645,12 @@ main() {
                   main() {}
                   '''
             },
-            messages: ['warning: Engine has more than one constructor '
-                'annotated for injection. (web/main.dart 2 18)']);
+            messages: [
+                'warning: Engine has more than one constructor '
+                'annotated for injection. (web/main.dart 2 18)',
+                'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+                'not transforming entry point.',
+            ]);
       });
 
       it('transforms main', () {
@@ -619,6 +715,10 @@ main() {
             generators: [
               'import_0.Engine: (f) => new import_0.Engine(),',
               'import_0.Car: (f) => new import_0.Car(f(import_0.Engine, import_0.Turbo)),',
+            ],
+            messages: [
+              'fine: Unable to resolve "di.auto_injector.defaultInjector", '
+              'not transforming entry point.',
             ]);
       });
   });

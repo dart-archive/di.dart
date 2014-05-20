@@ -88,7 +88,7 @@ TransformOptions _parseSettings(Map args) {
       sdkDirectory: sdkDir);
 }
 
-_readStringValue(Map args, String name, {bool required: true}) {
+String _readStringValue(Map args, String name, {bool required: true}) {
   var value = args[name];
   if (value == null) {
     if (required) {
@@ -103,7 +103,7 @@ _readStringValue(Map args, String name, {bool required: true}) {
   return value;
 }
 
-_readStringListValue(Map args, String name) {
+List _readStringListValue(Map args, String name) {
   var value = args[name];
   if (value == null) return [];
   var results = [];

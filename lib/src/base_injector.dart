@@ -194,7 +194,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     return newFromParent(modules, name);
   }
 
-  newFromParent(List<Module> modules, String name);
+  Injector newFromParent(List<Module> modules, String name);
 
   Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
                        ResolutionContext resolving);

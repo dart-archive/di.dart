@@ -4,11 +4,11 @@ import 'base_injector.dart';
 import 'provider.dart';
 import 'package:di/di.dart';
 
-class InjectorDelagate implements BaseInjector, ObjectFactory {
+class InjectorDelegate implements BaseInjector, ObjectFactory {
   BaseInjector _injector;
   ResolutionContext _resolving;
 
-  InjectorDelagate(this._injector, this._resolving);
+  InjectorDelegate(this._injector, this._resolving);
 
   @override
   bool get allowImplicitInjection => _injector.allowImplicitInjection;
@@ -45,7 +45,7 @@ class InjectorDelagate implements BaseInjector, ObjectFactory {
           name: name);
 
   @override
-  newFromParent(List<Module> modules, String name) =>
+  Injector newFromParent(List<Module> modules, String name) =>
       _injector.newFromParent(modules, name);
 
   @override

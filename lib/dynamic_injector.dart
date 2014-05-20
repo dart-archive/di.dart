@@ -21,7 +21,7 @@ class DynamicInjector extends BaseInjector {
   DynamicInjector._fromParent(List<Module> modules, Injector parent, {name})
       : super.fromParent(modules, parent, name: name);
 
-  newFromParent(List<Module> modules, String name) =>
+  DynamicInjector newFromParent(List<Module> modules, String name) =>
       new DynamicInjector._fromParent(modules, this, name: name);
 
   Object newInstanceOf(Type type, ObjectFactory objFactory, Injector requestor,
