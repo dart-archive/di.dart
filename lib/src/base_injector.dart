@@ -79,7 +79,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     assert(_checkKeyConditions(key, resolving));
 
     // Do not bother checking the array until we are fairly deep.
-    if (resolving.depth > 30 && resolving.ancestorKeys().contains(key)) {
+    if (resolving.depth > 30 && resolving.ancestorKeys.contains(key)) {
       throw new CircularDependencyError(
           error(resolving, 'Cannot resolve a circular dependency!', key));
     }
@@ -224,7 +224,7 @@ class ResolutionContext {
 
   /// Returns the [key]s of the ancestors of this node (including this node) in
   /// the order that ascends the tree.  Note that [ROOT] has no [key].
-  List<Key> ancestorKeys() {
+  List<Key> get ancestorKeys {
     var keys = [];
     for (var node = this; node.parent != null; node = node.parent) {
       keys.add(node.key);
