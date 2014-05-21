@@ -184,7 +184,7 @@ class _Processor {
   }
 
   /**
-   * Checks if the element is annotated with one of the known injectablee
+   * Checks if the element is annotated with one of the known injectable
    * annotations.
    */
   bool _isElementAnnotated(Element e) {

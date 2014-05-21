@@ -63,7 +63,7 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
     List<String> imports, Map<Chunk, List<ClassElement>> typeFactoryTypes) {
   Map<Chunk, StringBuffer> factories = <Chunk, StringBuffer>{};
   Map<Chunk, String> result = <Chunk, String>{};
-  typeFactoryTypes.forEach((Chunk chunk, List<ClassElement> classes) {
+  typeFactoryTypes.forEach((Chunk chunk, List<Element> elements) {
     List<String> requiredImports = <String>[];
     String resolveClassIdentifier(InterfaceType type) {
       if (type.element.library.isDartCore) {
@@ -76,26 +76,23 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
       String prefix = _calculateImportPrefix(import, imports);
       return '$prefix.${type.name}';
     }
+
     factories[chunk] = new StringBuffer();
-    classes.forEach((ClassElement clazz) {
+    elements.forEach((Element element) {
       StringBuffer factory = new StringBuffer();
       bool skip = false;
-      factory.write('${resolveClassIdentifier(clazz.type)}: (f) => ');
-      factory.write('new ${resolveClassIdentifier(clazz.type)}(');
+      factory.write('${resolveClassIdentifier(element.type)}: (f) => ');
+      factory.write('new ${resolveClassIdentifier(element.type)}(');
       ConstructorElement constr =
-          clazz.constructors.firstWhere((c) => c.name.isEmpty,
+          element.constructors.firstWhere((c) => c.name.isEmpty,
           orElse: () {
             throw 'Unable to find default constructor for '
-                  '$clazz in ${clazz.source}';
+                  '$element in ${element.source}';
           });
       factory.write(constr.parameters.map((param) {
-        if (param.type.element is! ClassElement) {
-          throw 'Unable to resolve type for constructor parameter '
-                '"${param.name}" for type "$clazz" in ${clazz.source}';
-        }
         if (_isParameterized(param)) {
           print('WARNING: parameterized types are not supported: '
-                '$param in $clazz in ${clazz.source}. Skipping!');
+                '$param in $element in ${element.source}. Skipping!');
           skip = true;
         }
         var annotations = [];
@@ -164,14 +161,16 @@ class CompilationUnitVisitor {
     }
     visitLibrary(compilationUnit.enclosingElement, source);
 
-    List<ClassElement> types = <ClassElement>[];
-    types.addAll(compilationUnit.types);
+    List<Element> types = <Element>[];
+    types..addAll(compilationUnit.types)
+         ..addAll(compilationUnit.functionTypeAliases);
 
     for (CompilationUnitElement part in compilationUnit.enclosingElement.parts) {
-      types.addAll(part.types);
+      types..addAll(part.types)
+           ..addAll(part.functionTypeAliases);
     }
 
-    types.forEach((clazz) => visitClassElement(clazz, source));
+    types.forEach((element) => visitElement(element, source));
   }
 
   visitLibrary(LibraryElement libElement, SourceFile source) {
@@ -206,28 +205,26 @@ class CompilationUnitVisitor {
     });
   }
 
-  visitClassElement(ClassElement classElement, SourceFile source) {
-    if (classElement.name.startsWith('_')) {
-      return; // ignore private classes.
-    }
+  visitElement(Element element, SourceFile source) {
+    if (element.isPrivate) return;
     var importUri = source.entryPointImport;
     if (Uri.parse(importUri).scheme == '') {
       importUri = path.relative(importUri, from: path.dirname(outputFilename));
     }
-    typeToImport[getCanonicalName(classElement.type)] = importUri;
+    typeToImport[getCanonicalName(element.type)] = importUri;
     if (!imports.contains(importUri)) {
       imports.add(importUri);
     }
-    for (ElementAnnotation ann in classElement.metadata) {
+    for (ElementAnnotation ann in element.metadata) {
       if (ann.element is ConstructorElement) {
         ConstructorElement con = ann.element;
         if (classAnnotations
             .contains(getQualifiedName(con.enclosingElement.type))) {
           if (typeFactoryTypes[source.chunk] == null) {
-            typeFactoryTypes[source.chunk] = <ClassElement>[];
+            typeFactoryTypes[source.chunk] = <Element>[];
           }
-          if (!typeFactoryTypes[source.chunk].contains(classElement)) {
-            typeFactoryTypes[source.chunk].add(classElement);
+          if (!typeFactoryTypes[source.chunk].contains(element)) {
+            typeFactoryTypes[source.chunk].add(element);
           }
         }
       }
@@ -235,14 +232,14 @@ class CompilationUnitVisitor {
   }
 }
 
-String getQualifiedName(InterfaceType type) {
+String getQualifiedName(DartType type) {
   var lib = type.element.library.displayName;
   var name = type.name;
   return lib == null ? name : '$lib.$name';
 }
 
-String getCanonicalName(InterfaceType type) {
-  var source = type.element.source.toString();
+String getCanonicalName(DartType type) {
+  var source = type.element.source;
   var name = type.name;
   return '$source:$name';
 }
@@ -393,13 +390,13 @@ class CrawlerVisitor {
         import = import.substring(0, import.lastIndexOf('/'));
         var currentDir = new File(currentFile.canonicalPath).parent.path;
         currentDir = currentDir.replaceAll('\\', '/'); // if at all needed, on Windows
-        if (uri.startsWith('../')) {
-          while (uri.startsWith('../')) {
-            uri = uri.substring('../'.length);
-            import = import.substring(0, import.lastIndexOf('/'));
-            currentDir = currentDir.substring(0, currentDir.lastIndexOf('/'));
-          }
+
+        while (uri.startsWith('../')) {
+          uri = uri.substring('../'.length);
+          import = import.substring(0, import.lastIndexOf('/'));
+          currentDir = currentDir.substring(0, currentDir.lastIndexOf('/'));
         }
+
         newImport = '$import/$uri';
       }
       sourceFile = new SourceFile(
@@ -491,9 +488,11 @@ class SourceFile {
   SourceFile(this.canonicalPath, this.entryPointImport, this.compilationUnit,
       this.compilationUnitElement, this.chunk);
 
-  operator ==(o) {
+  bool operator ==(o) {
     if (o is String) return o == canonicalPath;
     if (o is! SourceFile) return false;
     return o.canonicalPath == canonicalPath;
   }
+
+  int get hashCode => canonicalPath.hashCode;
 }
