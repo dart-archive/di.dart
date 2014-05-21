@@ -95,7 +95,7 @@ class Module {
   void bindByKey(Key key, {dynamic toValue: _DEFAULT_VALUE,
       FactoryFn toFactory: _DEFAULT_VALUE, Type toImplementation,
       Visibility visibility}) {
-    _checkBindArgs(toValue, toFactory, toImplementation);
+    assert(_assertBindArgsValid(toValue, toFactory, toImplementation));
     _dirty();
     if (!identical(toValue, _DEFAULT_VALUE)) {
       _providers[key.id] = new ValueProvider(key.type, toValue, visibility);
@@ -107,7 +107,7 @@ class Module {
     }
   }
 
-  _checkBindArgs(toValue, toFactory, toImplementation) {
+  _assertBindArgsValid(toValue, toFactory, toImplementation) {
     int count = 0;
     if (!identical(toValue, _DEFAULT_VALUE)) count++;
     if (!identical(toFactory, _DEFAULT_VALUE)) count++;
