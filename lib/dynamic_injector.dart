@@ -47,20 +47,15 @@ class DynamicInjector extends BaseInjector {
         throw new NoProviderError(
             error(resolving, "The '$name' parameter must be typed"));
       }
-      if (p.type is TypedefMirror) {
-        throw new NoProviderError(
-            error(resolving,
-                  'Cannot create new instance of a typedef ${p.type}'));
-      }
       if (p.metadata.isNotEmpty) {
         assert(p.metadata.length == 1);
         var type = p.metadata.first.type.reflectedType;
         return objFactory.getInstanceByKey(
-            new Key((p.type as ClassMirror).reflectedType, type),
+            new Key(p.type.reflectedType, type),
             requestor, resolving);
       } else {
         return objFactory.getInstanceByKey(
-            new Key((p.type as ClassMirror).reflectedType),
+            new Key(p.type.reflectedType),
             requestor, resolving);
       }
     }
