@@ -23,15 +23,15 @@ class InjectorBenchmark extends BenchmarkBase {
 
   setup() {
     module = new Module()
-      ..type(A)
-      ..type(B)
-      ..type(C)
-      ..type(C, withAnnotation: AnnOne, implementedBy: COne )
-      ..type(D)
-      ..type(E)
-      ..type(E, withAnnotation: AnnTwo, implementedBy: ETwo )
-      ..type(F)
-      ..type(G);
+      ..bind(A)
+      ..bind(B)
+      ..bind(C)
+      ..bind(C, withAnnotation: AnnOne, toImplementation: COne )
+      ..bind(D)
+      ..bind(E)
+      ..bind(E, withAnnotation: AnnTwo, toImplementation: ETwo )
+      ..bind(F)
+      ..bind(G);
   }
 
   teardown() {
