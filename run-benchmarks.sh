@@ -1,18 +1,27 @@
 #!/bin/sh 
 set -e
 
+BENCHMARKS="module_benchmark.dart
+dynamic_injector_benchmark.dart
+static_injector_benchmark.dart
+instance_benchmark.dart"
+
+
 # run tests in dart
-dart benchmark/module_benchmark.dart
-dart benchmark/dynamic_injector_benchmark.dart
-dart benchmark/static_injector_benchmark.dart
+for b in $BENCHMARKS
+do
+    dart benchmark/$b
+done
 
 # run dart2js on tests
 mkdir -p out
-dart2js --minify benchmark/module_benchmark.dart   -o out/module_benchmark.dart.js
-dart2js --minify benchmark/static_injector_benchmark.dart   -o out/static_injector_benchmark.dart.js
-dart2js --minify benchmark/dynamic_injector_benchmark.dart   -o out/dynamic_injector_benchmark.dart.js
+for b in $BENCHMARKS
+do
+    dart2js --minify benchmark/$b   -o out/$b.js
+done
 
 # run tests in node
-node out/module_benchmark.dart.js
-node out/dynamic_injector_benchmark.dart.js
-node out/static_injector_benchmark.dart.js
+for b in $BENCHMARKS
+do
+    node out/$b.js
+done
