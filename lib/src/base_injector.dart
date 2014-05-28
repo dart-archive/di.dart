@@ -24,7 +24,13 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
   List<Provider> _providers;
 
-  final Map<Key, Object> _instances = <Key, Object>{};
+  /**
+   * _instances is a List when implicit injection is not allowed
+   * for performance because all types would have been seen and the
+   * List would not need to be expanded. In dynamic injection with
+   * implicit injection turned on it is a Map instead.
+   */
+  dynamic _instances;
 
   @override
   final bool allowImplicitInjection;
@@ -52,6 +58,12 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     _root = parent == null ? this : parent._root;
     var injectorId = new Key(Injector).id;
     _providers = new List(Key.numInstances);
+
+    if (allowImplicitInjection == true) {
+      _instances = new Map<int, Object>();
+    } else {
+      _instances = new List(Key.numInstances);
+    }
     if (modules != null) {
       modules.forEach((module) {
         module.bindings.forEach((k, v) {
@@ -90,7 +102,13 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     var visible = provider.visibility == null ||
         provider.visibility(requester, injector);
 
-    if (visible && _instances.containsKey(key)) return _instances[key];
+    assert(allowImplicitInjection == true || key.id < _instances.length);
+    if (visible){
+      var instance = _instances[key.id];
+      if (instance != null){
+        return instance;
+      }
+    }
 
     if (injector != this || !visible) {
       if (!visible) {
@@ -108,7 +126,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     var value = provider.get(this, requester, this, resolving);
 
     // cache the value.
-    providerWithInjector.injector._instances[key] = value;
+    providerWithInjector.injector._instances[key.id] = value;
     return value;
   }
 

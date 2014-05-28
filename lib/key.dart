@@ -16,6 +16,8 @@ class Key {
   /// Assigned via auto-increment.
   final int id;
 
+  int get hashCode => id;
+
   /**
    * Creates a new key or returns one from a cache if given the same inputs that
    * a previous call had.  E.g. `identical(new Key(t, a), new Key(t, a))` holds.
