@@ -30,7 +30,8 @@ abstract class BaseInjector implements Injector, ObjectFactory {
    * List would not need to be expanded. In dynamic injection with
    * implicit injection turned on it is a Map instead.
    */
-  dynamic _instances;
+  List<Object> _instancesList;
+  Map<int, Object> _instancesMap;
 
   @override
   final bool allowImplicitInjection;
@@ -54,15 +55,15 @@ abstract class BaseInjector implements Injector, ObjectFactory {
           name: name, allowImplicitInjection: allowImplicitInjection);
 
   BaseInjector.fromParent(List<Module> modules,
-      BaseInjector this.parent, {this.name, this.allowImplicitInjection}) {
+      BaseInjector this.parent, {this.name, this.allowImplicitInjection: false}) {
     _root = parent == null ? this : parent._root;
     var injectorId = new Key(Injector).id;
     _providers = new List(Key.numInstances);
 
-    if (allowImplicitInjection == true) {
-      _instances = new Map<int, Object>();
+    if (allowImplicitInjection) {
+      _instancesMap = new Map<int, Object>();
     } else {
-      _instances = new List(Key.numInstances);
+      _instancesList = new List(Key.numInstances);
     }
     if (modules != null) {
       modules.forEach((module) {
@@ -102,9 +103,10 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     var visible = provider.visibility == null ||
         provider.visibility(requester, injector);
 
-    assert(allowImplicitInjection == true || key.id < _instances.length);
+    assert(allowImplicitInjection || key.id < _instancesList.length);
     if (visible){
-      var instance = _instances[key.id];
+      var instance = allowImplicitInjection ?
+              _instancesMap[key.id] : _instancesList[key.id];
       if (instance != null){
         return instance;
       }
@@ -126,7 +128,11 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     var value = provider.get(this, requester, this, resolving);
 
     // cache the value.
-    providerWithInjector.injector._instances[key.id] = value;
+    if (allowImplicitInjection == true) {
+      providerWithInjector.injector._instancesMap[key.id] = value;
+    } else {
+      providerWithInjector.injector._instancesList[key.id] = value;
+    }
     return value;
   }
 
