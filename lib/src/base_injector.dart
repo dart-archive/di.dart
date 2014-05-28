@@ -29,6 +29,9 @@ abstract class BaseInjector implements Injector, ObjectFactory {
   @override
   final bool allowImplicitInjection;
 
+  static final InjectorStats _stats = new InjectorStats();
+  String get stats => _stats.toString();
+
   Iterable<Type> _typesCache;
 
   Iterable<Type> get _types {
@@ -49,6 +52,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
   BaseInjector.fromParent(List<Module> modules,
       BaseInjector this.parent, {this.name, this.allowImplicitInjection}) {
+    _stats.numInjectors++;
     _root = parent == null ? this : parent._root;
     var injectorId = new Key(Injector).id;
     _providers = new List(Key.numInstances);
@@ -90,18 +94,26 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     var visible = provider.visibility == null ||
         provider.visibility(requester, injector);
 
-    if (visible && _instances.containsKey(key)) return _instances[key];
+    if (visible && _instances.containsKey(key)) {
+      _stats.instanceInCache++;
+      return _instances[key];
+    }
 
     if (injector != this || !visible) {
-      if (!visible) {
-        if (injector.parent == null) {
-          throw new NoProviderError(
-              error(resolving, 'No provider found for ${key}!', key));
-        }
-        injector = injector.parent
-            ._getProviderWithInjectorForKey(key, resolving).injector;
-      }
-      return injector.getInstanceByKey(key, requester, resolving);
+    if (!visible) {
+    if (injector.parent == null) {
+    throw new NoProviderError(
+    error(resolving, 'No provider found for ${key}!', key));
+    }
+    injector = injector.parent
+    ._getProviderWithInjectorForKey(key, resolving).injector;
+    }
+    _stats.instanceInParent++;
+    return injector.getInstanceByKey(key, requester, resolving);
+    }
+
+    if (resolving.depth == 0) {
+    _stats.instanceFromProvider++;
     }
 
     resolving = new ResolutionContext(resolving.depth + 1, key, resolving);
@@ -129,6 +141,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     if (key.id < _providers.length) {
       var provider = _providers[key.id];
       if (provider != null) {
+        _stats.providerWithInjectorRequestsSatisfied++;
         return new _ProviderWithInjector(provider, this);
       }
     }
@@ -136,6 +149,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
       return parent._getProviderWithInjectorForKey(key, resolving);
     }
     if (allowImplicitInjection) {
+      _stats.providerWithInjectorRequestsSatisfied++;
       return new _ProviderWithInjector(new TypeProvider(key.type), this);
     }
     throw new NoProviderError(
@@ -152,12 +166,16 @@ abstract class BaseInjector implements Injector, ObjectFactory {
   }
 
   @override
-  dynamic get(Type type, [Type annotation]) =>
-      getInstanceByKey(new Key(type, annotation), this, ResolutionContext.ROOT);
+  dynamic get(Type type, [Type annotation]) {
+    _stats.numGet++;
+    return getInstanceByKey(new Key(type, annotation), this, ResolutionContext.ROOT);
+  }
 
   @override
-  dynamic getByKey(Key key) =>
-      getInstanceByKey(key, this, ResolutionContext.ROOT);
+  dynamic getByKey(Key key) {
+    _stats.numGetByKey++;
+    return getInstanceByKey(key, this, ResolutionContext.ROOT);
+  }
 
   @override
   Injector createChild(List<Module> modules,
@@ -230,5 +248,36 @@ class ResolutionContext {
       keys.add(node.key);
     }
     return keys;
+  }
+}
+
+class InjectorStats {
+  static InjectorStats stats;
+
+  int numInjectors = 0;
+
+  int instanceInCache = 0;
+  int instanceInParent = 0;
+  int instanceFromProvider = 0;
+
+  int numGet = 0;
+  int numGetByKey = 0;
+
+  int providerWithInjectorRequestsSatisfied = 0;
+
+  String toString () {
+    return "$numInjectors Injectors Created. ${Key.numInstances} Keys Created. \n" +
+    "Instance from cache/provider " + "$instanceInCache/$instanceFromProvider" + "\n" +
+    "Calls to... providerWithInjector: $providerWithInjectorRequestsSatisfied, " +
+    "get: $numGet, getByKey: $numGetByKey";
+  }
+
+  InjectorStats._();
+
+  factory InjectorStats(){
+    if (stats == null) {
+      stats = new InjectorStats._();
+    }
+    return stats;
   }
 }
