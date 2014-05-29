@@ -6,8 +6,17 @@ import 'injector_benchmark_common.dart';
 class InstanceBenchmark extends InjectorBenchmark{
   InstanceBenchmark(name, injectorFactory) : super(name, injectorFactory);
 
+  StaticInjector injector;
+
+  void setup(){
+    super.setup();
+    injector = injectorFactory([module]);
+    for (var i = 0; i < 20; i++) {
+      injector = injector.createChild(null);
+    }
+  }
+
   void run(){
-    Injector injector = injectorFactory([module]);
     for (var i = 0; i < 30; i++) {
       injector.get(A);
     }
