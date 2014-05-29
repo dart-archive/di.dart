@@ -8,7 +8,7 @@ import 'package:code_transformers/tests.dart' as tests;
 import 'package:di/transformer/injector_generator.dart';
 import 'package:di/transformer/options.dart';
 
-import 'fixed-unittest.dart';
+import 'package:guinness/guinness.dart';
 
 main() {
   describe('generator', () {
