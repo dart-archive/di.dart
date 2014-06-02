@@ -735,9 +735,10 @@ void dynamicInjectorTest() {
     it('should get an instance using implicit injection for an unseen type', (){
       var module = new Module()
           ..bind(Engine);
-      var injector = new DynamicInjector(modules: [module], allowImplicitInjection: true);
+      var injector =
+          new DynamicInjector(modules: [module], allowImplicitInjection: true);
 
-      expect(injector.get(SpecialEngine).id, equals('special-id'));
+      expect(injector.get(SpecialEngine).id).toEqual('special-id');
     });
 
   });
