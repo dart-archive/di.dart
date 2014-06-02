@@ -46,6 +46,12 @@ class MockEngine2 implements Engine {
   String id = 'mock-id-2';
 }
 
+// this class should only be used in a single test (dynamic implicit injection)
+@InjectableTest()
+class SpecialEngine implements Engine {
+  String id = 'special-id';
+}
+
 class HiddenConstructor {
   HiddenConstructor._();
 }
@@ -710,6 +716,14 @@ void dynamicInjectorTest() {
       var injector = new DynamicInjector(modules: [module]);
       injector.invoke((@Turbo() Engine e) => id = e.id);
       expect(id, equals('turbo-engine-id'));
+    });
+
+    it('should get an instance using implicit injection for an unseen type', (){
+      var module = new Module()
+          ..bind(Engine);
+      var injector = new DynamicInjector(modules: [module], allowImplicitInjection: true);
+
+      expect(injector.get(SpecialEngine).id, equals('special-id'));
     });
 
   });
