@@ -6,6 +6,7 @@ dynamic_injector_benchmark.dart
 static_injector_benchmark.dart
 instance_benchmark.dart"
 
+dart benchmark/class_gen.dart
 
 # run tests in dart
 for b in $BENCHMARKS
