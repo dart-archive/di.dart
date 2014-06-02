@@ -30,7 +30,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
   final bool allowImplicitInjection;
 
   static final InjectorStats _stats = new InjectorStats();
-  String get stats => _stats.toString();
+  InjectorStats get stats => _stats;
 
   Iterable<Type> _typesCache;
 
@@ -100,16 +100,16 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     }
 
     if (injector != this || !visible) {
-    if (!visible) {
-    if (injector.parent == null) {
-    throw new NoProviderError(
-    error(resolving, 'No provider found for ${key}!', key));
-    }
-    injector = injector.parent
-    ._getProviderWithInjectorForKey(key, resolving).injector;
-    }
-    _stats.instanceInParent++;
-    return injector.getInstanceByKey(key, requester, resolving);
+      if (!visible) {
+      if (injector.parent == null) {
+      throw new NoProviderError(
+      error(resolving, 'No provider found for ${key}!', key));
+      }
+      injector = injector.parent
+      ._getProviderWithInjectorForKey(key, resolving).injector;
+      }
+      _stats.instanceInParent++;
+      return injector.getInstanceByKey(key, requester, resolving);
     }
 
     if (resolving.depth == 0) {
