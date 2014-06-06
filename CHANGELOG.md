@@ -1,3 +1,24 @@
+# 1.0.0
+
+Starting with this release DI is following [semver](http://semver.org).
+
+## Bug Fixes
+
+- **Key:** fixed bugs caused by hashCode collisions, and docs cleanup
+  ([f673267d](https://github.com/angular/di.dart/commit/f673267dd2eb3a3058ec8657e4f034057e377c47),
+   [#94](https://github.com/angular/di.dart/issues/94))
+- **circular deps:** Improve error messages
+  ([4ccdb1f0](https://github.com/angular/di.dart/commit/4ccdb1f0723c140bceb332a317884770c02ad4a8))
+
+
+## Performance Improvements
+
+- **Key:** don't use Map.putIfAbsent -- too slow
+  ([0930b377](https://github.com/angular/di.dart/commit/0930b37747ebfd483db71a2b333601d77a437c10))
+- **injector:** use separate structures to allow compiler optimizations
+  ([f7b8af92](https://github.com/angular/di.dart/commit/f7b8af92aa903621b0dc4d1001d7329d77d698c0))
+
+
 # 0.0.40
 
 ## Bug Fixes
