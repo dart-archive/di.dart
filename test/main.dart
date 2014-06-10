@@ -735,9 +735,25 @@ void dynamicInjectorTest() {
     it('should get an instance using implicit injection for an unseen type', (){
       var module = new Module()
           ..bind(Engine);
-      var injector = new DynamicInjector(modules: [module], allowImplicitInjection: true);
+      var injector =
+          new DynamicInjector(modules: [module], allowImplicitInjection: true);
 
-      expect(injector.get(SpecialEngine).id, equals('special-id'));
+      expect(injector.get(SpecialEngine).id).toEqual('special-id');
+    });
+
+    it('should give higher precedence to bindings in parent module', () {
+      var module = new Module()
+          ..bind(Engine);
+      var child = new Module()
+          ..bind(Engine, toImplementation:TurboEngine);
+      var injector = new DynamicInjector(modules: [child]);
+      module.install(child);
+      injector = new DynamicInjector(modules: [module]);
+      var id = injector.get(Engine).id;
+      expect(id).toEqual('v8-id');
+      injector = new DynamicInjector(modules: [child]);
+      id = injector.get(Engine).id;
+      expect(id).toEqual('turbo-engine-id');
     });
 
   });

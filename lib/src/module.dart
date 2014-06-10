@@ -22,7 +22,7 @@ typedef Object TypeFactory(factory(Type type, Type annotation));
  * a collection of type bindings that specify how each type is created.
  *
  * When an injector is created, it copies its configuration information from a
- * module. Defining additional type bindings after an injector is created have
+ * module. Defining additional type bindings after an injector is created has
  * no effect on that injector.
  */
 class Module {
@@ -46,19 +46,11 @@ class Module {
     _typeFactories = factories;
   }
 
-  Map<int, Provider> _providersCache;
-
-  /**
-   * Compiles and returns a map of type bindings by performing depth-first
-   * traversal of the child (installed) modules.
-   */
-  Map<int, Provider> get bindings {
-    if (_isDirty) {
-      _providersCache = <int, Provider>{};
-      _childModules.forEach((child) => _providersCache.addAll(child.bindings));
-      _providersCache.addAll(_providers);
-    }
-    return _providersCache;
+  void updateListWithBindings(List<Provider> providers) {
+    _childModules.forEach((child) => child.updateListWithBindings(providers));
+    _providers.forEach((k, v) {
+      providers[k] = v;
+    });
   }
 
   /**
@@ -96,7 +88,6 @@ class Module {
       FactoryFn toFactory: _DEFAULT_VALUE, Type toImplementation,
       Visibility visibility}) {
     _checkBindArgs(toValue, toFactory, toImplementation);
-    _dirty();
     if (!identical(toValue, _DEFAULT_VALUE)) {
       _providers[key.id] = new ValueProvider(key.type, toValue, visibility);
     } else if (!identical(toFactory, _DEFAULT_VALUE)) {
@@ -170,17 +161,9 @@ class Module {
 
   /**
    * Installs another module into this module. Bindings defined on this module
-   * take precidence over the installed module.
+   * take precedence over the installed module.
    */
   void install(Module module) {
     _childModules.add(module);
-    _dirty();
   }
-
-  _dirty() {
-    _providersCache = null;
-  }
-
-  bool get _isDirty =>
-      _providersCache == null || _childModules.any((m) => m._isDirty);
 }
