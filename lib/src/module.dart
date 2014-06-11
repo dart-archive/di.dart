@@ -170,7 +170,7 @@ class Module {
 
   /**
    * Installs another module into this module. Bindings defined on this module
-   * take precidence over the installed module.
+   * take precedence over the installed module.
    */
   void install(Module module) {
     _childModules.add(module);
