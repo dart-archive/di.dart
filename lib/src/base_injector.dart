@@ -67,9 +67,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     }
     if (modules != null) {
       modules.forEach((module) {
-        module.bindings.forEach((k, v) {
-          _providers[k] = v;
-        });
+        module.updateListWithBindings(_providers);
       });
     }
     _providers[injectorId] = new ValueProvider(Injector, this);
