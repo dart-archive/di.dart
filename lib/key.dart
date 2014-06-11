@@ -1,11 +1,12 @@
 library di.key;
+import 'dart:collection';
 
 /**
  * Key to which an [Injector] binds a [Provider].  This is a pair consisting of
  * a [type] and an optional [annotation].
  */
 class Key {
-  static Map<Type, Map<Type, Key>> _typeToAnnotationToKey = {};
+  static Map<Type, Map<Type, Key>> _typeToAnnotationToKey = new HashMap();
   static int _numInstances = 0;
   /// The number of instances of [Key] created.
   static int get numInstances => _numInstances;
@@ -26,7 +27,7 @@ class Key {
     // Don't use Map.putIfAbsent -- too slow!
     var annotationToKey = _typeToAnnotationToKey[type];
     if (annotationToKey == null) {
-      _typeToAnnotationToKey[type] = annotationToKey = {};
+      _typeToAnnotationToKey[type] = annotationToKey = new HashMap();
     }
     Key key = annotationToKey[annotation];
     if (key == null) {

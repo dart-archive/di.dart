@@ -4,6 +4,7 @@ import 'di.dart';
 import 'src/error_helper.dart';
 import 'src/base_injector.dart';
 import 'src/provider.dart';
+import 'dart:collection';
 
 export 'annotations.dart';
 export 'di.dart';
@@ -56,7 +57,7 @@ class StaticInjector extends BaseInjector {
 Map<Type, TypeFactory> _extractTypeFactories(List<Module> modules,
     [Map<Type, TypeFactory> initial = const {}]) {
   if (modules == null || modules.isEmpty) return initial;
-  var factories = new Map.from(initial == null ? {} : initial);
+  var factories = new HashMap.from(initial == null ? {} : initial);
   modules.forEach((m) {
     factories.addAll(m.typeFactories);
   });
