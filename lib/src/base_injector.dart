@@ -95,9 +95,23 @@ abstract class BaseInjector implements Injector, ObjectFactory {
           error(resolving, 'Cannot resolve a circular dependency!', key));
     }
 
-    var providerWithInjector = _getProviderWithInjectorForKey(key, resolving);
-    var provider = providerWithInjector.provider;
-    var injector = providerWithInjector.injector;
+    // This code is pasted in createChildWithResolvingHistory for performance
+    var provider = key.id < _providers.length ? _providers[key.id] : null;
+    var injector = this;
+    while (provider == null){
+      if (injector.parent == null){
+        if (allowImplicitInjection) {
+          provider = new TypeProvider(key.type);
+          break;
+        }
+        throw new NoProviderError(
+            error(resolving, 'No provider found for ${key}!', key));
+      }
+      injector = injector.parent;
+      provider = key.id < injector._providers.length ?
+                  injector._providers[key.id] : null;
+    }
+
     var visible = provider.visibility == null ||
         provider.visibility(requester, injector);
 
@@ -116,8 +130,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
           throw new NoProviderError(
               error(resolving, 'No provider found for ${key}!', key));
         }
-        injector = injector.parent
-            ._getProviderWithInjectorForKey(key, resolving).injector;
+        injector = injector.parent;
       }
       return injector.getInstanceByKey(key, requester, resolving);
     }
@@ -127,41 +140,11 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
     // cache the value.
     if (allowImplicitInjection == true) {
-      providerWithInjector.injector._instancesMap[key.id] = value;
+      injector._instancesMap[key.id] = value;
     } else {
-      providerWithInjector.injector._instancesList[key.id] = value;
+      injector._instancesList[key.id] = value;
     }
     return value;
-  }
-
-  /**
-   * Finds the nearest ancestor injector that binds a [Provider] to [key] and
-   * returns that [Provider] and its binding [Injector].  If there is no such
-   * [Injector], then
-   *
-   * - if [allowImplicitInjection] is true for the root injector (not this
-   *   injector), returns a default [Provider] and the root injector.
-   * - if [allowImplicitInjector] is false for the root injector, throws
-   *   [NoProviderError].
-   *
-   * [resolving] is only used for error reporting.
-   */
-  _ProviderWithInjector _getProviderWithInjectorForKey(
-      Key key, ResolutionContext resolving) {
-    if (key.id < _providers.length) {
-      var provider = _providers[key.id];
-      if (provider != null) {
-        return new _ProviderWithInjector(provider, this);
-      }
-    }
-    if (parent != null) {
-      return parent._getProviderWithInjectorForKey(key, resolving);
-    }
-    if (allowImplicitInjection) {
-      return new _ProviderWithInjector(new TypeProvider(key.type), this);
-    }
-    throw new NoProviderError(
-        error(resolving, 'No provider found for ${key}!', key));
   }
 
   bool _checkKeyConditions(Key key, ResolutionContext resolving) {
@@ -200,9 +183,24 @@ abstract class BaseInjector implements Injector, ObjectFactory {
         } else if (key is! Key) {
           throw 'forceNewInstances must be List<Key|Type>';
         }
-        var providerWithInjector =
-            _getProviderWithInjectorForKey(key, resolving);
-        var provider = providerWithInjector.provider;
+
+        // This code is pasted from getInstanceByKey for performance
+        var provider = key.id < _providers.length ? _providers[key.id] : null;
+        var injector = this;
+        while (provider == null){
+          if (injector.parent == null){
+            if (allowImplicitInjection) {
+              provider = new TypeProvider(key.type);
+              break;
+            }
+            throw new NoProviderError(
+                error(resolving, 'No provider found for ${key}!', key));
+          }
+          injector = injector.parent;
+          provider = key.id < injector._providers.length ?
+                     injector._providers[key.id] : null;
+        }
+
         forceNew.bindByKey(key,
             toFactory: (Injector inj) =>
                 provider.get(this, inj, inj as ObjectFactory, resolving),
@@ -220,12 +218,6 @@ abstract class BaseInjector implements Injector, ObjectFactory {
 
   Object newInstanceOf(Type type, ObjectFactory factory, Injector requestor,
                        ResolutionContext resolving);
-}
-
-class _ProviderWithInjector {
-  final Provider provider;
-  final BaseInjector injector;
-  _ProviderWithInjector(this.provider, this.injector);
 }
 
 /**

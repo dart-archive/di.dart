@@ -30,8 +30,7 @@ class InjectorBenchmark extends BenchmarkBase {
       ..type(D)
       ..type(E)
       ..type(E, withAnnotation: AnnTwo, implementedBy: ETwo )
-      ..type(F)
-      ..type(G);
+      ..type(F);
   }
 
   teardown() {
