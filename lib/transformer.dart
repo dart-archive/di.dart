@@ -77,10 +77,7 @@ TransformOptions _parseSettings(Map args) {
   var injectedTypes = _readStringListValue(args, 'injected_types');
 
   var sdkDir = _readStringValue(args, 'dart_sdk', required: false);
-  if (sdkDir == null) {
-    // Assume the Pub executable is always coming from the SDK.
-    sdkDir =  path.dirname(path.dirname(Platform.executable));
-  }
+  if (sdkDir == null) sdkDir = dartSdkDirectory;
 
   return new TransformOptions(
       injectableAnnotations: annotations,
