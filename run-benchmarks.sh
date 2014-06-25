@@ -17,9 +17,10 @@ done
 
 # run dart2js on tests
 mkdir -p out
+echo "running dart2js"
 for b in $BENCHMARKS
 do
-    dart2js --minify benchmark/$b   -o out/$b.js
+    dart2js --minify benchmark/$b   -o out/$b.js > /dev/null
 done
 
 # run tests in node

@@ -1,6 +1,6 @@
 import 'package:di/di.dart';
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:di/static_injector.dart';
+import 'package:di/src/reflector_static.dart';
 
 import 'injector_benchmark_common.dart';
 import 'static_injector_benchmark.dart';
@@ -39,7 +39,7 @@ class CreateSingleInjector extends InjectorBenchmark {
       : super('.. and create an injector'.padRight(PAD_LENGTH), injectorFactory);
 
   void run() {
-    Injector injector = new StaticInjector(modules: [module], typeFactories: typeFactories);
+    Injector injector = new ModuleInjector([module]);
 
     var b1 = new B(new D(), new E());
     var c1 = new C();
@@ -61,7 +61,7 @@ class CreateInjectorAndChild extends InjectorBenchmark {
       : super('.. and a child injector'.padRight(PAD_LENGTH), injectorFactory);
 
   void run() {
-    Injector injector = new StaticInjector(modules: [module], typeFactories: typeFactories);
+    Injector injector = new ModuleInjector([module]);
     var childInjector = injector.createChild([module]);
 
     var b1 = new B(new D(), new E());
@@ -84,8 +84,8 @@ class InjectByKey extends InjectorBenchmark {
     : super('.. and precompute keys'.padRight(PAD_LENGTH), injectorFactory);
 
   void run() {
-    var injector = new StaticInjector(modules: [module], typeFactories: typeFactories);
-    var childInjector = injector.createChild([module]);
+    var injector = new ModuleInjector([module]);
+    var childInjector = new ModuleInjector([module], injector);
 
     injector.getByKey(KEY_A);
     injector.getByKey(KEY_B);
@@ -105,12 +105,13 @@ main() {
   };
 
   injectorFactory() => null;
-
+  GeneratedTypeFactories generatedTypeFactories =
+      new GeneratedTypeFactories(typeFactories, paramKeys);
   new CreateObjectsOnly().report();
   new CreateSingleInjector(injectorFactory).report();
   new CreateInjectorAndChild(injectorFactory).report();
   new InjectorBenchmark('DI using ModuleInjector'.padRight(PAD_LENGTH),
-      (m) => new StaticInjector(modules: m, typeFactories: typeFactories)
+      generatedTypeFactories
   ).report();
   new InjectByKey(injectorFactory).report();
 }

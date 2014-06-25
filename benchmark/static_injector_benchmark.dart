@@ -1,9 +1,9 @@
-import 'package:di/static_injector.dart';
-
+import 'package:di/di.dart';
+import 'package:di/di_static.dart';
 import 'injector_benchmark_common.dart';
 
 main() {
   new InjectorBenchmark('StaticInjectorBenchmark',
-      (m) => new StaticInjector(modules: m, typeFactories: typeFactories)
+      new GeneratedTypeFactories(typeFactories, paramKeys)
   ).report();
 }

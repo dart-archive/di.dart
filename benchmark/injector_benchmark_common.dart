@@ -7,27 +7,27 @@ int count = 0;
 
 class InjectorBenchmark extends BenchmarkBase {
   var module;
-  var injectorFactory;
+  var typeReflector;
   Key KEY_A;
   Key KEY_B;
   Key KEY_C;
   Key KEY_D;
   Key KEY_E;
 
-  InjectorBenchmark(name, this.injectorFactory) : super(name);
+  InjectorBenchmark(name, this.typeReflector) : super(name);
 
   void run() {
-    Injector injector = injectorFactory([module]);
+    Injector injector = new ModuleInjector([module]);
     injector.getByKey(KEY_A);
     injector.getByKey(KEY_B);
 
-    var childInjector = injector.createChild([module]);
+    var childInjector = new ModuleInjector([module], injector);
     childInjector.getByKey(KEY_A);
     childInjector.getByKey(KEY_B);
   }
 
   setup() {
-    module = new Module()
+    module = new Module.withReflector(typeReflector)
       ..bind(A)
       ..bind(B)
       ..bind(C)
@@ -113,13 +113,25 @@ class G {
 }
 
 var typeFactories = {
-    A: (f) => new A(f(B), f(C)),
-    B: (f) => new B(f(D), f(E)),
-    C: (f) => new C(),
-    D: (f) => new D(),
-    E: (f) => new E(),
-    COne: (f) => new COne(),
-    ETwo: (f) => new ETwo(),
-    F: (f) => new F(f(C), f(D)),
-    G: (f) => new G(f(E)),
+    A: (p) => new A(p[0], p[1]),
+    B: (p) => new B(p[0], p[1]),
+    C: (p) => new C(),
+    D: (p) => new D(),
+    E: (p) => new E(),
+    COne: (p) => new COne(),
+    ETwo: (p) => new ETwo(),
+    F: (p) => new F(p[0], p[1]),
+    G: (p) => new G(p[0]),
+};
+
+var paramKeys = {
+    A: [new Key(B), new Key(C)],
+    B: [new Key(D), new Key(E)],
+    C: const [],
+    D: const [],
+    E: const [],
+    COne: const [],
+    ETwo: const [],
+    F: [new Key(C, AnnOne), new Key(D)],
+    G: [new Key(G, AnnTwo)],
 };

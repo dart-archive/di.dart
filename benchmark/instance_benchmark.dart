@@ -1,13 +1,14 @@
-import 'package:di/static_injector.dart';
+import 'package:di/di.dart';
+import 'package:di/di_static.dart';
 
 import 'injector_benchmark_common.dart';
 
 // tests the speed of cached getInstanceByKey requests
 class InstanceBenchmark extends InjectorBenchmark{
-  InstanceBenchmark(name, injectorFactory) : super(name, injectorFactory);
+  InstanceBenchmark(name, typeReflector) : super(name, typeReflector);
 
   void run(){
-    Injector injector = injectorFactory([module]);
+    Injector injector = new ModuleInjector([module]);
     for (var i = 0; i < 30; i++) {
       injector.get(A);
     }
@@ -16,6 +17,6 @@ class InstanceBenchmark extends InjectorBenchmark{
 
 main() {
   new InstanceBenchmark('InstanceBenchmark',
-      (m) => new StaticInjector(modules: m, typeFactories: typeFactories)
+      new GeneratedTypeFactories(typeFactories, paramKeys)
   ).report();
 }

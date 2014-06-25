@@ -1,3 +1,66 @@
+# 2.0.0-alpha.1
+
+## Breaking Changes
+
+### Calls to StaticInjector and DynamicInjector should be replaced with ModuleInjector
+  - There are no longer `StaticInjectors` and `DynamicInjectors`. They have been replaced
+    by a new `ModuleInjector` class that acts as both types of injectors.
+
+### ModuleInjectors have no visibility
+  - All bindings and instances of parent injectors are now visible in child injectors.
+  - The optional argument `forceNewInstances` of `Injector.createChild` has been removed
+    Instead, create a new module with bindings of the types that require new instances
+    and pass that to the child injector, and the child injector will create new
+    instances instead of returning the instance of the parent injector.
+
+### Use “new ModuleInjector(modules, parent)” instead of “Injector.createChild(modules)”
+  - The latter is still available but deprecated.
+  - Injectors with no parent now have a dummy RootInjector instance as the parent
+    Instead of checking “parent == null”, check for “parent == rootInjector”.
+
+### Injectors no longer have a name field
+
+### typeFactories have changed
+  - Old type factories had the form `(injector) => new Instance(injector.get(dep1), … )`
+  - New factories have one of these two forms:
+    - `toFactory(a0, a1, …) => new Instance(a0, a1, …)`
+    - `toFactoryPos(List<dependency instances> p) => new Instance(p[0], p[1] …)`
+  - When calling `Module.bind(toFactory: factory)`, there is an additional argument `inject`
+    of a list of types or keys (preferred for performance) whose instances should be
+    passed to the factory. The array `p` passed to the factory function will be instances
+    of the types in `inject`.
+
+    Example:
+    - Old code `module.bind(Car, toFactory: (i) => new Car(i.get(Engine)));`
+    - New code
+      - `module.bind(Car, toFactoryPos: (p) => new Car(p[0]), inject: [Engine]);`
+      - `module.bind(Car, toFactory: (engine) => new Car(engine), inject: [Engine]);`
+
+    There is also some syntactic sugar for this special case.
+    - Old code `module.bind(Engine, toFactory: (i) => i.get(Engine));`
+    - New code `module.bind(Engine, toFactory: (e) => e, inject: [Engine]);`
+    - With sugar `module.bind(Engine, inject: [Engine]);`
+
+### Modules have a TypeReflector instance attached
+  - The `TypeReflector` is how the module will find the `toFactoryPos` and `inject`
+    arguments when not explicitly specified. This is either done with mirroring or code
+    generation via transformers. Typical use will not need to worry about this at all, and
+    should initialize it as shown below. If needed, implement `TypeReflector` and use
+    `new Module.withReflector(reflector)`.
+  - Modules need a `TypeReflector` instance initialized:
+
+        import 'package:di/di_dynamic.dart';
+        main() {
+          setupModuleTypeReflector();
+        }
+
+### The transformer has been updated
+  - Running the transformer will do the necessary code generation and edits to switch the
+    default `TypeReflector` from mirroring to static factories. Enable transformer to use
+    static factories, disable to use mirrors. More docs on the transformer can be found in
+    `transformer.dart`
+  - Annotating types for injection has not changed.
+
 # 1.2.3
 
 ## Features
@@ -34,7 +97,6 @@ Added missing library declaration to injector.
 
 - **injector:** optimized module to injector instantiation
   ([62f22f15](https://github.com/angular/di.dart/commit/62f22f1566642cecc1b9f980475c94a7a88e9362))
-
 
 # 1.0.0
 
