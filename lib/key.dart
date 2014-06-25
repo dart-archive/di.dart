@@ -1,10 +1,15 @@
 library di.key;
 
+import 'dart:collection';
+
 /**
  * Key to which an [Injector] binds a [Provider].  This is a pair consisting of
  * a [type] and an optional [annotation].
  */
 class Key {
+  // TODO: experiment with having a separate map for non-annotated types (perf)
+  // TODO: Use Map.identity once dart issue 19622 is fixed
+  //        (run last test in KeySpec of main.dart in dart2js)
   static Map<Type, Map<Type, Key>> _typeToAnnotationToKey = {};
   static int _numInstances = 0;
   /// The number of instances of [Key] created.
@@ -16,6 +21,18 @@ class Key {
   /// Assigned via auto-increment.
   final int id;
 
+  int _data;
+  @deprecated
+  int get uid => _data;
+  @deprecated
+  set uid(int d) {
+    if (_data == null) {
+      _data = d;
+      return;
+    }
+    throw "Key($type).uid has already been set to $_data.";
+  }
+
   int get hashCode => id;
 
   /**
@@ -26,7 +43,7 @@ class Key {
     // Don't use Map.putIfAbsent -- too slow!
     var annotationToKey = _typeToAnnotationToKey[type];
     if (annotationToKey == null) {
-      _typeToAnnotationToKey[type] = annotationToKey = {};
+      _typeToAnnotationToKey[type] = annotationToKey = new Map();
     }
     Key key = annotationToKey[annotation];
     if (key == null) {
@@ -46,3 +63,6 @@ class Key {
     return asString;
   }
 }
+
+/// shortcut function
+Key key(Type type, [Type annotation]) => new Key(type, annotation);

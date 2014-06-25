@@ -1,14 +1,4 @@
-library di.transformer.injector_generator;
-
-import 'dart:async';
-import 'package:analyzer/src/generated/ast.dart';
-import 'package:analyzer/src/generated/element.dart';
-import 'package:barback/barback.dart';
-import 'package:code_transformers/resolver.dart';
-import 'package:di/transformer/options.dart';
-import 'package:path/path.dart' as path;
-
-import 'refactor.dart';
+part of di.transformer;
 
 /**
  * Pub transformer which generates type factories for all injectable types
@@ -21,7 +11,9 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
     this.resolvers = resolvers;
   }
 
-  Future<bool> shouldApplyResolver(Asset asset) => options.isDartEntry(asset);
+  Future<bool> shouldApplyResolver(Asset asset) {
+    return options.isDartEntry(asset);
+  }
 
   applyResolver(Transform transform, Resolver resolver) =>
       new _Processor(transform, resolver, options).process();
@@ -61,21 +53,49 @@ class _Processor {
 
     var id = transform.primaryInput.id;
     var outputFilename = '${path.url.basenameWithoutExtension(id.path)}'
-        '_static_injector.dart';
+        '_generated_type_factory_maps.dart';
     var outputPath = path.url.join(path.url.dirname(id.path), outputFilename);
     _generatedAssetId = new AssetId(id.package, outputPath);
 
     var constructors = _gatherConstructors();
 
+    // generates typeFactory file
     var injectLibContents = _generateInjectLibrary(constructors);
     transform.addOutput(
         new Asset.fromString(_generatedAssetId, injectLibContents));
 
-    transformIdentifiers(transform, resolver,
-        identifier: 'di.auto_injector.defaultInjector',
-        replacement: 'createStaticInjector',
-        importPrefix: 'generated_static_injector',
-        importUrl: outputFilename);
+    // edits main function
+    var lib = resolver.getLibrary(id);
+    var unit = lib.definingCompilationUnit.node;
+    var transaction = resolver.createTextEditTransaction(lib);
+    var imports = unit.directives.where((d) => d is ImportDirective);
+    var dir = imports.where((ImportDirective d) => d.uriContent == 'package:di/di_dynamic.dart');
+    var begin, end;
+    if (dir.isNotEmpty) {
+      begin = dir.first.offset;
+      end = dir.first.end;
+    } else {
+      begin = imports.last.end;
+      end = imports.last.end;
+    }
+    transaction.edit(begin, end, '\nimport '
+        "'${path.url.basenameWithoutExtension(id.path)}"
+        "_generated_type_factory_maps.dart' show setupModuleTypeReflector;");
+
+    FunctionExpression main = unit.declarations.where((d) =>
+        d is FunctionDeclaration && d.name.toString() == 'main')
+        .first.functionExpression;
+    var body = main.body;
+    if (body is BlockFunctionBody) {
+      var location = body.beginToken.end;
+      transaction.edit(location, location, '\n  setupModuleTypeReflector();');
+    } else if (body is ExpressionFunctionBody) {
+      transaction.edit(body.beginToken.offset, body.endToken.end,
+          "{\n  setupModuleTypeReflector();\n"
+          "  return ${body.expression};\n}");
+    } // EmptyFunctionBody can only appear as abstract methods and constructors.
+
+    commitTransaction(transaction, transform);
   }
 
   /** Resolves the classes for the injectable annotations in the current AST. */
@@ -184,7 +204,7 @@ class _Processor {
   }
 
   /**
-   * Checks if the element is annotated with one of the known injectablee
+   * Checks if the element is annotated with one of the known injectable
    * annotations.
    */
   bool _isElementAnnotated(Element e) {
@@ -306,36 +326,57 @@ class _Processor {
       return '$prefix${type.name}';
     }
 
+    var keysBuffer = new StringBuffer();
     var factoriesBuffer = new StringBuffer();
+    var paramsBuffer = new StringBuffer();
+    var addedKeys = new Set<String>();
     for (var ctor in constructors) {
       var type = ctor.enclosingElement;
       var typeName = resolveClassName(type);
-      factoriesBuffer.write('  $typeName: (f) => new $typeName(');
+
+      factoriesBuffer.write('  $typeName: (p) => new $typeName(');
+      factoriesBuffer.write(new List.generate(ctor.parameters.length, (i) => 'p[$i]').join(', '));
+      factoriesBuffer.write('),\n');
+
+      paramsBuffer.write('  $typeName: ');
+      paramsBuffer.write(ctor.parameters.length == 0 ? 'const[' : '[');
       var params = ctor.parameters.map((param) {
         var typeName = resolveClassName(param.type.element);
-        var annotations = [];
+        Iterable<ClassElement> annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
-              (item) => resolveClassName(item.element.returnType.element));
+              (item) => item.element.returnType.element);
         }
-        var annotationsSuffix =
-            annotations.isNotEmpty ? ', ${annotations.first}' : '';
-        return 'f($typeName$annotationsSuffix)';
+
+        var keyName = '_KEY_${param.type.name}' +
+            (annotations.isNotEmpty ? '_${annotations.first}' : '');
+        if (addedKeys.add(keyName)) {
+          keysBuffer.writeln('final Key $keyName = new Key($typeName' +
+              (annotations.isNotEmpty ? ', ${resolveClassName(annotations.first)});' : ');'));
+        }
+        return keyName;
       });
-      factoriesBuffer.write('${params.join(', ')}),\n');
+      paramsBuffer.write('${params.join(', ')}],\n');
     }
 
     var outputBuffer = new StringBuffer();
 
-    _writeStaticInjectorHeader(transform.primaryInput.id, outputBuffer);
+    _writeHeader(transform.primaryInput.id, outputBuffer);
     usedLibs.forEach((lib) {
       if (lib.isDartCore) return;
       var uri = resolver.getImportUri(lib, from: _generatedAssetId);
       outputBuffer.write('import \'$uri\' as ${prefixes[lib]};\n');
     });
-    _writePreamble(outputBuffer);
+    outputBuffer.write('\n');
+    outputBuffer.write(keysBuffer);
+    outputBuffer.write('final Map<Type, Factory> typeFactories = <Type, Factory>{\n');
     outputBuffer.write(factoriesBuffer);
-    _writeFooter(outputBuffer);
+    outputBuffer.write('};\nfinal Map<Type, List<Key>> parameterKeys = {\n');
+    outputBuffer.write(paramsBuffer);
+    outputBuffer.write('};\n');
+    outputBuffer.write('setupModuleTypeReflector() => '
+        'Module.DEFAULT_REFLECTOR = '
+        'new GeneratedTypeFactories(typeFactories, parameterKeys);\n');
 
     return outputBuffer.toString();
   }
@@ -346,32 +387,14 @@ class _Processor {
   }
 }
 
-void _writeStaticInjectorHeader(AssetId id, StringSink sink) {
+void _writeHeader(AssetId id, StringSink sink) {
   var libName = path.withoutExtension(id.path).replaceAll('/', '.');
   libName = libName.replaceAll('-', '_');
   sink.write('''
-library ${id.package}.$libName.generated_static_injector;
+library ${id.package}.$libName.generated_type_factory_maps;
 
 import 'package:di/di.dart';
-import 'package:di/static_injector.dart';
+import 'package:di/di_static.dart';
 
-''');
-}
-
-void _writePreamble(StringSink sink) {
-  sink.write('''
-Injector createStaticInjector({List<Module> modules, String name,
-    bool allowImplicitInjection: false}) =>
-  new StaticInjector(modules: modules, name: name,
-      allowImplicitInjection: allowImplicitInjection,
-      typeFactories: factories);
-
-final Map<Type, TypeFactory> factories = <Type, TypeFactory>{
-''');
-}
-
-void _writeFooter(StringSink sink) {
-  sink.write('''
-};
 ''');
 }

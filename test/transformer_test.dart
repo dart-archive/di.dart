@@ -5,8 +5,7 @@ import 'dart:async';
 import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 import 'package:code_transformers/tests.dart' as tests;
-import 'package:di/transformer/injector_generator.dart';
-import 'package:di/transformer/options.dart';
+import 'package:di/transformer.dart';
 
 import 'package:guinness/guinness.dart';
 
@@ -51,11 +50,19 @@ main() {
             "import 'package:a/engine.dart' as import_1;",
             "import 'package:a/seat.dart' as import_2;",
           ],
-          generators: [
-            'import_0.Car: (f) => new import_0.Car(f(import_1.Engine), '
-                'f(import_2.Seat)),',
-            'import_1.Engine: (f) => new import_1.Engine(),',
-            'import_2.Seat: (f) => new import_2.Seat(),',
+          keys: [
+            'Engine = new Key(import_1.Engine);',
+            'Seat = new Key(import_2.Seat);',
+          ],
+          factories: [
+            'import_0.Car: (p) => new import_0.Car(p[0], p[1]),',
+            'import_1.Engine: (p) => new import_1.Engine(),',
+            'import_2.Seat: (p) => new import_2.Seat(),',
+          ],
+          paramKeys: [
+            'import_0.Car: [_KEY_Engine, _KEY_Seat],',
+            'import_1.Engine: const[],',
+            'import_2.Seat: const[],'
           ]);
     });
 
@@ -74,8 +81,11 @@ main() {
           imports: [
             "import 'package:a/a.dart' as import_0;",
           ],
-          generators: [
-            'import_0.Parameterized: (f) => new import_0.Parameterized(),',
+          factories: [
+            'import_0.Parameterized: (p) => new import_0.Parameterized(),',
+          ],
+          paramKeys: [
+            'import_0.Parameterized: const[],',
           ],
           messages: [
             'warning: Parameterized is a parameterized type. '
@@ -118,8 +128,14 @@ main() {
           imports: [
             "import 'main.dart' as import_0;",
           ],
-          generators: [
-            'import_0.Bar: (f) => new import_0.Bar(f(import_0.Foo)),',
+          keys: [
+            "Foo = new Key(import_0.Foo);"
+          ],
+          factories: [
+            'import_0.Bar: (p) => new import_0.Bar(p[0]),',
+          ],
+          paramKeys: [
+            'import_0.Bar: [_KEY_Foo],'
           ]);
     });
 
@@ -133,8 +149,11 @@ main() {
           imports: [
             "import 'package:a/b.dart' as import_0;",
           ],
-          generators: [
-            'import_0.Engine: (f) => new import_0.Engine(),',
+          factories: [
+            'import_0.Engine: (p) => new import_0.Engine(),',
+          ],
+          paramKeys: [
+            'import_0.Engine: const[],'
           ]);
     });
 
@@ -156,8 +175,11 @@ main() {
           imports: [
             "import 'package:a/a.dart' as import_0;",
           ],
-          generators: [
-            'import_0.Engine: (f) => new import_0.Engine(),',
+          factories: [
+            'import_0.Engine: (p) => new import_0.Engine(),',
+          ],
+          paramKeys: [
+            'import_0.Engine: const[],'
           ]);
     });
 
@@ -171,8 +193,11 @@ main() {
           imports: [
             "import 'package:a/b.dart' as import_0;",
           ],
-          generators: [
-            'import_0.Engine: (f) => new import_0.Engine(),',
+          factories: [
+            'import_0.Engine: (p) => new import_0.Engine(),',
+          ],
+          paramKeys: [
+            'import_0.Engine: const[],'
           ]);
     });
 
@@ -194,9 +219,16 @@ main() {
             "import 'package:a/a.dart' as import_0;",
             "import 'package:a/b.dart' as import_1;",
           ],
-          generators: [
-            'import_0.Car: (f) => new import_0.Car(f(import_1.Engine)),',
-            'import_1.Engine: (f) => new import_1.Engine(),',
+          keys: [
+            "Engine = new Key(import_1.Engine);"
+          ],
+          factories: [
+            'import_0.Car: (p) => new import_0.Car(p[0]),',
+            'import_1.Engine: (p) => new import_1.Engine(),',
+          ],
+          paramKeys: [
+            'import_0.Car: [_KEY_Engine],',
+            'import_1.Engine: const[],',
           ]);
     });
 
@@ -209,8 +241,11 @@ main() {
           imports: [
             "import 'a.dart' as import_0;",
           ],
-          generators: [
-            'import_0.Engine: (f) => new import_0.Engine(),',
+          factories: [
+            'import_0.Engine: (p) => new import_0.Engine(),',
+          ],
+          paramKeys: [
+            'import_0.Engine: const[],'
           ]);
     });
 
@@ -225,8 +260,11 @@ main() {
           imports: [
             "import 'main.dart' as import_0;",
           ],
-          generators: [
-            'import_0.Engine: (f) => new import_0.Engine(),',
+          factories: [
+            'import_0.Engine: (p) => new import_0.Engine(),',
+          ],
+          paramKeys: [
+            'import_0.Engine: const[],'
           ]);
     });
 
@@ -261,8 +299,11 @@ main() {
             imports: [
             "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(),',
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(),',
+            ],
+            paramKeys: [
+              'import_0.Engine: const[],'
             ]);
       });
 
@@ -333,8 +374,11 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(),',
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(),',
+            ],
+            paramKeys: [
+              'import_0.Engine: const[],'
             ]);
       });
 
@@ -357,8 +401,14 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(f(import_0.Fuel)),',
+            keys: [
+              "Fuel = new Key(import_0.Fuel);",
+            ],
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(p[0]),',
+            ],
+            paramKeys: [
+              'import_0.Engine: [_KEY_Fuel],'
             ]);
       });
 
@@ -382,9 +432,14 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => '
-                  'new import_0.Engine(f(import_0.JetFuel)),',
+            keys: [
+              "JetFuel = new Key(import_0.JetFuel);",
+            ],
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(p[0]),',
+            ],
+            paramKeys: [
+              'import_0.Engine: [_KEY_JetFuel],'
             ]);
       });
 
@@ -436,9 +491,13 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(),',
-              'import_0.Car: (f) => new import_0.Car(),',
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(),',
+              'import_0.Car: (p) => new import_0.Car(),',
+            ],
+            paramKeys: [
+              'import_0.Engine: const[],',
+              'import_0.Car: const[],'
             ]).whenComplete(() {
               injectableAnnotations.clear();
             });
@@ -449,16 +508,16 @@ main() {
             inputs: {
               'a|web/main.dart': '''
                   import "package:inject/inject.dart";
-                  class Engine {
-                    final Car car;
+                  class Car {
+                    final Engine engine;
 
                     @inject
-                    Engine([Car this.car]);
+                    Car([Engine this.engine]);
                   }
 
-                  class Car {
+                  class Engine {
                     @inject
-                    Car();
+                    Engine();
                   }
 
                   main() {}
@@ -467,9 +526,16 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(f(import_0.Car)),',
-              'import_0.Car: (f) => new import_0.Car(),',
+            keys: [
+              "Engine = new Key(import_0.Engine);"
+            ],
+            factories: [
+              'import_0.Car: (p) => new import_0.Car(p[0]),',
+              'import_0.Engine: (p) => new import_0.Engine(),',
+            ],
+            paramKeys: [
+              'import_0.Car: [_KEY_Engine],',
+              'import_0.Engine: const[],',
             ]);
       });
 
@@ -493,8 +559,11 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(),',
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(),',
+            ],
+            paramKeys: [
+              'import_0.Engine: const[],'
             ]);
       });
 
@@ -514,8 +583,14 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(f(int)),',
+            keys: [
+              "int = new Key(int);"
+            ],
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(p[0]),',
+            ],
+            paramKeys: [
+              'import_0.Engine: [_KEY_int],'
             ]);
       });
 
@@ -557,41 +632,6 @@ main() {
                 'annotated for injection. (web/main.dart 2 18)']);
       });
 
-      it('transforms main', () {
-        return tests.applyTransformers(phases,
-            inputs: {
-              'a|web/main.dart': '''
-library main;
-import 'package:di/auto_injector.dart';
-import 'package:di/auto_injector.dart' as ai;
-
-main() {
-  var module = defaultInjector(modules: null, name: 'foo');
-  print(module);
-
-  var module2 = ai.defaultInjector(modules: null, name: 'foo');
-  print(module2);
-}''',
-              'di|lib/auto_injector.dart': PACKAGE_AUTO
-            },
-            results: {
-              'a|web/main.dart': '''
-library main;
-import 'main_static_injector.dart' as generated_static_injector;
-import 'package:di/auto_injector.dart';
-import 'package:di/auto_injector.dart' as ai;
-
-main() {
-  var module = generated_static_injector.createStaticInjector(modules: null, name: 'foo');
-  print(module);
-
-  var module2 = generated_static_injector.createStaticInjector(modules: null, name: 'foo');
-  print(module2);
-}'''
-
-            });
-      });
-
       it('handles annotated dependencies', () {
         return generates(phases,
             inputs: {
@@ -616,54 +656,103 @@ main() {
             imports: [
               "import 'main.dart' as import_0;",
             ],
-            generators: [
-              'import_0.Engine: (f) => new import_0.Engine(),',
-              'import_0.Car: (f) => new import_0.Car(f(import_0.Engine, import_0.Turbo)),',
+            keys: [
+              "Engine_Turbo = new Key(import_0.Engine, import_0.Turbo);"
+            ],
+            factories: [
+              'import_0.Engine: (p) => new import_0.Engine(),',
+              'import_0.Car: (p) => new import_0.Car(p[0]),',
+            ],
+            paramKeys: [
+              'import_0.Engine: const[],',
+              'import_0.Car: [_KEY_Engine_Turbo],'
             ]);
+      });
+
+      it('transforms main', () {
+        return tests.applyTransformers(phases,
+            inputs: {
+              'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+
+main() {
+  print('abc');
+}'''
+            },
+            results: {
+              'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+import 'main_generated_type_factory_maps.dart' show setupModuleTypeReflector;
+
+main() {
+  setupModuleTypeReflector();
+  print('abc');
+}'''
+            });
+      });
+
+      it('transforms main formatted as an expression', () {
+        return tests.applyTransformers(phases,
+        inputs: {
+            'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+
+main() => print("abc");'''
+        },
+        results: {
+            'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+import 'main_generated_type_factory_maps.dart' show setupModuleTypeReflector;
+
+main() {
+  setupModuleTypeReflector();
+  return print("abc");
+}'''
+        });
       });
   });
 }
 
 Future generates(List<List<Transformer>> phases,
     {Map<String, String> inputs, Iterable<String> imports: const [],
-    Iterable<String> generators: const [],
+    Iterable<String> keys: const [],
+    Iterable<String> factories: const [],
+    Iterable<String> paramKeys: const [],
     Iterable<String> messages: const []}) {
 
   inputs['inject|lib/inject.dart'] = PACKAGE_INJECT;
 
   imports = imports.map((i) => '$i\n');
-  generators = generators.map((t) => '  $t\n');
+  keys = keys.map((t) => 'final Key _KEY_$t');
+  factories = factories.map((t) => '  $t\n');
+  paramKeys = paramKeys.map((t) => '  $t\n');
 
   return tests.applyTransformers(phases,
       inputs: inputs,
       results: {
-          'a|web/main_static_injector.dart': '''
+          'a|web/main_generated_type_factory_maps.dart': '''
 $IMPORTS
-${imports.join('')}$BOILER_PLATE
-${generators.join('')}$FOOTER
+${imports.join('')}${(keys.length != 0 ? '\n' : '')}${keys.join('\n')}
+final Map<Type, Factory> typeFactories = <Type, Factory>{
+${factories.join('')}};
+final Map<Type, List<Key>> parameterKeys = {
+${paramKeys.join('')}};
+setupModuleTypeReflector() => Module.DEFAULT_REFLECTOR = new GeneratedTypeFactories(typeFactories, parameterKeys);
 ''',
       },
       messages: messages);
 }
 
 const String IMPORTS = '''
-library a.web.main.generated_static_injector;
+library a.web.main.generated_type_factory_maps;
 
 import 'package:di/di.dart';
-import 'package:di/static_injector.dart';
+import 'package:di/di_static.dart';
 ''';
-
-const String BOILER_PLATE = '''
-Injector createStaticInjector({List<Module> modules, String name,
-    bool allowImplicitInjection: false}) =>
-  new StaticInjector(modules: modules, name: name,
-      allowImplicitInjection: allowImplicitInjection,
-      typeFactories: factories);
-
-final Map<Type, TypeFactory> factories = <Type, TypeFactory>{''';
-
-const String FOOTER = '''
-};''';
 
 const String CLASS_ENGINE = '''
     import 'package:inject/inject.dart';
@@ -696,11 +785,4 @@ class Injectables {
   final List<Type> types;
   const Injectables(this.types);
 }
-''';
-
-const String PACKAGE_AUTO = '''
-library di.auto_injector;
-
-defaultInjector({List modules, String name,
-    bool allowImplicitInjection: false}) => null;
 ''';

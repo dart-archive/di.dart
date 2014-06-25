@@ -7,20 +7,19 @@
 Add dependency to your pubspec.yaml.
 
     dependencies:
-      di: ">=0.0.39 <0.1.0"
+      di: ">=2.0.0 <3.0.0"
 
 Then, run `pub install`.
 
 Import di.
 
     import 'package:di/di.dart';
-    import 'package:di/auto_injector.dart';
 
 ## Example
 
 ```dart
 import 'package:di/di.dart';
-import 'package:di/auto_injector.dart';
+import 'package:di/di_dynamic.dart';
 
 abstract class Engine {
   go();
@@ -64,10 +63,11 @@ class ElectricCar {
 }
 
 void main() {
-  var injector = defaultInjector(modules: [new Module()
+  setupModuleTypeReflector();
+  var injector = new ModuleInjector(modules: [new Module()
       ..bind(GenericCar)
       ..bind(ElectricCar)
-      ..bind(Engine, toFactory: (i) => new V8Engine())
+      ..bind(Engine, toFactory: () => new V8Engine())
       ..bind(Engine, toImplementation: ElectricEngine, withAnnotation: Electric)
   ]);
   injector.get(GenericCar).drive();
