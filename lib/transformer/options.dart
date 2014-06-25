@@ -1,7 +1,6 @@
 library di.transformer.options;
 
 import 'dart:async';
-
 import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 
@@ -36,16 +35,16 @@ class TransformOptions {
   final String sdkDirectory;
 
   TransformOptions({EntryFilter entryFilter, String sdkDirectory,
-      List<String> injectableAnnotations, List<String> injectedTypes})
-    : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
-      sdkDirectory = sdkDirectory,
-      injectableAnnotations =
-          (injectableAnnotations != null ? injectableAnnotations : [])
-              ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
-      injectedTypes =
-          new Set.from(injectedTypes != null ? injectedTypes : []) {
-    if (sdkDirectory == null)
-      throw new ArgumentError('sdkDirectory must be provided.');
+                   List<String> injectableAnnotations, List<String> injectedTypes})
+      : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
+  sdkDirectory = sdkDirectory,
+  injectableAnnotations =
+      (injectableAnnotations != null ? injectableAnnotations : [])
+      ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
+  injectedTypes =
+      new Set.from(injectedTypes != null ? injectedTypes : []) {
+        if (sdkDirectory == null)
+          throw new ArgumentError('sdkDirectory must be provided.');
   }
 
   Future<bool> isDartEntry(Asset asset) => new Future.value(entryFilter(asset));

@@ -7,26 +7,29 @@
 Add dependency to your pubspec.yaml.
 
     dependencies:
-      di: ">=0.0.39 <0.1.0"
+      di: ">=2.0.0 <3.0.0"
 
 Then, run `pub install`.
 
 Import di.
 
     import 'package:di/di.dart';
-    import 'package:di/auto_injector.dart';
 
 ## Example
 
 ```dart
 import 'package:di/di.dart';
-import 'package:di/auto_injector.dart';
 
 abstract class Engine {
   go();
 }
 
+class Fuel {}
+
 class V8Engine implements Engine {
+  Fuel fuel;
+  V8Engine(this.fuel);
+  
   go() {
     print('Vroom...');
   }
@@ -64,14 +67,17 @@ class ElectricCar {
 }
 
 void main() {
-  var injector = defaultInjector(modules: [new Module()
+  var injector = new ModuleInjector(modules: [new Module()
       ..bind(GenericCar)
       ..bind(ElectricCar)
-      ..bind(Engine, toFactory: (i) => new V8Engine())
+      ..bind(Engine, toFactory: (fuel) => new V8Engine(fuel), inject: [Fuel])
       ..bind(Engine, toImplementation: ElectricEngine, withAnnotation: Electric)
   ]);
-  injector.get(GenericCar).drive();
-  injector.get(ElectricCar).drive();
+  injector.get(GenericCar).drive(); // Vroom...
+  injector.get(ElectricCar).drive(); // Hum...
 }
 ```
 
+## Contributing
+
+Refer to the guidelines for [contributing to AngularDart](http://goo.gl/nrXVgm).

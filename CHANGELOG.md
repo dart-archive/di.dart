@@ -35,7 +35,6 @@ Added missing library declaration to injector.
 - **injector:** optimized module to injector instantiation
   ([62f22f15](https://github.com/angular/di.dart/commit/62f22f1566642cecc1b9f980475c94a7a88e9362))
 
-
 # 1.0.0
 
 Starting with this release DI is following [semver](http://semver.org).

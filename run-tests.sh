@@ -1,16 +1,46 @@
-
 #!/bin/sh
 set -e
 
-echo "run type factories generator for tests"
+echo "Running generator..."
 ./test_tf_gen.sh
 
-echo "run tests in dart"
+echo "Running tests in Dart..."
 dart --checked test/main.dart
-dart --checked test/generator_test.dart
-dart --checked test/injector_generator_spec.dart
+dart --checked test/transformer_test.dart
 
-echo "run dart2js on tests"
+# Example app test
+echo "Building example..."
+rm -rf example/build/
+cd example
+pub_out=$(pub build | tee /dev/tty | grep -F "mirror" || : )
+cd ..
+echo "--------"
+
+if [[ -n $pub_out ]]
+then
+    echo "FAIL: Example transformer should not import dart:mirror"
+    failed=1
+else
+    echo "PASS: Example transformer should not import dart:mirror"
+fi
+
+output=$(node example/build/web/main.dart.js || : )
+if [ $output == "Success" ]
+then
+    echo "PASS: Example transformer should inject dependencies"
+else
+    echo "FAIL: Example transformer should inject dependencies"
+    failed=1
+fi
+
+if [[ -n $failed ]]
+then
+    echo "Tests failed. Build /example with \`pub build example/ --mode debug\` to debug."
+    exit 1
+fi
+echo ""
+
+echo "Compiling tests to JavaScript with dart2js..."
 mkdir -p out
 dart2js --minify -c test/main.dart -o out/main.dart.js
 
@@ -22,17 +52,4 @@ cat out/main.dart.js >> out/main.js
 echo "Running compiled tests in node..."
 node out/main.js
 
-echo "run transformer tests"
-pub build --mode=debug test
-
-echo "running transformer test (uncompiled, Dynamic DI)"
-dart --checked test/auto_injector_test.dart
-
-echo "running transformer test (Static DI, Dart VM)"
-dart --checked build/test/auto_injector_test.dart
-
-echo "running transformer test (Static DI, dart2js)"
-# TODO(blois) dart2js compilation is not picking up transformed files, so
-# run dart2js manually. dartbug.com/17198
-dart2js -c build/test/auto_injector_test.dart -o build/test/auto_injector_test.dart.js;
-node build/test/auto_injector_test.dart.js
+echo "Testing complete."
