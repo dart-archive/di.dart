@@ -8,7 +8,7 @@ test/main.dart.js.deps
 test/main.dart.js.map
 test/main.dart.precompiled.js
 test/transformer/build
-benchmark/generated_classes.dart
+benchmark/generated_files/
 examples/build
 out
 build

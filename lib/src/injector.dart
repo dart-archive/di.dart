@@ -1,4 +1,8 @@
-part of di;
+library di.injector;
+
+import '../key.dart';
+import 'module.dart';
+import 'errors.dart';
 
 Key _INJECTOR_KEY = new Key(Injector);
 
@@ -7,7 +11,7 @@ abstract class Injector {
   /**
    * The parent injector.
    */
-  final Injector parent;
+  final Injector parent = null;
 
   /**
    * Returns the instance associated with the given key (i.e. [type] and
@@ -47,16 +51,17 @@ abstract class Injector {
  * parent, and instead RootInjector will start the exception chain that reports
  * the resolution context tree when no providers are found.
  */
-class RootInjector implements Injector {
+class RootInjector extends Injector {
   Injector get parent => null;
   List<Object> get _instances => null;
-  dynamic getByKey(key) => throw new NoProviderError(key);
-  const RootInjector();
+  dynamic getByKey(key, [depth]) => throw new NoProviderError(key);
+  Injector createChild(m) => null;
+  RootInjector();
 }
 
 class ModuleInjector extends Injector {
 
-  static const rootInjector = const RootInjector();
+  static final rootInjector = new RootInjector();
   final Injector parent;
   String name;
 

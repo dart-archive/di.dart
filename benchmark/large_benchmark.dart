@@ -1,7 +1,7 @@
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:di/di.dart';
-import 'package:di/static_injector.dart';
-import 'generated_classes.dart';
+import 'package:di/di_static.dart';
+import 'generated_files/factories.dart';
 
 import 'dart:math';
 
@@ -14,7 +14,7 @@ class LargeBenchmark extends BenchmarkBase {
   var numInjectors = 1;
   var allLeaves = [];
 
-  LargeBenchmark(name, this.injectorFactory) : super(name);
+  LargeBenchmark(name, this.injectorFactory) : super("Large" + name);
 
   setup() {
     var rootModule = new Module()
@@ -48,7 +48,7 @@ class LargeBenchmark extends BenchmarkBase {
 }
 
 class GetFromRoot extends LargeBenchmark {
-  GetFromRoot() : super('FromRoot', (m) => new StaticInjector(modules: m, typeFactories: typeFactories));
+  GetFromRoot() : super('FromRoot', (m) => new ModuleInjector(m));
 
   run() {
     leafInjector.getByKey(key999);
@@ -56,7 +56,7 @@ class GetFromRoot extends LargeBenchmark {
 }
 
 class GetFromLeaf extends LargeBenchmark {
-  GetFromLeaf() : super('FromLeaf', (m) => new StaticInjector(modules: m, typeFactories: typeFactories));
+  GetFromLeaf() : super('FromLeaf', (m) => new ModuleInjector(m));
 
   run() {
     leafInjector.getByKey(leafKey);
@@ -64,6 +64,7 @@ class GetFromLeaf extends LargeBenchmark {
 }
 
 main() {
+  Module.DEFAULT_REFLECTOR = new GeneratedTypeFactories(typeFactories, parameterKeys);
   new GetFromRoot().report();
   new GetFromLeaf().report();
 }

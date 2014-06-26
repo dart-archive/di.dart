@@ -70,8 +70,8 @@ void main() {
       ..bind(Engine, toFactory: () => new V8Engine())
       ..bind(Engine, toImplementation: ElectricEngine, withAnnotation: Electric)
   ]);
-  injector.get(GenericCar).drive();
-  injector.get(ElectricCar).drive();
+  injector.get(GenericCar).drive(); // Vroom...
+  injector.get(ElectricCar).drive(); // Hum...
 }
 ```
 

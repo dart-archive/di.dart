@@ -1,4 +1,7 @@
-part of di;
+library di.module;
+
+import "../key.dart";
+import "reflector.dart";
 
 typedef dynamic Factory(List<dynamic> parameters);
 _DEFAULT_VALUE(_) => null;
@@ -31,6 +34,9 @@ class Module {
 
   Map<Key, Binding> bindings = new Map<Key, Binding>();
 
+  /**
+   * Copies all bindings of [module] into this one. Overwriting when conflicts are found.
+   */
   install(Module module) => module.bindings.forEach((key, binding) => bindings[key] = binding);
 
   /**
@@ -104,40 +110,5 @@ class Module {
             'toValue, toFactory, toFactoryPos, toImplementation';
     }
     return true;
-  }
-
-  /**
-   * Register a binding to a concrete value.
-   *
-   * The [value] is what actually will be injected.
-   */
-  @Deprecated("Use bind(type, toValue: value)")
-  void value(Type id, value, {Type withAnnotation}) {
-    bind(id, toValue: value, withAnnotation: withAnnotation);
-  }
-
-  /**
-   * Registers a binding for a [Type].
-   *
-   * The default behavior is to simply instantiate the type.
-   *
-   * The following parameters can be specified:
-   *
-   * * [withAnnotation]: Type decorated with additional annotation.
-   * * [implementedBy]: The type will be instantiated using the [new] operator
-   *   and the resulting instance will be injected. If no type is provided,
-   *   then it's implied that [type] should be instantiated.
-   * * [visibility]: Function which determines fi the requesting injector can
-   *   see the type in the current injector.
-   */
-  @Deprecated("Use bind(type, implementedBy: impl)")
-  void type(Type type, {Type withAnnotation, Type implementedBy}) {
-    bind(type, withAnnotation: withAnnotation,
-        toImplementation: implementedBy);
-  }
-
-  @Deprecated("Use bindByKey(type, toFactory: factory)")
-  void factoryByKey(Key key, Function factoryFn) {
-    bindByKey(key, toFactory: factoryFn);
   }
 }

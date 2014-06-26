@@ -1,4 +1,8 @@
-part of di.transformer;
+library di.transformer.options;
+
+import 'dart:async';
+import 'package:barback/barback.dart';
+import 'package:code_transformers/resolver.dart';
 
 const List<String> DEFAULT_INJECTABLE_ANNOTATIONS =
     const ['di.annotations.Injectable'];

@@ -1,4 +1,12 @@
-part of di.transformer;
+library di.transformer.injector_generator;
+
+import 'dart:async';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:barback/barback.dart';
+import 'package:code_transformers/resolver.dart';
+import 'package:path/path.dart' as path;
+import 'options.dart';
 
 /**
  * Pub transformer which generates type factories for all injectable types
@@ -64,38 +72,7 @@ class _Processor {
     transform.addOutput(
         new Asset.fromString(_generatedAssetId, injectLibContents));
 
-    // edits main function
-    var lib = resolver.getLibrary(id);
-    var unit = lib.definingCompilationUnit.node;
-    var transaction = resolver.createTextEditTransaction(lib);
-    var imports = unit.directives.where((d) => d is ImportDirective);
-    var dir = imports.where((ImportDirective d) => d.uriContent == 'package:di/di_dynamic.dart');
-    var begin, end;
-    if (dir.isNotEmpty) {
-      begin = dir.first.offset;
-      end = dir.first.end;
-    } else {
-      begin = imports.last.end;
-      end = imports.last.end;
-    }
-    transaction.edit(begin, end, '\nimport '
-        "'${path.url.basenameWithoutExtension(id.path)}"
-        "_generated_type_factory_maps.dart' show setupModuleTypeReflector;");
-
-    FunctionExpression main = unit.declarations.where((d) =>
-        d is FunctionDeclaration && d.name.toString() == 'main')
-        .first.functionExpression;
-    var body = main.body;
-    if (body is BlockFunctionBody) {
-      var location = body.beginToken.end;
-      transaction.edit(location, location, '\n  setupModuleTypeReflector();');
-    } else if (body is ExpressionFunctionBody) {
-      transaction.edit(body.beginToken.offset, body.endToken.end,
-          "{\n  setupModuleTypeReflector();\n"
-          "  return ${body.expression};\n}");
-    } // EmptyFunctionBody can only appear as abstract methods and constructors.
-
-    commitTransaction(transaction, transform);
+    _editImport();
   }
 
   /** Resolves the classes for the injectable annotations in the current AST. */
@@ -384,6 +361,33 @@ class _Processor {
   void _warn(String msg, Element element) {
      logger.warning(msg, asset: resolver.getSourceAssetId(element),
         span: resolver.getSourceSpan(element));
+  }
+
+  /// edits out di_dynamic import and replace with generated_type_factory_maps
+  void _editImport() {
+    AssetId id = transform.primaryInput.id;
+    var lib = resolver.getLibrary(id);
+    var unit = lib.definingCompilationUnit.node;
+    var transaction = resolver.createTextEditTransaction(lib);
+    var imports = unit.directives.where((d) => d is ImportDirective);
+    var dir = imports.where((ImportDirective d) =>
+        d.uriContent == 'package:di/di_dynamic.dart');
+    var begin, end;
+    if (dir.isNotEmpty) {
+      begin = dir.first.offset;
+      end = dir.first.end;
+    } else {
+      begin = imports.last.end;
+      end = imports.last.end;
+    }
+    transaction.edit(begin, end, (begin == end ? "\n" : "") + 'import '
+        "'${path.url.basenameWithoutExtension(id.path)}"
+        "_generated_type_factory_maps.dart' show setupModuleTypeReflector;");
+    var printer = transaction.commit();
+    var url = id.path.startsWith('lib/') ?
+        'package:${id.package}/${id.path.substring(4)}' : id.path;
+    printer.build(url);
+    transform.addOutput(new Asset.fromString(id, printer.text));
   }
 }
 

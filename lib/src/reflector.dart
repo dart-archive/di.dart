@@ -1,8 +1,8 @@
-part of di;
+library di.reflector;
 
-// TODO: add toClosure in addition to toFactory
-// TODO: write a verifier that toClosure signature matches inject attribute!
-// TODO: write tests
+import "../key.dart";
+import "errors.dart";
+import "module.dart";
 
 abstract class TypeReflector {
   /**
@@ -31,15 +31,6 @@ class NullReflector extends TypeReflector {
 
 class NullReflectorError extends BaseError {
   NullReflectorError()
-    : super("No default dependency injection reflector set for Module. \n"
-    "To use recommended behavior, which uses mirrors to resolve dependencies "
-    "when transformers are off and generated type factories when transformers"
-    "are enabled, add the following line to the main function before any modules"
-    "are instantiated:\n"
-    "setupModuleTypeReflector();\n"
-    "with the import:\n"
-    "import 'package:di/di_dynamic.dart';\n"
-    "To always use static code generation instead, call the "
-    "initializeGeneratedTypeFactories function provided by the transformer generated"
-    "file instead.");
+    : super("Module.DEFAULT_REFLECTOR not initialized for dependency injection."
+            "http://goo.gl/XFXx9G");
 }

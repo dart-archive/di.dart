@@ -5,7 +5,7 @@ import 'dart:html';
 @Injectable()
 class Application {
   run() {
-    window.alert("WORKS");
+    print('Success');
   }
 }
 

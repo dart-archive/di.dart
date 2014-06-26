@@ -6,6 +6,8 @@ import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 import 'package:code_transformers/tests.dart' as tests;
 import 'package:di/transformer.dart';
+import 'package:di/transformer/options.dart';
+import 'package:di/transformer/injector_generator.dart';
 
 import 'package:guinness/guinness.dart';
 
@@ -675,8 +677,10 @@ main() {
               'a|web/main.dart': '''
 library main;
 import 'package:di/di.dart';
+import 'package:di/di_dynamic.dart';
 
 main() {
+  setupModuleTypeReflector();
   print('abc');
 }'''
             },
@@ -691,28 +695,6 @@ main() {
   print('abc');
 }'''
             });
-      });
-
-      it('transforms main formatted as an expression', () {
-        return tests.applyTransformers(phases,
-        inputs: {
-            'a|web/main.dart': '''
-library main;
-import 'package:di/di.dart';
-
-main() => print("abc");'''
-        },
-        results: {
-            'a|web/main.dart': '''
-library main;
-import 'package:di/di.dart';
-import 'main_generated_type_factory_maps.dart' show setupModuleTypeReflector;
-
-main() {
-  setupModuleTypeReflector();
-  return print("abc");
-}'''
-        });
       });
   });
 }

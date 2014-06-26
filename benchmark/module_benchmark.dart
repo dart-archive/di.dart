@@ -16,11 +16,11 @@ class ModuleBenchmark extends BenchmarkBase {
 
   void run() {
     var m = new Module()
-      ..type(A)
-      ..type(B)
-      ..type(C)
-      ..type(D)
-      ..type(E);
+      ..bind(A)
+      ..bind(B)
+      ..bind(C)
+      ..bind(D)
+      ..bind(E);
   }
 }
 

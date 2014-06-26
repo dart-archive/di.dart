@@ -7,15 +7,11 @@ import 'static_injector_benchmark.dart';
 
 import 'dart:profiler';
 
-class TestInjector {
-  const TestInjector();
-}
-
 /**
  * This benchmark creates the same objects as the StaticInjectorBenchmark
  * without using DI, to serve as a baseline for comparison.
  */
-class CreateObjectsOnly extends BenchmarkBase{
+class CreateObjectsOnly extends BenchmarkBase {
   CreateObjectsOnly(name) : super(name);
 
   void run() {
