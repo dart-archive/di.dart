@@ -15,4 +15,33 @@ dart2js --minify -c test/main.dart -o out/main.dart.js
 echo "Running compiled tests in node..."
 node out/main.dart.js
 
+# Example app test
+echo "Building example..."
+cd example/
+pub_out=$(pub build example/ | tee /dev/tty | grep -F "mirror" || : )
+cd ..
+echo "--------"
+
+if [[ -n $pub_out ]]
+then
+    echo "FAIL: Example transformer should not import dart:mirror"
+    failed=1
+else
+    echo "PASS: Example transformer should not import dart:mirror"
+fi
+
+output=$(node example/build/web/main.dart.js || : )
+if [ $output == "Success" ]
+then
+    echo "PASS: Example transformer should inject dependencies"
+else
+    echo "FAIL: Example transformer should inject dependencies"
+    failed=1
+fi
+
+if [[ -n $failed ]]
+then
+    echo "Tests failed. Build /example with \`pub build example/ --mode debug\` to debug."
+    exit 1
+fi
 echo "Testing complete."

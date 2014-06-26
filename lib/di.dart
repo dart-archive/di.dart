@@ -1,11 +1,8 @@
 library di;
 
-import 'key.dart';
-
 export 'key.dart' show Key, key;
+export 'src/injector.dart' show Injector, ModuleInjector;
+export 'src/module.dart' show Factory, Module;
+export 'src/reflector.dart' show TypeReflector;
+export 'src/errors.dart' hide BaseError;
 export 'annotations.dart';
-
-part 'src/injector.dart';
-part 'src/module.dart';
-part 'src/errors.dart';
-part 'src/reflector.dart';

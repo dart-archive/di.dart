@@ -1,3 +1,11 @@
+/**
+ * Generates Factory & paramKeys maps into a file by crawling source files and
+ * finding all constructors that are annotated for injection. Does the same thing as
+ * transformer.dart (see there for more info), except without modifications
+ * to the main function. As such, the user needs to import the generated file, and run
+ * `Module.DEFAULT_REFLECTOR = new GeneratedTypeFactories(typeFactories, parameterKeys)`
+ * with `di_static.dart` imported, before any modules are initialized.
+ */
 library di.generator;
 
 import 'package:analyzer/src/generated/java_io.dart';

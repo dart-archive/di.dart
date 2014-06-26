@@ -1,4 +1,6 @@
-part of di;
+library di.errors;
+
+import '../key.dart';
 
 abstract class BaseError extends Error {
   final String message;
@@ -42,7 +44,6 @@ class NoProviderError extends ResolvingError {
       new Key(num), new Key(int), new Key(double), new Key(String),
       new Key(bool)
   ];
-  final NoProviderError parent;
 
   String toString(){
     var root = keys.first;
@@ -59,6 +60,9 @@ class CircularDependencyError extends ResolvingError {
   CircularDependencyError(key) : super(key);
 }
 
-class NoParentError extends BaseError {
-  NoParentError(message) : super(message);
+class NoGeneratedTypeFactoryError extends BaseError {
+  NoGeneratedTypeFactoryError(Type type): super(type.toString());
+  String toString() =>
+      "Type '$message' not found in generated typeFactory maps. Is the type's"
+      "constructor annotated for injection?";
 }

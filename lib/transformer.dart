@@ -11,17 +11,11 @@
  * and outputted to a file [entry_point_name]_generated_type_factory_maps.dart. Multiple
  * entry points (main functions) is not supported.
  *
- * An import of this file is added to main, and a line is added by the transformer at
- * the beginning of the main function that initializes the factories by passing them
- * to DI's GeneratedTypeFactories class to be visible to modules before binding time.
- * This is necessary as the generated maps must live outside `packages`, and DI cannot
- * import them from inside `packages`, so it must be explicitly passed in at the start
- * of the program.
+ * The import in main is also modified to use import di_static.dart instead
+ * of di_dynamic.dart.
  *
- * An import in di.dart is also modified to use the static GeneratedTypeFactories
- * implementation of TypeReflector instead of the mirror implementation.
- *
- * All of the above is taken care of by the transformer. The user only need to
+ * All of the above is taken care of by the transformer. The user needs to call
+ * setupModuleTypeReflector in main, before any modules are initialized. User must also
  * annotate types for the transformer to add them to the generated type factories file,
  * in addition to enabling the transformer in pubspec.yaml.
  *
@@ -82,10 +76,8 @@ import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 import 'package:path/path.dart' as path;
 import 'package:source_maps/refactor.dart';
-
-part 'transformer/injector_generator.dart';
-part 'transformer/options.dart';
-
+import 'transformer/injector_generator.dart';
+import 'transformer/options.dart';
 
 /**
  * The transformer, which will extract all classes being dependency injected
@@ -155,21 +147,4 @@ _readStringListValue(Map args, String name) {
 List<List<Transformer>> _createPhases(TransformOptions options) {
   var resolvers = new Resolvers(options.sdkDirectory);
   return [[new InjectorGenerator(options, resolvers)]];
-}
-
-/// Commits the transaction if there have been edits, otherwise just adds
-/// the input as an output.
-void commitTransaction(TextEditTransaction transaction, Transform transform) {
-  var id = transform.primaryInput.id;
-
-  if (transaction.hasEdits) {
-    var printer = transaction.commit();
-    var url = id.path.startsWith('lib/')
-    ? 'package:${id.package}/${id.path.substring(4)}' : id.path;
-    printer.build(url);
-    transform.addOutput(new Asset.fromString(id, printer.text));
-  } else {
-    // No modifications, so just pass the source through.
-    transform.addOutput(transform.primaryInput);
-  }
 }
