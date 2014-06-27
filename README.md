@@ -75,3 +75,6 @@ void main() {
 }
 ```
 
+## Contributing
+
+Refer to the guidelines for [contributing to AngularDart](http://goo.gl/nrXVgm).

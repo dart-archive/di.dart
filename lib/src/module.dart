@@ -1,11 +1,12 @@
 library di.module;
 
 import "../key.dart";
+import "../check_bind_args.dart" show checkBindArgs;
 import "reflector.dart";
 
 typedef dynamic Factory(List<dynamic> parameters);
-_DEFAULT_VALUE(_) => null;
-_IDENTITY(p) => p[0];
+DEFAULT_VALUE(_) => null;
+IDENTITY(p) => p[0];
 
 class Binding {
   Key key;
@@ -14,8 +15,8 @@ class Binding {
   Binding(this.key, this.parameterKeys, this.factory);
 }
 
-bool _isSet(val) => !identical(val, _DEFAULT_VALUE);
-bool _isNotSet(val) => identical(val, _DEFAULT_VALUE);
+bool isSet(val) => !identical(val, DEFAULT_VALUE);
+bool isNotSet(val) => identical(val, DEFAULT_VALUE);
 
 /**
  * Module contributes configuration information to an [Injector] by providing
@@ -56,8 +57,8 @@ class Module {
    * Up to one (0 or 1) of the following parameters can be specified at the
    * same time: [toImplementation], [toFactory], [toValue].
    */
-  void bind(Type type, {dynamic toValue: _DEFAULT_VALUE,
-      Function toFactory: _DEFAULT_VALUE, Factory toFactoryPos: _DEFAULT_VALUE,
+  void bind(Type type, {dynamic toValue: DEFAULT_VALUE,
+      Function toFactory: DEFAULT_VALUE, Factory toFactoryPos: DEFAULT_VALUE,
       Type toImplementation,
       List inject: const [], Type withAnnotation}) {
     bindByKey(new Key(type, withAnnotation), toValue: toValue,
@@ -69,23 +70,23 @@ class Module {
    * Same as [bind] except it takes [Key] instead of
    * [Type] [withAnnotation] combination. Faster.
    */
-  void bindByKey(Key key, {dynamic toValue: _DEFAULT_VALUE,
-      Function toFactory: _DEFAULT_VALUE, Factory toFactoryPos: _DEFAULT_VALUE,
+  void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE,
+      Function toFactory: DEFAULT_VALUE, Factory toFactoryPos: DEFAULT_VALUE,
       List inject: const [], Type toImplementation}) {
-    if (inject.length == 1 && _isNotSet(toFactory) && _isNotSet(toFactoryPos)) {
-      toFactoryPos = _IDENTITY;
+    if (inject.length == 1 && isNotSet(toFactory) && isNotSet(toFactoryPos)) {
+      toFactoryPos = IDENTITY;
     }
 
-    _checkBindArgs(toValue, toFactory, toFactoryPos, toImplementation);
+    assert(checkBindArgs(toValue, toFactory, toFactoryPos, toImplementation, inject));
 
     List<Key> parameterKeys;
     Factory factory;
 
-    if (_isSet(toValue)) {
+    if (isSet(toValue)) {
       factory = (_) => toValue;
       parameterKeys = const [];
-    } else if (_isSet(toFactory) || _isSet(toFactoryPos)) {
-      factory = _isSet(toFactoryPos) ? toFactoryPos : (args) => Function.apply(toFactory, args);
+    } else if (isSet(toFactory) || isSet(toFactoryPos)) {
+      factory = isSet(toFactoryPos) ? toFactoryPos : (args) => Function.apply(toFactory, args);
       parameterKeys = inject.map((t) {
         if (t is Key) return t;
         if (t is Type) return new Key(t);
@@ -97,18 +98,5 @@ class Module {
       factory = reflector.factoryFor(implementationType);
     }
     bindings[key] = new Binding(key, parameterKeys, factory);
-  }
-
-  _checkBindArgs(toValue, toFactory, toFactoryPos, toImplementation) {
-    int count = 0;
-    if (_isSet(toValue)) count++;
-    if (_isSet(toFactory)) count++;
-    if (_isSet(toFactoryPos)) count++;
-    if (toImplementation != null) count++;
-    if (count > 1) {
-      throw 'Only one of following parameters can be specified: '
-            'toValue, toFactory, toFactoryPos, toImplementation';
-    }
-    return true;
   }
 }
