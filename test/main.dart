@@ -17,6 +17,8 @@ import 'package:di/di.dart';
 import 'package:di/annotations.dart';
 import 'package:di/di_static.dart';
 import 'package:di/di_dynamic.dart';
+import 'package:di/check_bind_args.dart';
+import 'package:di/src/module.dart';
 
 import 'test_annotations.dart';
 // Generated file. Run ../test_tf_gen.sh.
@@ -192,7 +194,7 @@ class ThrowOnce {
 }
 
 void main() {
-  moduleTest();
+  testModule();
 
   new GeneratedTypeFactories(
       type_factories_gen.typeFactories, type_factories_gen.parameterKeys);
@@ -203,10 +205,11 @@ void main() {
   createInjectorSpec('Dynamic ModuleInjector ',
       () => new Module.withReflector(reflector));
 
-  createKeySpec();
+  testKey();
+  testCheckBindArgs();
 }
 
-moduleTest() {
+testModule() {
 
   describe('Module', () {
 
@@ -544,7 +547,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       var module = moduleFactory()..bind(Engine, toImplementation: MockEngine);
 
       var parent = new ModuleInjector([moduleFactory()..bind(Engine)]);
-      var child = parent.createChild([module]);
+      var child = new ModuleInjector([module], parent);
 
       var abcFromParent = parent.get(Engine);
       var abcFromChild = child.get(Engine);
@@ -556,7 +559,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 
     it('should enumerate across children', () {
       var parent = new ModuleInjector([moduleFactory()..bind(Engine)]);
-      var child = parent.createChild([moduleFactory()..bind(MockEngine)]);
+      var child = new ModuleInjector([moduleFactory()..bind(MockEngine)], parent);
 
       expect(parent.types).to(matcher.unorderedEquals([Engine, Injector]));
       expect(child.types).to(matcher.unorderedEquals([Engine, MockEngine, Injector]));
@@ -567,7 +570,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       var module = moduleFactory()..bind(Car);
 
       var parent = new ModuleInjector([moduleFactory()..bind(Car)..bind(Engine)]);
-      var child = parent.createChild([module]);
+      var child = new ModuleInjector([module], parent);
 
       var complexFromParent = parent.get(Car);
       var complexFromChild = child.get(Car);
@@ -583,7 +586,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       var module = moduleFactory()..bind(Engine, toImplementation: MockEngine);
 
       var parent = new ModuleInjector([moduleFactory()..bind(Car)..bind(Engine)]);
-      var child = parent.createChild([module]);
+      var child = new ModuleInjector([module], parent);
 
       var complexFromParent = parent.get(Car);
       var complexFromChild = child.get(Car);
@@ -598,7 +601,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 
     it('should provide child injector as Injector', () {
       var injector = new ModuleInjector([]);
-      var child = injector.createChild([]);
+      var child = new ModuleInjector([], injector);
 
       expect(child.get(Injector)).toBe(child);
     });
@@ -606,12 +609,12 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 
     it('should instantiate class only once (Issue #18)', () {
       var rootInjector = new ModuleInjector([]);
-      var injector = rootInjector.createChild([
+      var injector = new ModuleInjector([
           moduleFactory()
             ..bind(Log)
             ..bind(ClassOne)
             ..bind(InterfaceOne, inject: [ClassOne])
-      ]);
+      ], rootInjector);
 
       expect(injector.get(InterfaceOne)).toBe(injector.get(ClassOne));
       expect(injector.get(Log).log.join(' ')).toEqual('ClassOne');
@@ -620,7 +623,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 }
 
 
-createKeySpec() {
+testKey() {
   describe('Key', () {
     void expectEquals(x, y, bool truthValue) {
       expect(x == y).toEqual(truthValue);
@@ -662,6 +665,30 @@ createKeySpec() {
       var pType = (p.type as ClassMirror).reflectedType;
 
       expectEquals(new Key(Engine), new Key(pType), true);
+    });
+  });
+}
+
+
+testCheckBindArgs() {
+  describe('CheckBindArgs', () {
+    var _ = DEFAULT_VALUE;
+    it('should return true when args are well formed', () {
+      expect(checkBindArgs(_, (Engine e, Car c) => 0, _, null, [Engine, Car])).toBeTrue();
+      expect(checkBindArgs(_, () => 0, _, null, [])).toBeTrue();
+      expect(checkBindArgs(_, _, IDENTITY, null, [Car])).toBeTrue();
+      expect(checkBindArgs(0, _, _, null, [])).toBeTrue();
+      expect(checkBindArgs(_, _, _, Car, [])).toBeTrue();
+    });
+    
+    it('should error when wrong number of args have been set', () {
+      expect(() => checkBindArgs(_, () => 0, (p) => p[0], null, [])).toThrowWith();
+      expect(() => checkBindArgs(0, _, _, null, [Engine, Car])).toThrowWith();
+    });
+    
+    it('should error when toFactory argument count does not match inject length', () {
+      expect(() => checkBindArgs(_, (Engine e, Car c) => 0, _, null, [Engine])).toThrowWith();
+      expect(() => checkBindArgs(_, () => 0, _, null, [Engine, Car])).toThrowWith();
     });
   });
 }
