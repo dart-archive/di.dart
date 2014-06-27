@@ -8,8 +8,7 @@ import 'dart:collection';
  */
 class Key {
   // TODO: experiment with having a separate map for non-annotated types (perf)
-  // TODO: Use Map.identity once dart issue 19622 is fixed
-  //        (run last test in KeySpec of main.dart in dart2js)
+  // While Map.identity is faster here, it's not supported in dart2js (dart issue 19622 wontfix)
   static Map<Type, Map<Type, Key>> _typeToAnnotationToKey = {};
   static int _numInstances = 0;
   /// The number of instances of [Key] created.

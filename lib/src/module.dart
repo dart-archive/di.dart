@@ -6,13 +6,43 @@ import "reflector.dart";
 
 typedef dynamic Factory(List<dynamic> parameters);
 DEFAULT_VALUE(_) => null;
-IDENTITY(p) => p[0];
+IDENTITY(p) {
+  assert(p.length == 1);
+  return p[0];
+}
 
 class Binding {
   Key key;
   List<Key> parameterKeys;
   Function factory;
-  Binding(this.key, this.parameterKeys, this.factory);
+
+  Binding();
+
+  void bind(k, TypeReflector reflector, {dynamic toValue: DEFAULT_VALUE,
+          Function toFactory: DEFAULT_VALUE, Type toImplementation,
+          Factory toFactoryPos: DEFAULT_VALUE, List inject: const[]}) {
+    key = k;
+    if (inject.length == 1 && isNotSet(toFactory) && isNotSet(toFactoryPos)) {
+      toFactoryPos = IDENTITY;
+    }
+    assert(checkBindArgs(toValue, toFactory, toFactoryPos, toImplementation, inject));
+
+    if (isSet(toValue)) {
+      factory = (_) => toValue;
+      parameterKeys = const [];
+    } else if (isSet(toFactory) || isSet(toFactoryPos)) {
+      factory = isSet(toFactoryPos) ? toFactoryPos : (args) => Function.apply(toFactory, args);
+      parameterKeys = inject.map((t) {
+        if (t is Key) return t;
+        if (t is Type) return new Key(t);
+        throw "inject must be Keys or Types. '$t' is not an instance of Key or Type.";
+      }).toList(growable: false);
+    } else {
+      var implementationType = toImplementation == null ? key.type : toImplementation;
+      parameterKeys = reflector.parameterKeysFor(implementationType);
+      factory = reflector.factoryFor(implementationType);
+    }
+  }
 }
 
 bool isSet(val) => !identical(val, DEFAULT_VALUE);
@@ -73,30 +103,10 @@ class Module {
   void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE,
       Function toFactory: DEFAULT_VALUE, Factory toFactoryPos: DEFAULT_VALUE,
       List inject: const [], Type toImplementation}) {
-    if (inject.length == 1 && isNotSet(toFactory) && isNotSet(toFactoryPos)) {
-      toFactoryPos = IDENTITY;
-    }
 
-    assert(checkBindArgs(toValue, toFactory, toFactoryPos, toImplementation, inject));
-
-    List<Key> parameterKeys;
-    Factory factory;
-
-    if (isSet(toValue)) {
-      factory = (_) => toValue;
-      parameterKeys = const [];
-    } else if (isSet(toFactory) || isSet(toFactoryPos)) {
-      factory = isSet(toFactoryPos) ? toFactoryPos : (args) => Function.apply(toFactory, args);
-      parameterKeys = inject.map((t) {
-        if (t is Key) return t;
-        if (t is Type) return new Key(t);
-        throw "inject must be Keys or Types. '$t' is not an instance of Key or Type.";
-      }).toList(growable: false);
-    } else {
-      var implementationType = toImplementation == null ? key.type : toImplementation;
-      parameterKeys = reflector.parameterKeysFor(implementationType);
-      factory = reflector.factoryFor(implementationType);
-    }
-    bindings[key] = new Binding(key, parameterKeys, factory);
+    var binding = new Binding();
+    binding.bind(key, reflector, toValue: toValue, toFactory: toFactory, toFactoryPos: toFactoryPos,
+                 toImplementation: toImplementation, inject: inject);
+    bindings[key] = binding;
   }
 }
