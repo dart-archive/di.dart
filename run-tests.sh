@@ -17,8 +17,9 @@ node out/main.dart.js
 
 # Example app test
 echo "Building example..."
-cd example/
-pub_out=$(pub build example/ | tee /dev/tty | grep -F "mirror" || : )
+rm -rf example/build/
+cd example
+pub_out=$(pub build | tee /dev/tty | grep -F "mirror" || : )
 cd ..
 echo "--------"
 
@@ -44,4 +45,5 @@ then
     echo "Tests failed. Build /example with \`pub build example/ --mode debug\` to debug."
     exit 1
 fi
+echo ""
 echo "Testing complete."
