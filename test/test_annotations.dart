@@ -1,7 +1,7 @@
 library test_annotations;
 
-class Broken {
-  const Broken();
+class StringList {
+  const StringList();
 }
 
 class Old {

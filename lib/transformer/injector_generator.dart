@@ -260,12 +260,6 @@ class _Processor {
     }
     for (var param in ctor.parameters) {
       var type = param.type;
-      if (type is InterfaceType &&
-          type.typeArguments.any((t) => !t.isDynamic)) {
-        _warn('${cls.name} cannot be injected because '
-            '${param.type} is a parameterized type.', ctor);
-        return false;
-      }
       if (type.isDynamic) {
         _warn('${cls.name} cannot be injected because parameter type '
           '${param.name} cannot be resolved.', ctor);
@@ -282,11 +276,9 @@ class _Processor {
     var prefixes = <LibraryElement, String>{};
 
     var ctorTypes = constructors.map((ctor) => ctor.enclosingElement).toSet();
-    var paramTypes = constructors.expand((ctor) => ctor.parameters)
-        .map((param) => param.type.element).toSet();
 
     var usedLibs = new Set<LibraryElement>();
-    String resolveClassName(ClassElement type) {
+    String resolveClassName(ClassElement type, [List<DartType> typeArgs]) {
       var library = type.library;
       usedLibs.add(library);
 
@@ -298,7 +290,10 @@ class _Processor {
       if (prefix.isNotEmpty) {
         prefix = '$prefix.';
       }
-      return '$prefix${type.name}';
+      if (typeArgs == null || typeArgs.isEmpty || !typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
+        return '$prefix${type.name}';
+      }
+      return 'new TypeLiteral<$prefix${type.name}<${typeArgs.join(', ')}>>().type';
     }
 
     var keysBuffer = new StringBuffer();
@@ -306,8 +301,8 @@ class _Processor {
     var paramsBuffer = new StringBuffer();
     var addedKeys = new Set<String>();
     for (var ctor in constructors) {
-      var type = ctor.enclosingElement;
-      var typeName = resolveClassName(type);
+      ClassElement type = ctor.enclosingElement;
+      String typeName = resolveClassName(type);
 
       String args = new List.generate(ctor.parameters.length, (i) => 'a${i+1}').join(', ');
       factoriesBuffer.write('  $typeName: ($args) => new $typeName($args),\n');
@@ -315,15 +310,18 @@ class _Processor {
       paramsBuffer.write('  $typeName: ');
       paramsBuffer.write(ctor.parameters.isEmpty ? 'const[' : '[');
       var params = ctor.parameters.map((param) {
-        var typeName = resolveClassName(param.type.element);
+        String typeName = resolveClassName(param.type.element, (param.type).typeArguments);
         Iterable<ClassElement> annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
               (item) => item.element.returnType.element);
         }
 
-        var keyName = '_KEY_${param.type.name}' +
-            (annotations.isNotEmpty ? '_${annotations.first}' : '');
+        var keyName = '_KEY_${param.type.name}' + (annotations.isNotEmpty ? '_${annotations.first}' : '');
+        var typeArgs = param.type.typeArguments;
+        if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
+          typeArgs.forEach((arg) => keyName = ('${keyName}_${arg.name}'));
+        }
         if (addedKeys.add(keyName)) {
           keysBuffer.writeln('final Key $keyName = new Key($typeName' +
               (annotations.isNotEmpty ? ', ${resolveClassName(annotations.first)});' : ');'));
