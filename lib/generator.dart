@@ -61,16 +61,17 @@ Map<Chunk, String> generateCode(String entryPoint, List<String> classAnnotations
   List<String> imports = <String>[];
   Map<Chunk, List<ClassElement>> typeFactoryTypes = <Chunk, List<ClassElement>>{};
   Map<String, String> typeToImport = new Map<String, String>();
+  Map<String, InterfaceType> typeMappings = {};
 
   c.crawl(entryPoint, (CompilationUnitElement compilationUnit, SourceFile source) {
-      new CompilationUnitVisitor(c.context, source, classAnnotations, imports,
-          typeToImport, typeFactoryTypes, outputFilename).visit(compilationUnit, source);
+      new CompilationUnitVisitor(c.context, source, classAnnotations, imports, typeToImport, typeFactoryTypes,
+          typeMappings, outputFilename).visit(compilationUnit, source);
   });
-  return printLibraryCode(typeToImport, imports, typeFactoryTypes);
+  return printLibraryCode(typeToImport, imports, typeFactoryTypes, typeMappings);
 }
 
 Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
-    List<String> imports, Map<Chunk, List<ClassElement>> typeFactoryTypes) {
+    List<String> imports, Map<Chunk, List<ClassElement>> typeFactoryTypes, Map<String, InterfaceType> typeMapping) {
 
   Map<Chunk, StringBuffer> factories = <Chunk, StringBuffer>{};
   Map<Chunk, StringBuffer> keys = <Chunk, StringBuffer>{};
@@ -79,8 +80,12 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
 
   typeFactoryTypes.forEach((Chunk chunk, List<ClassElement> classes) {
     List<String> requiredImports = <String>[];
-    String resolveClassIdentifier(InterfaceType type) {
+    String resolveClassIdentifier(InterfaceType type, [List typeArgs]) {
+      final TYPE_LITERAL = 'TypeLiteral';
       if (type.element.library.isDartCore) {
+        if (type.typeParameters.isNotEmpty) {
+          return 'new ${resolveClassIdentifier(typeMapping[TYPE_LITERAL])}<$type>().type';
+        }
         return type.name;
       }
       String import = typeToImport[getCanonicalName(type)];
@@ -88,6 +93,11 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
         requiredImports.add(import);
       }
       String prefix = _calculateImportPrefix(import, imports);
+      if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
+        var typeParameters = type.typeArguments.join(', ');
+        var typeLiteral = resolveClassIdentifier(typeMapping[TYPE_LITERAL]);
+        return  'new ${typeLiteral}<$prefix.${type.name}<${typeParameters}>>().type';
+      }
       return '$prefix.${type.name}';
     }
 
@@ -116,7 +126,7 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
   return result;
 }
 
-typedef String IdentifierResolver(InterfaceType type);
+typedef String IdentifierResolver(InterfaceType type, [List typeArgs]);
 /**
  * Takes classes and writes to StringBuffers the corresponding keys, factories,
  * and paramLists needed for static injection.
@@ -160,18 +170,13 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
           throw 'Unable to resolve type for constructor parameter '
           '"${param.name}" for type "$clazz" in ${clazz.source}';
         }
-        if (_isParameterized(param)) {
-          print('WARNING: parameterized types are not supported: '
-          '$param in $clazz in ${clazz.source}. Skipping!');
-          skip = true;
-        }
         var annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
                   (item) => item.element.returnType.name);
         }
-        String key_name = annotations.isNotEmpty ?
-        '${param.type.name}_${annotations.first}' : param.type.name;
+        String key_name = annotations.isNotEmpty ? '${param.type.name}_${annotations.first}' : param.type.name;
+        param.type.typeArguments.forEach((arg) => key_name = ('${key_name}_${arg.name}'));
         String output = '_KEY_${key_name}';
         if (addedKeys.add(key_name)){
           var annotationParam = "";
@@ -179,7 +184,7 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
             annotationParam = ", ${resolveClassIdentifier(param.metadata.first.element.returnType)}";
           }
           toBeAdded['$key_name']='final Key _KEY_${key_name} = '+
-          'new Key(${resolveClassIdentifier(param.type)}$annotationParam);\n';
+              'new Key(${resolveClassIdentifier(param.type, param.type.typeArguments)}$annotationParam);\n';
         }
         return output;
       }).join(', '));
@@ -198,18 +203,6 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
   toBeAdded.clear();
 }
 
-_isParameterized(ParameterElement param) {
-  String typeName = param.type.toString();
-
-  if (typeName.indexOf('<') > -1) {
-    String parameters =
-    typeName.substring(typeName.indexOf('<') + 1, typeName.length - 1);
-    return parameters.split(', ').any((p) => p != 'dynamic');
-  }
-  return false;
-}
-
-
 String _calculateImportPrefix(String import, List<String> imports) =>
     'import_${imports.indexOf(import)}';
 
@@ -221,10 +214,11 @@ class CompilationUnitVisitor {
   SourceFile source;
   AnalysisContext context;
   String outputFilename;
+  Map<String, InterfaceType> typeMappings;
 
   CompilationUnitVisitor(this.context, this.source,
       this.classAnnotations, this.imports, this.typeToImport,
-      this.typeFactoryTypes, this.outputFilename);
+      this.typeFactoryTypes, this.typeMappings, this.outputFilename);
 
   visit(CompilationUnitElement compilationUnit, SourceFile source) {
     if (typeFactoryTypes[source.chunk] == null) {
@@ -283,6 +277,9 @@ class CompilationUnitVisitor {
       importUri = path.relative(importUri, from: path.dirname(outputFilename));
     }
     typeToImport[getCanonicalName(classElement.type)] = importUri;
+    if (classElement.name == 'TypeLiteral' && classElement.library.name == 'di.type_literal') {
+      typeMappings.putIfAbsent(classElement.name, () => classElement.type);
+    }
     if (!imports.contains(importUri)) {
       imports.add(importUri);
     }
