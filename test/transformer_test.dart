@@ -68,26 +68,32 @@ main() {
           ]);
     });
 
-    it('warns about parameterized classes', () {
+    it('should inject parameterized parameters into object', () {
       return generates(phases,
           inputs: {
             'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
+            'di|lib/type_literal.dart': PACKAGE_TYPE_LITERAL,
             'a|lib/a.dart': '''
                 import 'package:inject/inject.dart';
                 class Parameterized<T> {
+                  List<num> nums;
+
                   @inject
-                  Parameterized();
+                  Parameterized(this.nums);
                 }
                 '''
           },
           imports: [
             "import 'package:a/a.dart' as import_0;",
           ],
+          keys: [
+            'List_num = new Key(new TypeLiteral<List<num>>().type);',
+          ],
           factories: [
-            'import_0.Parameterized: () => new import_0.Parameterized(),',
+            'import_0.Parameterized: (a1) => new import_0.Parameterized(a1),',
           ],
           paramKeys: [
-            'import_0.Parameterized: const[],',
+            'import_0.Parameterized: [_KEY_List_num],',
           ],
           messages: [
             'warning: Parameterized is a parameterized type. '
@@ -95,7 +101,7 @@ main() {
           ]);
     });
 
-    it('skips and warns about parameterized constructor parameters', () {
+    it('injects parameterized constructor parameters', () {
       return generates(phases,
           inputs: {
             'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
@@ -108,9 +114,17 @@ main() {
                 }
                 '''
           },
-          messages: [
-            'warning: Bar cannot be injected because Foo<bool> is a '
-            'parameterized type. (package:a/a.dart 3 18)'
+          imports: [
+              "import 'package:a/a.dart' as import_0;",
+          ],
+          keys: [
+            'Foo_bool = new Key(new TypeLiteral<import_0.Foo<bool>>().type);',
+          ],
+          factories: [
+              'import_0.Bar: (a1) => new import_0.Bar(a1),',
+          ],
+          paramKeys: [
+            'import_0.Bar: [_KEY_Foo_bool],',
           ]);
     });
 
@@ -138,6 +152,66 @@ main() {
           ],
           paramKeys: [
             'import_0.Bar: [_KEY_Foo],'
+          ]);
+    });
+
+    it('allows partially-parameterized parameters', () {
+      return generates(phases,
+          inputs: {
+              'a|web/main.dart': '''
+                    import 'package:inject/inject.dart';
+                    class Foo<T, U, V> {}
+                    class Bar {
+                      @inject
+                      Bar(Foo<bool, dynamic, num> f);
+                    }
+                    main() {}
+                    '''
+          },
+          imports: [
+              "import 'main.dart' as import_0;",
+          ],
+          keys: [
+            'Foo_bool_dynamic_num = new Key(new TypeLiteral<import_0.Foo<bool, dynamic, num>>().type);',
+          ],
+          factories: [
+            'import_0.Bar: (a1) => new import_0.Bar(a1),',
+          ],
+          paramKeys: [
+            'import_0.Bar: [_KEY_Foo_bool_dynamic_num],'
+          ]);
+    });
+
+    it('should generate same method when there\'s no parameters and when all parameters are dynamic', () {
+      return generates(phases,
+          inputs: {
+              'a|web/main.dart': '''
+                    import 'package:inject/inject.dart';
+                    class Foo<T, U, V> {}
+                    class Bar {
+                      @inject
+                      Bar(Foo<dynamic, dynamic, dynamic> f);
+                    }
+                    class Baz {
+                      @inject
+                      Baz(Foo f);
+                    }
+                    main() {}
+                    '''
+          },
+          imports: [
+              "import 'main.dart' as import_0;",
+          ],
+          keys: [
+            'Foo = new Key(import_0.Foo);',
+          ],
+          factories: [
+              'import_0.Bar: (a1) => new import_0.Bar(a1),',
+              'import_0.Baz: (a1) => new import_0.Baz(a1),',
+          ],
+          paramKeys: [
+            'import_0.Bar: [_KEY_Foo],',
+            'import_0.Baz: [_KEY_Foo],',
           ]);
     });
 
@@ -764,5 +838,14 @@ library di.annotations;
 class Injectables {
   final List<Type> types;
   const Injectables(this.types);
+}
+''';
+
+
+const String PACKAGE_TYPE_LITERAL = '''
+library di.type_literal;
+
+class TypeLiteral<T> {
+  Type get type => T;
 }
 ''';
