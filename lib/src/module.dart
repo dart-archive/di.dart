@@ -4,12 +4,8 @@ import "../key.dart";
 import "../check_bind_args.dart" show checkBindArgs;
 import "reflector.dart";
 
-typedef dynamic Factory(List<dynamic> parameters);
 DEFAULT_VALUE(_) => null;
-IDENTITY(p) {
-  assert(p.length == 1);
-  return p[0];
-}
+IDENTITY(p) => p;
 
 class Binding {
   Key key;
@@ -20,18 +16,18 @@ class Binding {
 
   void bind(k, TypeReflector reflector, {dynamic toValue: DEFAULT_VALUE,
           Function toFactory: DEFAULT_VALUE, Type toImplementation,
-          Factory toFactoryPos: DEFAULT_VALUE, List inject: const[]}) {
+          List inject: const[]}) {
     key = k;
-    if (inject.length == 1 && isNotSet(toFactory) && isNotSet(toFactoryPos)) {
-      toFactoryPos = IDENTITY;
+    if (inject.length == 1 && isNotSet(toFactory)) {
+      toFactory = IDENTITY;
     }
-    assert(checkBindArgs(toValue, toFactory, toFactoryPos, toImplementation, inject));
+    assert(checkBindArgs(toValue, toFactory, toImplementation, inject));
 
     if (isSet(toValue)) {
-      factory = (_) => toValue;
+      factory = () => toValue;
       parameterKeys = const [];
-    } else if (isSet(toFactory) || isSet(toFactoryPos)) {
-      factory = isSet(toFactoryPos) ? toFactoryPos : (args) => Function.apply(toFactory, args);
+    } else if (isSet(toFactory)) {
+      factory = toFactory;
       parameterKeys = inject.map((t) {
         if (t is Key) return t;
         if (t is Type) return new Key(t);
@@ -88,12 +84,10 @@ class Module {
    * same time: [toImplementation], [toFactory], [toValue].
    */
   void bind(Type type, {dynamic toValue: DEFAULT_VALUE,
-      Function toFactory: DEFAULT_VALUE, Factory toFactoryPos: DEFAULT_VALUE,
-      Type toImplementation,
+      Function toFactory: DEFAULT_VALUE, Type toImplementation,
       List inject: const [], Type withAnnotation}) {
     bindByKey(new Key(type, withAnnotation), toValue: toValue,
-        toFactory: toFactory, toFactoryPos: toFactoryPos,
-        toImplementation: toImplementation, inject: inject);
+        toFactory: toFactory, toImplementation: toImplementation, inject: inject);
   }
 
   /**
@@ -101,11 +95,10 @@ class Module {
    * [Type] [withAnnotation] combination. Faster.
    */
   void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE,
-      Function toFactory: DEFAULT_VALUE, Factory toFactoryPos: DEFAULT_VALUE,
-      List inject: const [], Type toImplementation}) {
+      Function toFactory: DEFAULT_VALUE, List inject: const [], Type toImplementation}) {
 
     var binding = new Binding();
-    binding.bind(key, reflector, toValue: toValue, toFactory: toFactory, toFactoryPos: toFactoryPos,
+    binding.bind(key, reflector, toValue: toValue, toFactory: toFactory,
                  toImplementation: toImplementation, inject: inject);
     bindings[key] = binding;
   }

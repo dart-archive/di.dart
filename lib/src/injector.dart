@@ -116,11 +116,50 @@ class ModuleInjector extends Injector {
         try {
           var paramKeys = binding.parameterKeys;
           var length = paramKeys.length;
-          var params = new List(length);
-          for (var i = 0; i < length; i++) {
-            params[i] = getByKey(paramKeys[i], depth + 1);
+          var factory = binding.factory;
+
+          if (length > 15) {
+            var params = new List(length);
+            for (var i = 0; i < length; i++) {
+              params[i] = getByKey(paramKeys[i], depth + 1);
+            }
+            return _instances[id] = Function.apply(factory, params);
           }
-          return _instances[id] = binding.factory(params);
+
+          var a1 = length >= 1 ? getByKey(paramKeys[0], depth + 1) : null;
+          var a2 = length >= 2 ? getByKey(paramKeys[1], depth + 1) : null;
+          var a3 = length >= 3 ? getByKey(paramKeys[2], depth + 1) : null;
+          var a4 = length >= 4 ? getByKey(paramKeys[3], depth + 1) : null;
+          var a5 = length >= 5 ? getByKey(paramKeys[4], depth + 1) : null;
+          var a6 = length >= 6 ? getByKey(paramKeys[5], depth + 1) : null;
+          var a7 = length >= 7 ? getByKey(paramKeys[6], depth + 1) : null;
+          var a8 = length >= 8 ? getByKey(paramKeys[7], depth + 1) : null;
+          var a9 = length >= 9 ? getByKey(paramKeys[8], depth + 1) : null;
+          var a10 = length >= 10 ? getByKey(paramKeys[9], depth + 1) : null;
+          var a11 = length >= 11 ? getByKey(paramKeys[10], depth + 1) : null;
+          var a12 = length >= 12 ? getByKey(paramKeys[11], depth + 1) : null;
+          var a13 = length >= 13 ? getByKey(paramKeys[12], depth + 1) : null;
+          var a14 = length >= 14 ? getByKey(paramKeys[13], depth + 1) : null;
+          var a15 = length >= 15 ? getByKey(paramKeys[14], depth + 1) : null;
+
+          switch (length) {
+            case 0: return _instances[id] = factory();
+            case 1: return _instances[id] = factory(a1);
+            case 2: return _instances[id] = factory(a1, a2);
+            case 3: return _instances[id] = factory(a1, a2, a3);
+            case 4: return _instances[id] = factory(a1, a2, a3, a4);
+            case 5: return _instances[id] = factory(a1, a2, a3, a4, a5);
+            case 6: return _instances[id] = factory(a1, a2, a3, a4, a5, a6);
+            case 7: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7);
+            case 8: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8);
+            case 9: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+            case 10: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+            case 11: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+            case 12: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+            case 13: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
+            case 14: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+            case 15: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+          }
         } on ResolvingError catch (e) {
           e.appendKey(key);
           rethrow; // to preserve stack trace

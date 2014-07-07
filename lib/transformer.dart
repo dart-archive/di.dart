@@ -1,8 +1,8 @@
 /**
  * Static injection transformer which generates, for each injectable type:
  *
- * - typeFactory: which is a closure (p) => new Type(p[0], p[1]...) where
- *     p is an array of injected dependency instances, as specified by
+ * - typeFactory: which is a closure (a1, a2...) => new Type(a1, a2...) where
+ *     args are injected dependency instances, as specified by
  * - paramKeys: List<Keys> corresponding to the dependency needing to be injected
  *    in the positional arguments of the typeFactory.
  *

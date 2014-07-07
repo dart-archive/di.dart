@@ -3,7 +3,7 @@ library di.check_bind_args;
 import "src/module.dart";
 export "src/module.dart" show DEFAULT_VALUE, IDENTITY, isSet, isNotSet;
 
-checkBindArgs(dynamic toValue, Function toFactory, Factory toFactoryPos,
+checkBindArgs(dynamic toValue, Function toFactory,
               Type toImplementation, List inject) {
   int count = 0;
   bool argCountMatch = true;
@@ -31,18 +31,14 @@ checkBindArgs(dynamic toValue, Function toFactory, Factory toFactoryPos,
     }
     if (!argCountMatch) throw "toFactory's argument count does not match amount provided by inject";
   }
-  if (isSet(toFactoryPos)) {
-    count++;
-    if (toFactoryPos is! _1) throw "toFactoryPos must take exactly one argument.";
-  }
+
   if (toImplementation != null) count++;
   if (count > 1) {
     throw 'Only one of following parameters can be specified: '
     'toValue, toFactory, toFactoryPos, toImplementation';
   }
 
-  if (inject.length > 0 && !isSet(toFactory) &&
-      !(inject.length == 1 && identical(toFactoryPos, IDENTITY))) {
+  if (inject.length > 0 && !isSet(toFactory)) {
     throw "Received inject list but toFactory is not set.";
   }
 

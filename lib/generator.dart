@@ -146,9 +146,9 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
       throw 'Unable to find default constructor for '
       '$clazz in ${clazz.source}';
     });
-    factory.write('${resolveClassIdentifier(clazz.type)}: (p) => new ${resolveClassIdentifier(clazz.type)}(');
-    factory.write(new List.generate(constr.parameters.length, (i) => 'p[$i]').join(', '));
-    factory.write('),\n');
+    var args = new List.generate(constr.parameters.length, (i) => 'a$i').join(', ');
+    factory.write('${resolveClassIdentifier(clazz.type)}: ($args) => '
+        'new ${resolveClassIdentifier(clazz.type)}($args),\n');
 
     paramList.write('${resolveClassIdentifier(clazz.type)}: ');
     if (constr.parameters.isEmpty){

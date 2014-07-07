@@ -196,10 +196,10 @@ class ThrowOnce {
 void main() {
   testModule();
 
-  new GeneratedTypeFactories(
+  var static_factory = new GeneratedTypeFactories(
       type_factories_gen.typeFactories, type_factories_gen.parameterKeys);
   createInjectorSpec('Static ModuleInjector ',
-      () => new Module.withReflector(new GeneratedTypeFactories()));
+      () => new Module.withReflector(static_factory));
 
   TypeReflector reflector = new DynamicTypeFactories();
   createInjectorSpec('Dynamic ModuleInjector ',
@@ -674,21 +674,20 @@ testCheckBindArgs() {
   describe('CheckBindArgs', () {
     var _ = DEFAULT_VALUE;
     it('should return true when args are well formed', () {
-      expect(checkBindArgs(_, (Engine e, Car c) => 0, _, null, [Engine, Car])).toBeTrue();
-      expect(checkBindArgs(_, () => 0, _, null, [])).toBeTrue();
-      expect(checkBindArgs(_, _, IDENTITY, null, [Car])).toBeTrue();
-      expect(checkBindArgs(0, _, _, null, [])).toBeTrue();
-      expect(checkBindArgs(_, _, _, Car, [])).toBeTrue();
+      expect(checkBindArgs(_, (Engine e, Car c) => 0, null, [Engine, Car])).toBeTrue();
+      expect(checkBindArgs(_, () => 0, null, [])).toBeTrue();
+      expect(checkBindArgs(0, _, null, [])).toBeTrue();
+      expect(checkBindArgs(_, _, Car, [])).toBeTrue();
     });
     
     it('should error when wrong number of args have been set', () {
-      expect(() => checkBindArgs(_, () => 0, (p) => p[0], null, [])).toThrowWith();
-      expect(() => checkBindArgs(0, _, _, null, [Engine, Car])).toThrowWith();
+      expect(() => checkBindArgs(_, () => 0, Car, [])).toThrowWith();
+      expect(() => checkBindArgs(0, _, null, [Engine, Car])).toThrowWith();
     });
     
     it('should error when toFactory argument count does not match inject length', () {
-      expect(() => checkBindArgs(_, (Engine e, Car c) => 0, _, null, [Engine])).toThrowWith();
-      expect(() => checkBindArgs(_, () => 0, _, null, [Engine, Car])).toThrowWith();
+      expect(() => checkBindArgs(_, (Engine e, Car c) => 0, null, [Engine])).toThrowWith();
+      expect(() => checkBindArgs(_, () => 0, null, [Engine, Car])).toThrowWith();
     });
   });
 }

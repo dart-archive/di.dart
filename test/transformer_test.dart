@@ -57,9 +57,9 @@ main() {
             'Seat = new Key(import_2.Seat);',
           ],
           factories: [
-            'import_0.Car: (p) => new import_0.Car(p[0], p[1]),',
-            'import_1.Engine: (p) => new import_1.Engine(),',
-            'import_2.Seat: (p) => new import_2.Seat(),',
+            'import_0.Car: (a1, a2) => new import_0.Car(a1, a2),',
+            'import_1.Engine: () => new import_1.Engine(),',
+            'import_2.Seat: () => new import_2.Seat(),',
           ],
           paramKeys: [
             'import_0.Car: [_KEY_Engine, _KEY_Seat],',
@@ -84,7 +84,7 @@ main() {
             "import 'package:a/a.dart' as import_0;",
           ],
           factories: [
-            'import_0.Parameterized: (p) => new import_0.Parameterized(),',
+            'import_0.Parameterized: () => new import_0.Parameterized(),',
           ],
           paramKeys: [
             'import_0.Parameterized: const[],',
@@ -134,7 +134,7 @@ main() {
             "Foo = new Key(import_0.Foo);"
           ],
           factories: [
-            'import_0.Bar: (p) => new import_0.Bar(p[0]),',
+            'import_0.Bar: (a1) => new import_0.Bar(a1),',
           ],
           paramKeys: [
             'import_0.Bar: [_KEY_Foo],'
@@ -152,7 +152,7 @@ main() {
             "import 'package:a/b.dart' as import_0;",
           ],
           factories: [
-            'import_0.Engine: (p) => new import_0.Engine(),',
+            'import_0.Engine: () => new import_0.Engine(),',
           ],
           paramKeys: [
             'import_0.Engine: const[],'
@@ -178,7 +178,7 @@ main() {
             "import 'package:a/a.dart' as import_0;",
           ],
           factories: [
-            'import_0.Engine: (p) => new import_0.Engine(),',
+            'import_0.Engine: () => new import_0.Engine(),',
           ],
           paramKeys: [
             'import_0.Engine: const[],'
@@ -196,7 +196,7 @@ main() {
             "import 'package:a/b.dart' as import_0;",
           ],
           factories: [
-            'import_0.Engine: (p) => new import_0.Engine(),',
+            'import_0.Engine: () => new import_0.Engine(),',
           ],
           paramKeys: [
             'import_0.Engine: const[],'
@@ -225,8 +225,8 @@ main() {
             "Engine = new Key(import_1.Engine);"
           ],
           factories: [
-            'import_0.Car: (p) => new import_0.Car(p[0]),',
-            'import_1.Engine: (p) => new import_1.Engine(),',
+            'import_0.Car: (a1) => new import_0.Car(a1),',
+            'import_1.Engine: () => new import_1.Engine(),',
           ],
           paramKeys: [
             'import_0.Car: [_KEY_Engine],',
@@ -244,7 +244,7 @@ main() {
             "import 'a.dart' as import_0;",
           ],
           factories: [
-            'import_0.Engine: (p) => new import_0.Engine(),',
+            'import_0.Engine: () => new import_0.Engine(),',
           ],
           paramKeys: [
             'import_0.Engine: const[],'
@@ -263,7 +263,7 @@ main() {
             "import 'main.dart' as import_0;",
           ],
           factories: [
-            'import_0.Engine: (p) => new import_0.Engine(),',
+            'import_0.Engine: () => new import_0.Engine(),',
           ],
           paramKeys: [
             'import_0.Engine: const[],'
@@ -302,7 +302,7 @@ main() {
             "import 'main.dart' as import_0;",
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(),',
+              'import_0.Engine: () => new import_0.Engine(),',
             ],
             paramKeys: [
               'import_0.Engine: const[],'
@@ -377,7 +377,7 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(),',
+              'import_0.Engine: () => new import_0.Engine(),',
             ],
             paramKeys: [
               'import_0.Engine: const[],'
@@ -407,7 +407,7 @@ main() {
               "Fuel = new Key(import_0.Fuel);",
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(p[0]),',
+              'import_0.Engine: (a1) => new import_0.Engine(a1),',
             ],
             paramKeys: [
               'import_0.Engine: [_KEY_Fuel],'
@@ -438,7 +438,7 @@ main() {
               "JetFuel = new Key(import_0.JetFuel);",
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(p[0]),',
+              'import_0.Engine: (a1) => new import_0.Engine(a1),',
             ],
             paramKeys: [
               'import_0.Engine: [_KEY_JetFuel],'
@@ -494,8 +494,8 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(),',
-              'import_0.Car: (p) => new import_0.Car(),',
+              'import_0.Engine: () => new import_0.Engine(),',
+              'import_0.Car: () => new import_0.Car(),',
             ],
             paramKeys: [
               'import_0.Engine: const[],',
@@ -532,8 +532,8 @@ main() {
               "Engine = new Key(import_0.Engine);"
             ],
             factories: [
-              'import_0.Car: (p) => new import_0.Car(p[0]),',
-              'import_0.Engine: (p) => new import_0.Engine(),',
+              'import_0.Car: (a1) => new import_0.Car(a1),',
+              'import_0.Engine: () => new import_0.Engine(),',
             ],
             paramKeys: [
               'import_0.Car: [_KEY_Engine],',
@@ -562,7 +562,7 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(),',
+              'import_0.Engine: () => new import_0.Engine(),',
             ],
             paramKeys: [
               'import_0.Engine: const[],'
@@ -589,7 +589,7 @@ main() {
               "int = new Key(int);"
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(p[0]),',
+              'import_0.Engine: (a1) => new import_0.Engine(a1),',
             ],
             paramKeys: [
               'import_0.Engine: [_KEY_int],'
@@ -662,8 +662,8 @@ main() {
               "Engine_Turbo = new Key(import_0.Engine, import_0.Turbo);"
             ],
             factories: [
-              'import_0.Engine: (p) => new import_0.Engine(),',
-              'import_0.Car: (p) => new import_0.Car(p[0]),',
+              'import_0.Engine: () => new import_0.Engine(),',
+              'import_0.Car: (a1) => new import_0.Car(a1),',
             ],
             paramKeys: [
               'import_0.Engine: const[],',
@@ -719,7 +719,7 @@ Future generates(List<List<Transformer>> phases,
           'a|web/main_generated_type_factory_maps.dart': '''
 $IMPORTS
 ${imports.join('')}${(keys.length != 0 ? '\n' : '')}${keys.join('\n')}
-final Map<Type, Factory> typeFactories = <Type, Factory>{
+final Map<Type, Function> typeFactories = <Type, Function>{
 ${factories.join('')}};
 final Map<Type, List<Key>> parameterKeys = {
 ${paramKeys.join('')}};

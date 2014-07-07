@@ -311,9 +311,8 @@ class _Processor {
       var type = ctor.enclosingElement;
       var typeName = resolveClassName(type);
 
-      factoriesBuffer.write('  $typeName: (p) => new $typeName(');
-      factoriesBuffer.write(new List.generate(ctor.parameters.length, (i) => 'p[$i]').join(', '));
-      factoriesBuffer.write('),\n');
+      String args = new List.generate(ctor.parameters.length, (i) => 'a${i+1}').join(', ');
+      factoriesBuffer.write('  $typeName: ($args) => new $typeName($args),\n');
 
       paramsBuffer.write('  $typeName: ');
       paramsBuffer.write(ctor.parameters.length == 0 ? 'const[' : '[');
@@ -346,7 +345,7 @@ class _Processor {
     });
     outputBuffer.write('\n');
     outputBuffer.write(keysBuffer);
-    outputBuffer.write('final Map<Type, Factory> typeFactories = <Type, Factory>{\n');
+    outputBuffer.write('final Map<Type, Function> typeFactories = <Type, Function>{\n');
     outputBuffer.write(factoriesBuffer);
     outputBuffer.write('};\nfinal Map<Type, List<Key>> parameterKeys = {\n');
     outputBuffer.write(paramsBuffer);
