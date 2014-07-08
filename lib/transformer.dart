@@ -79,6 +79,9 @@ import 'package:source_maps/refactor.dart';
 import 'transformer/injector_generator.dart';
 import 'transformer/options.dart';
 
+export 'transformer/options.dart';
+export 'transformer/injector_generator.dart';
+
 /**
  * The transformer, which will extract all classes being dependency injected
  * into a static injector.
