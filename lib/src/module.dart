@@ -52,19 +52,19 @@ bool isNotSet(val) => identical(val, DEFAULT_VALUE);
  * module. Defining additional type bindings after an injector is created have
  * no effect on that injector.
  */
-class Module {
+class BaseModule {
   static TypeReflector DEFAULT_REFLECTOR = new NullReflector();
   final TypeReflector reflector;
 
-  Module(): reflector = DEFAULT_REFLECTOR;
-  Module.withReflector(this.reflector);
+  BaseModule(): reflector = DEFAULT_REFLECTOR;
+  BaseModule.withReflector(this.reflector);
 
   Map<Key, Binding> bindings = new Map<Key, Binding>();
 
   /**
    * Copies all bindings of [module] into this one. Overwriting when conflicts are found.
    */
-  install(Module module) => module.bindings.forEach((key, binding) => bindings[key] = binding);
+  install(BaseModule module) => module.bindings.forEach((key, binding) => bindings[key] = binding);
 
   /**
    * Registers a binding for a given [type].

@@ -41,7 +41,7 @@ abstract class Injector {
    * [modules] overrides bindings of the parent.
    */
   @deprecated
-  Injector createChild(List<Module> modules);
+  Injector createChild(List<BaseModule> modules);
 }
 
 
@@ -68,7 +68,7 @@ class ModuleInjector extends Injector {
   List<Binding> _bindings;
   List<Object> _instances;
 
-  ModuleInjector(List<Module> modules, [Injector parent])
+  ModuleInjector(List<BaseModule> modules, [Injector parent])
       : parent = parent == null ? rootInjector : parent,
         _bindings = new List<Binding>(Key.numInstances + 1), // + 1 for injector itself
         _instances = new List<Object>(Key.numInstances + 1) {
@@ -174,7 +174,7 @@ class ModuleInjector extends Injector {
   }
 
   @deprecated
-  Injector createChild(List<Module> modules) {
+  Injector createChild(List<BaseModule> modules) {
     return new ModuleInjector(modules,this);
   }
 }

@@ -32,7 +32,6 @@ class _Processor {
 
   /** Current transform. */
   final Transform transform;
-
   final Resolver resolver;
   final TransformOptions options;
 
@@ -350,9 +349,10 @@ class _Processor {
     outputBuffer.write('};\nfinal Map<Type, List<Key>> parameterKeys = {\n');
     outputBuffer.write(paramsBuffer);
     outputBuffer.write('};\n');
-    outputBuffer.write('setupModuleTypeReflector() => '
-        'Module.DEFAULT_REFLECTOR = '
-        'new GeneratedTypeFactories(typeFactories, parameterKeys);\n');
+    outputBuffer.write('class Module extends BaseModule {\n'
+        '  static TypeReflector DEFAULT_REFLECTOR = '
+        'new GeneratedTypeFactories(typeFactories, parameterKeys);\n'
+        '  final TypeReflector reflector;\n  Module(): this.reflector = DEFAULT_REFLECTOR;\n}');
 
     return outputBuffer.toString();
   }
@@ -370,18 +370,14 @@ class _Processor {
     var transaction = resolver.createTextEditTransaction(lib);
     var imports = unit.directives.where((d) => d is ImportDirective);
     var dir = imports.where((ImportDirective d) =>
-        d.uriContent == 'package:di/di_dynamic.dart');
+        d.uriContent == 'package:di/di.dart');
+    if (dir.isEmpty) return;
     var begin, end;
-    if (dir.isNotEmpty) {
-      begin = dir.first.offset;
-      end = dir.first.end;
-    } else {
-      begin = imports.last.end;
-      end = imports.last.end;
-    }
-    transaction.edit(begin, end, (begin == end ? "\n" : "") + 'import '
+    begin = dir.first.offset;
+    end = dir.first.end;
+    transaction.edit(begin, end, "import 'package:di/di_static.dart';\nimport "
         "'${path.url.basenameWithoutExtension(id.path)}"
-        "_generated_type_factory_maps.dart' show setupModuleTypeReflector;");
+        "_generated_type_factory_maps.dart' show initDI;");
     var printer = transaction.commit();
     var url = id.path.startsWith('lib/') ?
         'package:${id.package}/${id.path.substring(4)}' : id.path;
@@ -396,8 +392,9 @@ void _writeHeader(AssetId id, StringSink sink) {
   sink.write('''
 library ${id.package}.$libName.generated_type_factory_maps;
 
-import 'package:di/di.dart';
 import 'package:di/di_static.dart';
+import 'package:di/src/module.dart';
+import 'package:di/src/reflector_static.dart';
 
 ''');
 }
