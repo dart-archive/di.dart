@@ -1,9 +1,10 @@
-part of di;
+import '../di.dart';
 
 abstract class Injector {
   /**
    * Name of the injector or null if none was given.
    */
+  @deprecated
   String get name;
 
   /**
@@ -14,6 +15,7 @@ abstract class Injector {
   /**
    * The root injector.
    */
+  @deprecated
   Injector get root;
 
   /**
@@ -27,6 +29,7 @@ abstract class Injector {
    * Whether the injector allows injecting a type to which no [Provider] is
    * bound.  Note that this setting only matters for the root injector.
    */
+  @deprecated
   bool get allowImplicitInjection;
 
   /**

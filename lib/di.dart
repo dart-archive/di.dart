@@ -5,7 +5,8 @@ import 'key.dart';
 
 export 'key.dart' show Key;
 
-part 'src/injector.dart';
+import 'src/injector.dart';
+export 'src/injector.dart';
 part 'src/module.dart';
 part 'src/errors.dart';
 

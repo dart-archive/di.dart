@@ -73,11 +73,11 @@ class Module {
    * same time: [toImplementation], [toFactory], [toValue].
    */
   void bind(Type type, {dynamic toValue: _DEFAULT_VALUE,
-      FactoryFn toFactory: _DEFAULT_VALUE, Type toImplementation,
-      Type withAnnotation, Visibility visibility}) {
+      Function toFactory: _DEFAULT_VALUE, Type toImplementation,
+      Type withAnnotation, Visibility visibility, List inject}) {
     bindByKey(new Key(type, withAnnotation), toValue: toValue,
         toFactory: toFactory, toImplementation: toImplementation,
-        visibility: visibility);
+        visibility: visibility, inject: inject);
   }
 
   /**
@@ -85,9 +85,28 @@ class Module {
    * [Type] [withAnnotation] combination.
    */
   void bindByKey(Key key, {dynamic toValue: _DEFAULT_VALUE,
-      FactoryFn toFactory: _DEFAULT_VALUE, Type toImplementation,
-      Visibility visibility}) {
+      Function toFactory: _DEFAULT_VALUE, Type toImplementation,
+      Visibility visibility, List inject}) {
     _checkBindArgs(toValue, toFactory, toImplementation);
+
+    if (inject != null) {
+      if (toFactory == _DEFAULT_VALUE) {
+        assert (inject.length == 1);
+        toFactory = (i) => i.get(inject[0]);
+      } else {
+        var originalFactory = toFactory;
+        toFactory = (Injector injector) {
+          var keys = inject.map((t) {
+            if (t is Type) return new Key(t);
+            if (t is Key) return t;
+            throw "inject must be a list of keys or types";
+          });
+          var params = keys.map(injector.getByKey).toList();
+          return Function.apply(originalFactory, params);
+        };
+      }
+    }
+
     if (!identical(toValue, _DEFAULT_VALUE)) {
       _providers[key.id] = new ValueProvider(key.type, toValue, visibility);
     } else if (!identical(toFactory, _DEFAULT_VALUE)) {

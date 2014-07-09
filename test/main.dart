@@ -374,9 +374,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
 
     it('should allow providing factory functions', () {
-      var module = new Module()..bind(Engine, toFactory: (Injector injector) {
+      var module = new Module()..bind(Engine, toFactory: () {
         return 'factory-product';
-      });
+      }, inject: []);
 
       var injector = injectorFactory([module]);
       var instance = injector.get(Engine);
@@ -399,9 +399,9 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
     it('should inject injector into factory function', () {
       var module = new Module()
         ..bind(Engine)
-        ..bind(Car, toFactory: (Injector injector) {
-          return new Car(injector.get(Engine), injector);
-        });
+        ..bind(Car, toFactory: (Engine engine, Injector injector) {
+          return new Car(engine, injector);
+        }, inject: [Engine, Injector]);
 
       var injector = injectorFactory([module]);
       var instance = injector.get(Car);
@@ -642,7 +642,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
           new Module()
             ..bind(Log)
             ..bind(ClassOne)
-            ..bind(InterfaceOne, toFactory: (i) => i.get(ClassOne))
+            ..bind(InterfaceOne, inject: [ClassOne])
       ]);
 
       expect(injector.get(InterfaceOne)).toBe(injector.get(ClassOne));

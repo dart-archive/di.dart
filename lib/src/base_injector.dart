@@ -14,12 +14,13 @@ List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
 
 abstract class BaseInjector implements Injector, ObjectFactory {
 
-  @override
+  @deprecated
   final String name;
 
   @override
   final BaseInjector parent;
 
+  @deprecated
   Injector _root;
 
   List<Provider> _providers;
@@ -33,7 +34,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
   List<Object> _instancesList;
   Map<int, Object> _instancesMap;
 
-  @override
+  @deprecated
   final bool allowImplicitInjection;
 
   Iterable<Type> _typesCache;
@@ -73,7 +74,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     _providers[injectorId] = new ValueProvider(Injector, this);
   }
 
-  @override
+  @deprecated
   Injector get root => _root;
 
   @override
