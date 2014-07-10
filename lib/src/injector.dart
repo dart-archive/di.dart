@@ -1,3 +1,5 @@
+library di.injector;
+
 import '../di.dart';
 
 abstract class Injector {
