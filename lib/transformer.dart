@@ -12,7 +12,7 @@
  * entry points (main functions) is not supported.
  *
  * The import in main is also modified to use import di_static.dart instead
- * of di_dynamic.dart.
+ * of di.dart, and imports module_dynamic.dart.
  *
  * All of the above is taken care of by the transformer. The user needs to call
  * setupModuleTypeReflector in main, before any modules are initialized. User must also
@@ -78,6 +78,7 @@ import 'package:path/path.dart' as path;
 import 'package:source_maps/refactor.dart';
 import 'transformer/injector_generator.dart';
 import 'transformer/options.dart';
+import 'transformer/export_transformer.dart';
 
 export 'transformer/options.dart';
 export 'transformer/injector_generator.dart';
@@ -109,7 +110,8 @@ TransformOptions _parseSettings(Map args) {
   return new TransformOptions(
       injectableAnnotations: annotations,
       injectedTypes: injectedTypes,
-      sdkDirectory: sdkDir);
+      sdkDirectory: sdkDir,
+      isDI: args['isDI'] != null);
 }
 
 _readStringValue(Map args, String name, {bool required: true}) {
@@ -149,5 +151,8 @@ _readStringListValue(Map args, String name) {
 
 List<List<Transformer>> _createPhases(TransformOptions options) {
   var resolvers = new Resolvers(options.sdkDirectory);
-  return [[new InjectorGenerator(options, resolvers)]];
+  return [[
+    options.isDI ? new ExportTransformer(options, resolvers) :
+        new InjectorGenerator(options, resolvers)
+  ]];
 }

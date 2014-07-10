@@ -1,5 +1,5 @@
 name: di
-version: 2.0.0-alpha.7
+version: 2.0.0-alpha.8
 authors:
 - Vojta Jina <vojta.jina@gmail.com>
 - Pavel Jbanov <pavelgj@gmail.com>
@@ -18,3 +18,6 @@ dev_dependencies:
   benchmark_harness: ">=1.0.4 <2.0.0"
   browser: ">=0.10.0 <0.11.0"
   guinness: ">=0.1.10 <0.2.0"
+transformers:
+- di:
+    isDI: true

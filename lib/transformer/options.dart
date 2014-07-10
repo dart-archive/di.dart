@@ -30,11 +30,16 @@ class TransformOptions {
   final Set<String> injectedTypes;
 
   /**
+   * Is the di package itself being transformed?
+   */
+  final bool isDI;
+
+  /**
    * Path to the Dart SDK directory, for resolving Dart libraries.
    */
   final String sdkDirectory;
 
-  TransformOptions({EntryFilter entryFilter, String sdkDirectory,
+  TransformOptions({EntryFilter entryFilter, String sdkDirectory, this.isDI: false,
       List<String> injectableAnnotations, List<String> injectedTypes})
     : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
       sdkDirectory = sdkDirectory,

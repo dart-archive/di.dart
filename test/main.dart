@@ -14,11 +14,10 @@ library di.tests;
 import 'package:guinness/guinness.dart';
 import 'package:matcher/matcher.dart' as matcher;
 import 'package:di/di.dart';
-import 'package:di/annotations.dart';
-import 'package:di/di_static.dart';
-import 'package:di/di_dynamic.dart';
 import 'package:di/check_bind_args.dart';
 import 'package:di/src/module.dart';
+import 'package:di/src/reflector_static.dart';
+import 'package:di/src/reflector_dynamic.dart';
 
 import 'test_annotations.dart';
 // Generated file. Run ../test_tf_gen.sh.
@@ -198,12 +197,12 @@ void main() {
 
   var static_factory = new GeneratedTypeFactories(
       type_factories_gen.typeFactories, type_factories_gen.parameterKeys);
-  createInjectorSpec('Static ModuleInjector ',
-      () => new Module.withReflector(static_factory));
+  createInjectorSpec('Static ModuleInjector',
+      () => new BaseModule.withReflector(static_factory));
 
   TypeReflector reflector = new DynamicTypeFactories();
-  createInjectorSpec('Dynamic ModuleInjector ',
-      () => new Module.withReflector(reflector));
+  createInjectorSpec('Dynamic ModuleInjector',
+      () => new Module());
 
   testKey();
   testCheckBindArgs();
