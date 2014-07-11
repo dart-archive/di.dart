@@ -12,7 +12,7 @@
  * entry points (main functions) is not supported.
  *
  * The import in main is also modified to use import di_static.dart instead
- * of di_dynamic.dart.
+ * of di.dart, and imports module_dynamic.dart.
  *
  * All of the above is taken care of by the transformer. The user needs to call
  * setupModuleTypeReflector in main, before any modules are initialized. User must also
@@ -90,10 +90,10 @@ class DependencyInjectorTransformerGroup implements TransformerGroup {
   final Iterable<Iterable> phases;
 
   DependencyInjectorTransformerGroup(TransformOptions options)
-      : phases = _createPhases(options);
+  : phases = _createPhases(options);
 
   DependencyInjectorTransformerGroup.asPlugin(BarbackSettings settings)
-      : this(_parseSettings(settings.configuration));
+  : this(_parseSettings(settings.configuration));
 }
 
 TransformOptions _parseSettings(Map args) {

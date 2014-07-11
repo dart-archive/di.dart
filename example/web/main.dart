@@ -1,5 +1,4 @@
 import 'package:di/di.dart';
-import 'package:di/di_dynamic.dart';
 import 'dart:html';
 
 @Injectable()
@@ -10,7 +9,6 @@ class Application {
 }
 
 main() {
-  setupModuleTypeReflector();
   Module module = new Module();
   module.bind(Application);
   new ModuleInjector([module]).get(Application).run();

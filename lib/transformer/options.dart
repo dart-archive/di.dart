@@ -35,14 +35,14 @@ class TransformOptions {
   final String sdkDirectory;
 
   TransformOptions({EntryFilter entryFilter, String sdkDirectory,
-      List<String> injectableAnnotations, List<String> injectedTypes})
-    : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
-      sdkDirectory = sdkDirectory,
-      injectableAnnotations =
-          (injectableAnnotations != null ? injectableAnnotations : [])
-              ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
-      injectedTypes =
-          new Set.from(injectedTypes != null ? injectedTypes : []) {
+                   List<String> injectableAnnotations, List<String> injectedTypes})
+  : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
+  sdkDirectory = sdkDirectory,
+  injectableAnnotations =
+  (injectableAnnotations != null ? injectableAnnotations : [])
+    ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
+  injectedTypes =
+  new Set.from(injectedTypes != null ? injectedTypes : []) {
     if (sdkDirectory == null)
       throw new ArgumentError('sdkDirectory must be provided.');
   }

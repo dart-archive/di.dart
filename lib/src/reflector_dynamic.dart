@@ -1,9 +1,9 @@
-library di.dynamic_type_factories;
+library di.reflector_dynamic;
 
-import 'di.dart';
-import 'src/mirrors.dart';
+import '../di.dart';
+import 'mirrors.dart';
 
-TypeReflector setupModuleTypeReflector() => Module.DEFAULT_REFLECTOR = new DynamicTypeFactories();
+TypeReflector getReflector() => new DynamicTypeFactories();
 
 class DynamicTypeFactories extends TypeReflector {
   /// caches of results calculated from mirroring
