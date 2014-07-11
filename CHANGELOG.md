@@ -1,3 +1,17 @@
+# 1.2.0
+
+## Features
+
+- **module:** allow v2 style toFactory binding with inject
+  ([1ef6ba71](https://github.com/angular/di.dart/commit/1ef6ba7103e2aa81d30ad037666c1723834af203))
+
+
+## Performance Improvements
+
+- **injector:** inlined getProviderWithInjector
+  ([d2a38b54](https://github.com/angular/di.dart/commit/d2a38b542fd773ec937ca8413fa388e30a58daa3))
+
+
 # 1.1.0
 
 ## Performance Improvements
