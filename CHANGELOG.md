@@ -1,3 +1,7 @@
+# 1.2.1
+
+Added missing library declaration to injector.
+
 # 1.2.0
 
 ## Features
