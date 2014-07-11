@@ -26,14 +26,14 @@ typedef Object TypeFactory(factory(Type type, Type annotation));
  * no effect on that injector.
  */
 class Module {
-  final _providers = <int, Provider>{};
+  final _providers = new HashMap<int, Provider>();
   final _childModules = <Module>[];
-  Map<Type, TypeFactory> _typeFactories = {};
+  Map<Type, TypeFactory> _typeFactories = new HashMap();
 
   Map<Type, TypeFactory> get typeFactories {
     if (_childModules.isEmpty) return _typeFactories;
 
-    var factories = new Map.from(_typeFactories);
+    var factories = new HashMap.from(_typeFactories);
     _childModules.forEach((m) {
       if (m.typeFactories != null) {
         factories.addAll(m.typeFactories);

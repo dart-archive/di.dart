@@ -6,6 +6,7 @@ import 'error_helper.dart';
 import 'package:collection/collection.dart';
 import 'package:di/di.dart';
 import 'package:di/key.dart';
+import 'dart:collection';
 
 List<Key> _PRIMITIVE_TYPES = new UnmodifiableListView(<Key>[
   new Key(num), new Key(int), new Key(double), new Key(String),
@@ -62,7 +63,7 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     _providers = new List(Key.numInstances);
 
     if (allowImplicitInjection) {
-      _instancesMap = new Map<int, Object>();
+      _instancesMap = new HashMap<int, Object>();
     } else {
       _instancesList = new List(Key.numInstances);
     }
