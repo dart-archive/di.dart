@@ -1,6 +1,6 @@
-library di.generated_type_factories;
+library di.reflector_static;
 
-import 'di.dart';
+import '../di.dart';
 
 class GeneratedTypeFactories extends TypeReflector {
 

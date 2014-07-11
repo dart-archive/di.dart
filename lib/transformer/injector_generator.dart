@@ -72,7 +72,7 @@ class _Processor {
     transform.addOutput(
         new Asset.fromString(_generatedAssetId, injectLibContents));
 
-    _editImport();
+    _editMain();
   }
 
   /** Resolves the classes for the injectable annotations in the current AST. */
@@ -350,7 +350,7 @@ class _Processor {
     outputBuffer.write('};\nfinal Map<Type, List<Key>> parameterKeys = {\n');
     outputBuffer.write(paramsBuffer);
     outputBuffer.write('};\n');
-    outputBuffer.write('setupModuleTypeReflector() => '
+    outputBuffer.write('setStaticReflectorAsDefault() => '
         'Module.DEFAULT_REFLECTOR = '
         'new GeneratedTypeFactories(typeFactories, parameterKeys);\n');
 
@@ -362,26 +362,31 @@ class _Processor {
         span: resolver.getSourceSpan(element));
   }
 
-  /// edits out di_dynamic import and replace with generated_type_factory_maps
-  void _editImport() {
+  /// import generated_type_factory_maps and call initialize
+  void _editMain() {
     AssetId id = transform.primaryInput.id;
     var lib = resolver.getLibrary(id);
     var unit = lib.definingCompilationUnit.node;
     var transaction = resolver.createTextEditTransaction(lib);
+
     var imports = unit.directives.where((d) => d is ImportDirective);
-    var dir = imports.where((ImportDirective d) =>
-        d.uriContent == 'package:di/di_dynamic.dart');
-    var begin, end;
-    if (dir.isNotEmpty) {
-      begin = dir.first.offset;
-      end = dir.first.end;
-    } else {
-      begin = imports.last.end;
-      end = imports.last.end;
-    }
-    transaction.edit(begin, end, (begin == end ? "\n" : "") + 'import '
+    transaction.edit(imports.last.end, imports.last.end, '\nimport '
         "'${path.url.basenameWithoutExtension(id.path)}"
-        "_generated_type_factory_maps.dart' show setupModuleTypeReflector;");
+        "_generated_type_factory_maps.dart' show setStaticReflectorAsDefault;");
+
+    FunctionExpression main = unit.declarations.where((d) =>
+        d is FunctionDeclaration && d.name.toString() == 'main')
+        .first.functionExpression;
+    var body = main.body;
+    if (body is BlockFunctionBody) {
+      var location = body.beginToken.end;
+      transaction.edit(location, location, '\n  setStaticReflectorAsDefault();');
+    } else if (body is ExpressionFunctionBody) {
+      transaction.edit(body.beginToken.offset, body.endToken.end,
+          "{\n  setStaticReflectorAsDefault();\n"
+          "  return ${body.expression};\n}");
+    } // EmptyFunctionBody can only appear as abstract methods and constructors.
+
     var printer = transaction.commit();
     var url = id.path.startsWith('lib/') ?
         'package:${id.package}/${id.path.substring(4)}' : id.path;
@@ -397,7 +402,7 @@ void _writeHeader(AssetId id, StringSink sink) {
 library ${id.package}.$libName.generated_type_factory_maps;
 
 import 'package:di/di.dart';
-import 'package:di/di_static.dart';
+import 'package:di/src/reflector_static.dart';
 
 ''');
 }

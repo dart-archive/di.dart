@@ -3,6 +3,7 @@ library di.module;
 import "../key.dart";
 import "../check_bind_args.dart" show checkBindArgs;
 import "reflector.dart";
+import "reflector_dynamic.dart";
 
 DEFAULT_VALUE(_) => null;
 IDENTITY(p) => p;
@@ -53,7 +54,7 @@ bool isNotSet(val) => identical(val, DEFAULT_VALUE);
  * no effect on that injector.
  */
 class Module {
-  static TypeReflector DEFAULT_REFLECTOR = new NullReflector();
+  static TypeReflector DEFAULT_REFLECTOR = getReflector();
   final TypeReflector reflector;
 
   Module(): reflector = DEFAULT_REFLECTOR;
