@@ -97,43 +97,43 @@ abstract class BaseInjector implements Injector, ObjectFactory {
     }
 
     // This code is pasted in createChildWithResolvingHistory for performance
-    var provider;
+    var provider = key.id < _providers.length ? _providers[key.id] : null;
     var injector = this;
-    var visible;
-
-    if (requester == null) requester = this;
-
-    do {
-      provider = key.id < injector._providers.length ?
-                  injector._providers[key.id] : null;
-
-      if (provider != null) {
-        visible = provider.visibility == null ||
-                provider.visibility(requester, injector);
-        if (!visible) {
-          provider = null;
-        }
-      }
-
-      if (provider == null && injector.parent == null){
+    while (provider == null){
+      if (injector.parent == null){
         if (allowImplicitInjection) {
           provider = new TypeProvider(key.type);
-        } else {
+          break;
+        }
+        throw new NoProviderError(
+            error(resolving, 'No provider found for ${key}!', key));
+      }
+      injector = injector.parent;
+      provider = key.id < injector._providers.length ?
+                  injector._providers[key.id] : null;
+    }
+
+    var visible = provider.visibility == null ||
+        provider.visibility(requester, injector);
+
+    assert(allowImplicitInjection || key.id < _instancesList.length);
+    if (visible){
+      var instance = allowImplicitInjection ?
+              _instancesMap[key.id] : _instancesList[key.id];
+      if (instance != null){
+        return instance;
+      }
+    }
+
+    if (injector != this || !visible) {
+      if (!visible) {
+        if (injector.parent == null) {
           throw new NoProviderError(
               error(resolving, 'No provider found for ${key}!', key));
         }
-      }
-      if (provider == null) {
         injector = injector.parent;
       }
-    } while (provider == null);
-
-    assert(allowImplicitInjection || key.id < injector._instancesList.length);
-
-    var instance = allowImplicitInjection ?
-            injector._instancesMap[key.id] : injector._instancesList[key.id];
-    if (instance != null){
-      return instance;
+      return injector.getInstanceByKey(key, requester, resolving);
     }
 
     resolving = new ResolutionContext(resolving.depth + 1, key, resolving);
