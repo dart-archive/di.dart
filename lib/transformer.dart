@@ -11,13 +11,11 @@
  * and outputted to a file [entry_point_name]_generated_type_factory_maps.dart. Multiple
  * entry points (main functions) is not supported.
  *
- * The import in main is also modified to use import di_static.dart instead
- * of di_dynamic.dart.
+ * This transformer also sets up the static reflector, since the dynamic version will have
+ * been erased by ModuleTransformer.
  *
- * All of the above is taken care of by the transformer. The user needs to call
- * setupModuleTypeReflector in main, before any modules are initialized. User must also
- * annotate types for the transformer to add them to the generated type factories file,
- * in addition to enabling the transformer in pubspec.yaml.
+ * User must annotate types for the transformer to add them to the generated type factories file,
+ * and enable the transformer in pubspec.yaml.
  *
  * Types which are considered injectable can be annotated in the following ways:
  *
@@ -90,10 +88,10 @@ class DependencyInjectorTransformerGroup implements TransformerGroup {
   final Iterable<Iterable> phases;
 
   DependencyInjectorTransformerGroup(TransformOptions options)
-      : phases = _createPhases(options);
+  : phases = _createPhases(options);
 
   DependencyInjectorTransformerGroup.asPlugin(BarbackSettings settings)
-      : this(_parseSettings(settings.configuration));
+  : this(_parseSettings(settings.configuration));
 }
 
 TransformOptions _parseSettings(Map args) {

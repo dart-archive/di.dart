@@ -677,10 +677,8 @@ main() {
               'a|web/main.dart': '''
 library main;
 import 'package:di/di.dart';
-import 'package:di/di_dynamic.dart';
 
 main() {
-  setupModuleTypeReflector();
   print('abc');
 }'''
             },
@@ -688,10 +686,10 @@ main() {
               'a|web/main.dart': '''
 library main;
 import 'package:di/di.dart';
-import 'main_generated_type_factory_maps.dart' show setupModuleTypeReflector;
+import 'main_generated_type_factory_maps.dart' show setStaticReflectorAsDefault;
 
 main() {
-  setupModuleTypeReflector();
+  setStaticReflectorAsDefault();
   print('abc');
 }'''
             });
@@ -723,7 +721,7 @@ final Map<Type, Function> typeFactories = <Type, Function>{
 ${factories.join('')}};
 final Map<Type, List<Key>> parameterKeys = {
 ${paramKeys.join('')}};
-setupModuleTypeReflector() => Module.DEFAULT_REFLECTOR = new GeneratedTypeFactories(typeFactories, parameterKeys);
+setStaticReflectorAsDefault() => Module.DEFAULT_REFLECTOR = new GeneratedTypeFactories(typeFactories, parameterKeys);
 ''',
       },
       messages: messages);
@@ -733,7 +731,7 @@ const String IMPORTS = '''
 library a.web.main.generated_type_factory_maps;
 
 import 'package:di/di.dart';
-import 'package:di/di_static.dart';
+import 'package:di/src/reflector_static.dart';
 ''';
 
 const String CLASS_ENGINE = '''

@@ -15,8 +15,8 @@ import 'package:guinness/guinness.dart';
 import 'package:matcher/matcher.dart' as matcher;
 import 'package:di/di.dart';
 import 'package:di/annotations.dart';
-import 'package:di/di_static.dart';
-import 'package:di/di_dynamic.dart';
+import 'package:di/src/reflector_static.dart';
+import 'package:di/src/reflector_dynamic.dart';
 import 'package:di/check_bind_args.dart';
 import 'package:di/src/module.dart';
 
