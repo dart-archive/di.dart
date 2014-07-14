@@ -19,13 +19,17 @@ Import di.
 
 ```dart
 import 'package:di/di.dart';
-import 'package:di/di_dynamic.dart';
 
 abstract class Engine {
   go();
 }
 
+class Fuel {}
+
 class V8Engine implements Engine {
+  Fuel fuel;
+  V8Engine(this.fuel);
+  
   go() {
     print('Vroom...');
   }
@@ -63,11 +67,10 @@ class ElectricCar {
 }
 
 void main() {
-  setupModuleTypeReflector();
   var injector = new ModuleInjector(modules: [new Module()
       ..bind(GenericCar)
       ..bind(ElectricCar)
-      ..bind(Engine, toFactory: () => new V8Engine())
+      ..bind(Engine, toFactory: (fuel) => new V8Engine(fuel), inject: [Fuel])
       ..bind(Engine, toImplementation: ElectricEngine, withAnnotation: Electric)
   ]);
   injector.get(GenericCar).drive(); // Vroom...

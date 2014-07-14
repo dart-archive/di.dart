@@ -31,7 +31,7 @@ class DynamicTypeFactories extends TypeReflector {
     return parameterKeys;
   }
 
-  _resize(int maxId) {
+  void _resize(int maxId) {
     if (_factories.length <= maxId) {
       _factories.length = maxId + 1;
       _parameterKeys.length = maxId + 1;
@@ -47,6 +47,7 @@ class DynamicTypeFactories extends TypeReflector {
     Function factory;
     if (length > 25) throw "Too many arguments in $name constructor for dynamic DI to handle :(";
     List l = lists[length];
+    // script for this is in scripts/reflector_dynamic_script.dart
     switch (length) {
       case 0:
         return () {
@@ -210,37 +211,20 @@ class DynamicTypeFactories extends TypeReflector {
   ClassMirror _reflectClass(Type type) {
     ClassMirror classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
-      throw new DynamicReflectorError('No implementation provided for '
-          '${getSymbolName(classMirror.qualifiedName)} typedef!');
+      throw new DynamicReflectorError("No implementation provided for "
+          "${getSymbolName(classMirror.qualifiedName)} typedef!");
     }
 
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
 
     if (ctor == null) {
-      throw new DynamicReflectorError('Unable to find default constructor for $type. '
-      'Make sure class has a default constructor.' + (1.0 is int ?
-      'Make sure you have correctly configured @MirrorsUsed.' : ''));
+      throw new DynamicReflectorError("Unable to find default constructor for $type. "
+          "Make sure class has a default constructor." + (1.0 is int ?
+          "Make sure you have correctly configured @MirrorsUsed." : ""));
     }
     return classMirror;
   }
 
-  addAll(Map<Type, Function> factories, Map<Type, List<Key>> parameterKeys) => null;
-  add(Type type, Function factory, List<Key> parameterKeys) => null;
+  void addAll(Map<Type, Function> factories, Map<Type, List<Key>> parameterKeys) => null;
+  void add(Type type, Function factory, List<Key> parameterKeys) => null;
 }
-
-/// script for generating the giant switch statement
-/*main() {
-  var args;
-  for (var i = 0; i <= 25; i++) {
-    print("case $i:");
-    args = new List.generate(i, (j) => "a${j+1}").join(', ');
-    print("return ($args) {");
-    var buffer = new StringBuffer();
-    for (var j = 0; j < i; j++){
-      buffer.write("l[$j]=a${j+1};");
-    }
-    print(buffer);
-    print("return create(name, l).reflectee;");
-    print("};");
-  }
-}*/
