@@ -13,9 +13,7 @@ class Binding {
   List<Key> parameterKeys;
   Function factory;
 
-  Binding();
-
-  void bind(k, TypeReflector reflector, {dynamic toValue: DEFAULT_VALUE,
+  void bind(k, TypeReflector reflector, {toValue: DEFAULT_VALUE,
           Function toFactory: DEFAULT_VALUE, Type toImplementation,
           List inject: const[]}) {
     key = k;
@@ -43,7 +41,7 @@ class Binding {
 }
 
 bool isSet(val) => !identical(val, DEFAULT_VALUE);
-bool isNotSet(val) => identical(val, DEFAULT_VALUE);
+bool isNotSet(val) => !isSet(val);
 
 /**
  * Module contributes configuration information to an [Injector] by providing
@@ -65,7 +63,7 @@ class Module {
   /**
    * Copies all bindings of [module] into this one. Overwriting when conflicts are found.
    */
-  install(Module module) => module.bindings.forEach((key, binding) => bindings[key] = binding);
+  void install(Module module) => bindings.addAll(module.bindings);
 
   /**
    * Registers a binding for a given [type].

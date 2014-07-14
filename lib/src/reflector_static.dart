@@ -26,12 +26,12 @@ class GeneratedTypeFactories extends TypeReflector {
     throw new NoGeneratedTypeFactoryError(type);
   }
 
-  addAll(Map<Type, Function> factories, Map<Type, List<Key>> parameterKeys) {
+  void addAll(Map<Type, Function> factories, Map<Type, List<Key>> parameterKeys) {
     _factories.addAll(factories);
     _parameterKeys.addAll(parameterKeys);
   }
 
-  add(Type type, Function factory, List<Key> paramKeys) {
+  void add(Type type, Function factory, List<Key> paramKeys) {
     _factories[type] = factory;
     _parameterKeys[type] = paramKeys;
   }

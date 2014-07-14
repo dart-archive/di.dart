@@ -6,7 +6,7 @@ import "module.dart";
 
 abstract class TypeReflector {
   /**
-   * Returns a [Factory] that knows how to construct an instance of a type.
+   * Returns a factory function that knows how to construct an instance of a type.
    *
    * This interface is type based because there is only one factory for each
    * type, no matter what the annotations are. However, the parameters returned

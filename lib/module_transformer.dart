@@ -1,11 +1,7 @@
 library di.transformer.export_transformer;
 
 import 'dart:async';
-import 'package:analyzer/src/generated/ast.dart';
-import 'package:analyzer/src/generated/element.dart';
 import 'package:barback/barback.dart';
-import 'package:code_transformers/resolver.dart';
-import 'package:path/path.dart' as path;
 
 /**
  * Pub transformer that changes reflector in Module to null instead of importing
@@ -16,16 +12,15 @@ class ModuleTransformerGroup implements TransformerGroup {
   final Iterable<Iterable> phases;
 
   ModuleTransformerGroup.asPlugin(BarbackSettings settings)
-  : phases = [[new ModuleTransformer()]];
+      : phases = [[new ModuleTransformer()]];
 }
 
 class ModuleTransformer extends Transformer {
 
   ModuleTransformer();
 
-  isPrimary(AssetId id) {
-    return new Future.value(id == new AssetId.parse("di|lib/src/module.dart"));
-  }
+  Future<bool> isPrimary(AssetId id) =>
+    new Future.value(id == new AssetId.parse("di|lib/src/module.dart"));
 
   Future apply(Transform transform) {
     var id = transform.primaryInput.id;

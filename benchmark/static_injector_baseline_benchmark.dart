@@ -1,6 +1,6 @@
 import 'package:di/di.dart';
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:di/di_static.dart';
+import 'package:di/src/reflector_static.dart';
 
 import 'injector_benchmark_common.dart';
 import 'static_injector_benchmark.dart';
