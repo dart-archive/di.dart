@@ -4,8 +4,8 @@ import '../key.dart';
 
 abstract class BaseError extends Error {
   final String message;
-  String toString() => message;
   BaseError(this.message);
+  String toString() => message;
 }
 
 class DynamicReflectorError extends BaseError {
@@ -25,10 +25,10 @@ abstract class ResolvingError extends Error {
       if (!seenKeys.add(key)) break;
     }
 
-    StringBuffer buffer = new StringBuffer();
-    buffer.write("(resolving ");
-    buffer.write(keysToPrint.join(' -> '));
-    buffer.write(")");
+    StringBuffer buffer = new StringBuffer()
+        ..write("(resolving ")
+        ..write(keysToPrint.join(" -> "))
+        ..write(")");
     return buffer.toString();
   }
 
@@ -40,6 +40,8 @@ abstract class ResolvingError extends Error {
 }
 
 class NoProviderError extends ResolvingError {
+  NoProviderError(key): super(key);
+
   static final List<Key> _PRIMITIVE_TYPES = <Key>[
       new Key(num), new Key(int), new Key(double), new Key(String),
       new Key(bool)
@@ -48,21 +50,20 @@ class NoProviderError extends ResolvingError {
   String toString(){
     var root = keys.first;
     if (_PRIMITIVE_TYPES.contains(root)) {
-      return 'Cannot inject a primitive type of $root! $resolveChain';
+      return "Cannot inject a primitive type of $root! $resolveChain";
     }
     return "No provider found for $root! $resolveChain";
   }
-  NoProviderError(key): super(key);
 }
 
 class CircularDependencyError extends ResolvingError {
-  String toString() => "Cannot resolve a circular dependency! $resolveChain";
   CircularDependencyError(key) : super(key);
+  String toString() => "Cannot resolve a circular dependency! $resolveChain";
 }
 
 class NoGeneratedTypeFactoryError extends BaseError {
   NoGeneratedTypeFactoryError(Type type): super(type.toString());
   String toString() =>
-      "Type '$message' not found in generated typeFactory maps. Is the type's"
+      "Type '$message' not found in generated typeFactory maps. Is the type's "
       "constructor annotated for injection?";
 }

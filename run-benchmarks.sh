@@ -7,7 +7,7 @@ static_injector_benchmark.dart
 instance_benchmark.dart
 large_benchmark.dart"
 
-dart class_gen.dart
+dart scripts/class_gen.dart
 
 # run tests in dart
 for b in $BENCHMARKS

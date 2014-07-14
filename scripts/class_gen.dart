@@ -1,3 +1,8 @@
+/**
+ * This script generates a large number of classes and their corresponding factories
+ * to benchmark/generated_files, to be imported by benchmarks that require many classes
+ * and factories. Called from run-benchmarks.sh
+ */
 import 'dart:io';
 import 'dart:async';
 
@@ -28,7 +33,7 @@ main() {
   sink.write('];\n');
   sink.write('Map<Type, Function> typeFactories = {\n');
   for (var i = 0; i < numClasses; i++) {
-    sink.write('Test$i: (p) => new Test$i(),\n');
+    sink.write('Test$i: () => new Test$i(),\n');
   }
   sink.write('};\n');
   sink.write('Map<Type, List<Key>> parameterKeys = {\n');

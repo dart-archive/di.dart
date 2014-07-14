@@ -1,6 +1,6 @@
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:di/di.dart';
-import 'package:di/di_static.dart';
+import 'package:di/src/reflector_static.dart';
 import 'generated_files/factories.dart';
 
 import 'dart:math';

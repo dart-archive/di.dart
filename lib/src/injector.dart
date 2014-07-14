@@ -4,13 +4,10 @@ import '../key.dart';
 import 'module.dart';
 import 'errors.dart';
 
-Key _INJECTOR_KEY = new Key(Injector);
+final Key _INJECTOR_KEY = new Key(Injector);
 
 abstract class Injector {
 
-  /**
-   * The parent injector.
-   */
   final Injector parent = null;
 
   /**
@@ -27,13 +24,13 @@ abstract class Injector {
    * it is returned.  Otherwise, the typeFactory of the binding is
    * used to create an instance, using I as to resolve the dependencies.
    */
-  dynamic get(Type type, [Type annotation])
-      => getByKey(new Key(type, annotation));
+  dynamic get(Type type, [Type annotation]) =>
+      getByKey(new Key(type, annotation));
 
   /**
    * Faster version of [get].
    */
-  dynamic getByKey(Key key, [int depth]);
+  dynamic getByKey(Key key);
 
   /**
    * Creates a child injector.
@@ -56,17 +53,17 @@ class RootInjector extends Injector {
   List<Object> get _instances => null;
   dynamic getByKey(key, [depth]) => throw new NoProviderError(key);
   Injector createChild(m) => null;
-  RootInjector();
 }
 
 class ModuleInjector extends Injector {
 
   static final rootInjector = new RootInjector();
   final Injector parent;
-  String name;
 
   List<Binding> _bindings;
   List<Object> _instances;
+
+  int _depth;
 
   ModuleInjector(List<Module> modules, [Injector parent])
       : parent = parent == null ? rootInjector : parent,
@@ -75,8 +72,8 @@ class ModuleInjector extends Injector {
 
     if (modules != null) {
       modules.forEach((module) {
-        module.bindings.forEach((Key key, Binding binding)
-            => _bindings[key.id] = binding);
+        module.bindings.forEach((Key key, Binding binding) =>
+            _bindings[key.id] = binding);
       });
     }
     _instances[_INJECTOR_KEY.id] = this;
@@ -104,73 +101,78 @@ class ModuleInjector extends Injector {
     return types;
   }
 
-  dynamic getByKey(Key key, [int depth = 0]){
+  dynamic getByKey(Key key) {
+    _depth = 0;
+    return _getByKey(key);
+  }
+
+  dynamic _getByKey(Key key) {
     var id = key.id;
-    if (id < _instances.length) {
-      var instance = _instances[id];
-      if (instance != null) return instance;
-
-      Binding binding = _bindings[id];
-      if (binding != null) {
-        if (depth > 42) throw new CircularDependencyError(key);
-        try {
-          var paramKeys = binding.parameterKeys;
-          var length = paramKeys.length;
-          var factory = binding.factory;
-
-          if (length > 15) {
-            var params = new List(length);
-            for (var i = 0; i < length; i++) {
-              params[i] = getByKey(paramKeys[i], depth + 1);
-            }
-            return _instances[id] = Function.apply(factory, params);
-          }
-
-          var a1 = length >= 1 ? getByKey(paramKeys[0], depth + 1) : null;
-          var a2 = length >= 2 ? getByKey(paramKeys[1], depth + 1) : null;
-          var a3 = length >= 3 ? getByKey(paramKeys[2], depth + 1) : null;
-          var a4 = length >= 4 ? getByKey(paramKeys[3], depth + 1) : null;
-          var a5 = length >= 5 ? getByKey(paramKeys[4], depth + 1) : null;
-          var a6 = length >= 6 ? getByKey(paramKeys[5], depth + 1) : null;
-          var a7 = length >= 7 ? getByKey(paramKeys[6], depth + 1) : null;
-          var a8 = length >= 8 ? getByKey(paramKeys[7], depth + 1) : null;
-          var a9 = length >= 9 ? getByKey(paramKeys[8], depth + 1) : null;
-          var a10 = length >= 10 ? getByKey(paramKeys[9], depth + 1) : null;
-          var a11 = length >= 11 ? getByKey(paramKeys[10], depth + 1) : null;
-          var a12 = length >= 12 ? getByKey(paramKeys[11], depth + 1) : null;
-          var a13 = length >= 13 ? getByKey(paramKeys[12], depth + 1) : null;
-          var a14 = length >= 14 ? getByKey(paramKeys[13], depth + 1) : null;
-          var a15 = length >= 15 ? getByKey(paramKeys[14], depth + 1) : null;
-
-          switch (length) {
-            case 0: return _instances[id] = factory();
-            case 1: return _instances[id] = factory(a1);
-            case 2: return _instances[id] = factory(a1, a2);
-            case 3: return _instances[id] = factory(a1, a2, a3);
-            case 4: return _instances[id] = factory(a1, a2, a3, a4);
-            case 5: return _instances[id] = factory(a1, a2, a3, a4, a5);
-            case 6: return _instances[id] = factory(a1, a2, a3, a4, a5, a6);
-            case 7: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7);
-            case 8: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8);
-            case 9: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9);
-            case 10: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-            case 11: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
-            case 12: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
-            case 13: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
-            case 14: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
-            case 15: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
-          }
-        } on ResolvingError catch (e) {
-          e.appendKey(key);
-          rethrow; // to preserve stack trace
-        }
-      }
+    if (id >= _instances.length) {
+      throw new NoProviderError(key);
     }
-    // recursion instead of iteration because it:
+    var instance = _instances[id];
+    if (instance != null) return instance;
+
+    Binding binding = _bindings[id];
+    // When binding is null, recurse instead of iterate because it:
     // 1. tracks key history on the stack for error reporting
     // 2. allows different types of ancestor injectors with alternative implementations.
     // An alternative could be to recurse only when parent is not a ModuleInjector
-    return _instances[id] = parent.getByKey(key);
+    if (binding == null) return _instances[id] = parent.getByKey(key);
+    
+    if (_depth++ > 42) throw new CircularDependencyError(key);
+    try {
+      var paramKeys = binding.parameterKeys;
+      var length = paramKeys.length;
+      var factory = binding.factory;
+
+      if (length > 15) {
+        var params = new List(length);
+        for (var i = 0; i < length; i++) {
+          params[i] = getByKey(paramKeys[i]);
+        }
+        return _instances[id] = Function.apply(factory, params);
+      }
+
+      var a1 = length >= 1 ? _getByKey(paramKeys[0]) : null;
+      var a2 = length >= 2 ? _getByKey(paramKeys[1]) : null;
+      var a3 = length >= 3 ? _getByKey(paramKeys[2]) : null;
+      var a4 = length >= 4 ? _getByKey(paramKeys[3]) : null;
+      var a5 = length >= 5 ? _getByKey(paramKeys[4]) : null;
+      var a6 = length >= 6 ? _getByKey(paramKeys[5]) : null;
+      var a7 = length >= 7 ? _getByKey(paramKeys[6]) : null;
+      var a8 = length >= 8 ? _getByKey(paramKeys[7]) : null;
+      var a9 = length >= 9 ? _getByKey(paramKeys[8]) : null;
+      var a10 = length >= 10 ? _getByKey(paramKeys[9]) : null;
+      var a11 = length >= 11 ? _getByKey(paramKeys[10]) : null;
+      var a12 = length >= 12 ? _getByKey(paramKeys[11]) : null;
+      var a13 = length >= 13 ? _getByKey(paramKeys[12]) : null;
+      var a14 = length >= 14 ? _getByKey(paramKeys[13]) : null;
+      var a15 = length >= 15 ? _getByKey(paramKeys[14]) : null;
+
+      switch (length) {
+        case 0: return _instances[id] = factory();
+        case 1: return _instances[id] = factory(a1);
+        case 2: return _instances[id] = factory(a1, a2);
+        case 3: return _instances[id] = factory(a1, a2, a3);
+        case 4: return _instances[id] = factory(a1, a2, a3, a4);
+        case 5: return _instances[id] = factory(a1, a2, a3, a4, a5);
+        case 6: return _instances[id] = factory(a1, a2, a3, a4, a5, a6);
+        case 7: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7);
+        case 8: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8);
+        case 9: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+        case 10: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+        case 11: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+        case 12: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+        case 13: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
+        case 14: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+        case 15: return _instances[id] = factory(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+      }
+    } on ResolvingError catch (e) {
+      e.appendKey(key);
+      rethrow; // to preserve stack trace
+    }
   }
 
   @deprecated
