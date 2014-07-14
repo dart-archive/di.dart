@@ -1,5 +1,10 @@
 part of di;
 
+// TODO: Make this private in DI 2.0. It is made public to temporarily allow
+//       people create delegates to bind* methods with identical defaults.
+@deprecated
+const DEFAULT_VALUE = _DEFAULT_VALUE;
+
 _DEFAULT_VALUE(_) => null;
 
 typedef dynamic FactoryFn(Injector injector);
