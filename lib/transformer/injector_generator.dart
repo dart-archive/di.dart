@@ -19,9 +19,7 @@ class InjectorGenerator extends Transformer with ResolverTransformer {
     this.resolvers = resolvers;
   }
 
-  Future<bool> shouldApplyResolver(Asset asset) {
-    return options.isDartEntry(asset);
-  }
+  Future<bool> shouldApplyResolver(Asset asset) => options.isDartEntry(asset);
 
   applyResolver(Transform transform, Resolver resolver) =>
       new _Processor(transform, resolver, options).process();
@@ -315,7 +313,7 @@ class _Processor {
       factoriesBuffer.write('  $typeName: ($args) => new $typeName($args),\n');
 
       paramsBuffer.write('  $typeName: ');
-      paramsBuffer.write(ctor.parameters.length == 0 ? 'const[' : '[');
+      paramsBuffer.write(ctor.parameters.isEmpty ? 'const[' : '[');
       var params = ctor.parameters.map((param) {
         var typeName = resolveClassName(param.type.element);
         Iterable<ClassElement> annotations = [];
@@ -343,16 +341,16 @@ class _Processor {
       var uri = resolver.getImportUri(lib, from: _generatedAssetId);
       outputBuffer.write('import \'$uri\' as ${prefixes[lib]};\n');
     });
-    outputBuffer.write('\n');
-    outputBuffer.write(keysBuffer);
-    outputBuffer.write('final Map<Type, Function> typeFactories = <Type, Function>{\n');
-    outputBuffer.write(factoriesBuffer);
-    outputBuffer.write('};\nfinal Map<Type, List<Key>> parameterKeys = {\n');
-    outputBuffer.write(paramsBuffer);
-    outputBuffer.write('};\n');
-    outputBuffer.write('setStaticReflectorAsDefault() => '
-        'Module.DEFAULT_REFLECTOR = '
-        'new GeneratedTypeFactories(typeFactories, parameterKeys);\n');
+    outputBuffer..write('\n')
+        ..write(keysBuffer)
+        ..write('final Map<Type, Function> typeFactories = <Type, Function>{\n')
+        ..write(factoriesBuffer)
+        ..write('};\nfinal Map<Type, List<Key>> parameterKeys = {\n')
+        ..write(paramsBuffer)
+        ..write('};\n')
+        ..write('setStaticReflectorAsDefault() => '
+            'Module.DEFAULT_REFLECTOR = '
+            'new GeneratedTypeFactories(typeFactories, parameterKeys);\n');
 
     return outputBuffer.toString();
   }

@@ -113,15 +113,15 @@ class G {
 }
 
 var typeFactories = {
-    A: (p) => new A(p[0], p[1]),
-    B: (p) => new B(p[0], p[1]),
-    C: (p) => new C(),
-    D: (p) => new D(),
-    E: (p) => new E(),
-    COne: (p) => new COne(),
-    ETwo: (p) => new ETwo(),
-    F: (p) => new F(p[0], p[1]),
-    G: (p) => new G(p[0]),
+    A: (a1, a2) => new A(a1, a2),
+    B: (a1, a2) => new B(a1, a2),
+    C: () => new C(),
+    D: () => new D(),
+    E: () => new E(),
+    COne: () => new COne(),
+    ETwo: () => new ETwo(),
+    F: (a1, a2) => new F(a1, a2),
+    G: (a1) => new G(a1),
 };
 
 var paramKeys = {

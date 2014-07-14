@@ -69,13 +69,9 @@
 library di.transformer;
 
 import 'dart:io';
-import 'dart:async';
-import 'package:analyzer/src/generated/ast.dart';
-import 'package:analyzer/src/generated/element.dart';
 import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 import 'package:path/path.dart' as path;
-import 'package:source_maps/refactor.dart';
 import 'transformer/injector_generator.dart';
 import 'transformer/options.dart';
 
@@ -90,10 +86,10 @@ class DependencyInjectorTransformerGroup implements TransformerGroup {
   final Iterable<Iterable> phases;
 
   DependencyInjectorTransformerGroup(TransformOptions options)
-  : phases = _createPhases(options);
+      : phases = _createPhases(options);
 
   DependencyInjectorTransformerGroup.asPlugin(BarbackSettings settings)
-  : this(_parseSettings(settings.configuration));
+      : this(_parseSettings(settings.configuration));
 }
 
 TransformOptions _parseSettings(Map args) {
