@@ -1,3 +1,15 @@
+# 1.2.3
+
+## Features
+
+- **module:** Expose DEFAULT_VALUE temporarily
+  ([6f5d88a1](https://github.com/angular/di.dart/commit/6f5d88a16fbc7bc6658722326c1ef35d7848963e))
+
+# 1.2.2
+
+Reverted changes that tickled a Dart bug (to be fixed in 1.6)
+
+
 # 1.2.1
 
 Added missing library declaration to injector.
