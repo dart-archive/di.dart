@@ -4,8 +4,10 @@ set -e
 BENCHMARKS="module_benchmark.dart
 dynamic_injector_benchmark.dart
 static_injector_benchmark.dart
-instance_benchmark.dart"
+instance_benchmark.dart
+large_benchmark.dart"
 
+dart scripts/class_gen.dart
 
 # run tests in dart
 for b in $BENCHMARKS
