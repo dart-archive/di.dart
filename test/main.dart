@@ -168,6 +168,12 @@ class Log {
   add(String message) => log.add(message);
 }
 
+@Injectable()
+class InjectTypedef {
+  CompareInt compare;
+  InjectTypedef(this.compare);
+}
+
 @InjectableTest()
 class AnnotatedPrimitiveDependency {
   String strValue;
@@ -514,6 +520,19 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
 
       expect(compare(1, 2)).toEqual(1);
       expect(compare(5, 2)).toEqual(-1);
+    });
+
+
+    it('should inject a typedef dependencies', () {
+      var module = new Module()
+          ..bind(CompareInt, toValue: compareIntAsc)
+          ..bind(InjectTypedef);
+
+      var injector = injectorFactory([module]);
+      InjectTypedef wrapper = injector.get(InjectTypedef);
+
+      expect(wrapper.compare(1, 2), toBe(1));
+      expect(wrapper.compare(5, 2), toBe(-1));
     });
 
 
