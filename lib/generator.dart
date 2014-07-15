@@ -134,11 +134,11 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
     StringBuffer paramList = new StringBuffer();
     List<String> factoryKeys = new List<String>();
     bool skip = false;
-    if (addedKeys.add(clazz.type.name)){
-      toBeAdded[clazz.type.name]=
-      'final Key _KEY_${clazz.type.name} = new Key(${resolveClassIdentifier(clazz.type)});\n';
+    if (addedKeys.add(getUniqueName(clazz.type))){
+      toBeAdded[getUniqueName(clazz.type)] =
+        'final Key _KEY_${getUniqueName(clazz.type)} = new Key(${resolveClassIdentifier(clazz.type)});\n';
     }
-    factoryKeys.add('${clazz.type.name}');
+    factoryKeys.add(getUniqueName(clazz.type));
 
     ConstructorElement constr =
     clazz.constructors.firstWhere((c) => c.name.isEmpty,
@@ -171,15 +171,15 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
                   (item) => item.element.returnType.name);
         }
         String key_name = annotations.isNotEmpty ?
-        '${param.type.name}_${annotations.first}' : param.type.name;
+          '${getUniqueName(param.type)}_${annotations.first}' : getUniqueName(param.type);
         String output = '_KEY_${key_name}';
         if (addedKeys.add(key_name)){
           var annotationParam = "";
           if (param.metadata.isNotEmpty) {
             annotationParam = ", ${resolveClassIdentifier(param.metadata.first.element.returnType)}";
           }
-          toBeAdded['$key_name']='final Key _KEY_${key_name} = '+
-          'new Key(${resolveClassIdentifier(param.type)}$annotationParam);\n';
+          toBeAdded[key_name] ='final Key _KEY_${key_name} = '+
+            'new Key(${resolveClassIdentifier(param.type)}$annotationParam);\n';
         }
         return output;
       }).join(', '));
@@ -307,6 +307,13 @@ String getQualifiedName(InterfaceType type) {
   var lib = type.element.library.displayName;
   var name = type.name;
   return lib == null ? name : '$lib.$name';
+}
+
+String getUniqueName(InterfaceType type) {
+  var lib = type.element.library.displayName;
+  var name = type.name;
+  String qualName = lib == null ? name : '$lib.$name';
+  return qualName.replaceAll('.', '_');
 }
 
 String getCanonicalName(InterfaceType type) {

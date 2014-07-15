@@ -23,6 +23,7 @@ import 'package:di/src/module.dart';
 import 'test_annotations.dart';
 // Generated file. Run ../test_tf_gen.sh.
 import 'type_factories_gen.dart' as type_factories_gen;
+import 'main_same_name.dart' as same_name;
 
 import 'dart:mirrors';
 
@@ -192,6 +193,13 @@ class ThrowOnce {
     }
   }
 }
+
+@Injectable()
+class SameEngine {
+  same_name.Engine engine;
+  SameEngine(this.engine);
+}
+
 
 void main() {
   testModule();
