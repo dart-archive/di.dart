@@ -11,3 +11,7 @@ class NoProviderError extends ArgumentError {
 class CircularDependencyError extends ArgumentError {
   CircularDependencyError(message) : super(message);
 }
+
+class NoAnnotationError extends ArgumentError {
+  NoAnnotationError(message) : super (message);
+}

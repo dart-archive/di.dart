@@ -12,16 +12,36 @@ export 'di.dart';
  * Dynamic implementation of [Injector] that uses mirrors.
  */
 class DynamicInjector extends BaseInjector {
+  /// Types injected via a [TypeProvider] must have one of those annotations
+  Set<Type> _assertAnnotations;
+  /// Those types need not be annotated, see [di.annotations.Injectables]
+  Set<Type> _annotationFreeTypes;
 
-  DynamicInjector({List<Module> modules, String name,
-                  bool allowImplicitInjection: false})
-      : super(modules: modules, name: name,
-          allowImplicitInjection: allowImplicitInjection);
+  /**
+   * If [_assertAnnotations] is specified then all [Type]s instantiated by a
+   * [TypeProvider] must have on of those annotations unless they are
+   * white-listed in [_annotationFreeTypes].
+   */
+  DynamicInjector({List<Module> modules,
+                  String name,
+                  bool allowImplicitInjection: false,
+                  Iterable<Type> assertAnnotations: null,
+                  Iterable<Type> annotationFreeTypes: null})
+      : _assertAnnotations = assertAnnotations == null ?
+            null : new Set.from(assertAnnotations),
+        _annotationFreeTypes = annotationFreeTypes == null ?
+            null : new Set.from(annotationFreeTypes),
+        super(modules: modules, name: name,
+              allowImplicitInjection: allowImplicitInjection) {
+    assert(_assertTypesHaveAnnotations(modules));
+  }
 
   DynamicInjector._fromParent(List<Module> modules, Injector parent, {name})
-      : super.fromParent(modules, parent, name: name);
+      : super.fromParent(modules, parent, name: name) {
+    assert(_assertTypesHaveAnnotations(modules));
+  }
 
-  newFromParent(List<Module> modules, String name) =>
+  Injector newFromParent(List<Module> modules, String name) =>
       new DynamicInjector._fromParent(modules, this, name: name);
 
   Object newInstanceOf(Type type, ObjectFactory objFactory, Injector requestor,
@@ -95,5 +115,44 @@ class DynamicInjector extends BaseInjector {
     }).toList();
 
     return cm.apply(args).reflectee;
+  }
+
+  /**
+   * Asserts that types provided by [TypeProvider]s are annotated with one of
+   * the [_assertAnnotations].
+   *
+   * This is useful so that the code will not break when switching to a
+   * static injector.
+   */
+  bool _assertTypesHaveAnnotations(List<Module> modules) {
+    if (parent != null) {
+      _assertAnnotations = (parent as DynamicInjector)._assertAnnotations;
+    }
+    if (modules == null || _assertAnnotations == null) return true;
+    var types = new Set<Type>();
+    modules.forEach((module) {
+      module.bindings.values.forEach((Provider p) {
+        if (p is TypeProvider) types.add(p.type);
+      });
+    });
+    if (_annotationFreeTypes != null) {
+      types = types.difference(_annotationFreeTypes);
+    }
+    types.forEach((Type t) {
+      var hasAnnotation = reflectType(t)
+          .metadata
+          .any((InstanceMirror im) {
+            var cm = im.type;
+            return cm.hasReflectedType &&
+                   _assertAnnotations.contains(cm.reflectedType);
+          });
+
+      if (!hasAnnotation) {
+        throw new NoAnnotationError("The type '$t' should be annotated with one"
+                                    " of '${_assertAnnotations.join(', ')}'");
+      }
+    });
+
+    return true;
   }
 }

@@ -159,7 +159,7 @@ class Module {
    * * [visibility]: Function which determines fi the requesting injector can
    *   see the type in the current injector.
    */
-  @Deprecated("Use bind(type, implementedBy: impl)")
+  @Deprecated("Use bind(type, toImplementation: impl)")
   void type(Type type, {Type withAnnotation, Type implementedBy, Visibility visibility}) {
     bind(type, withAnnotation: withAnnotation, visibility: visibility,
         toImplementation: implementedBy);

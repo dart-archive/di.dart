@@ -37,6 +37,10 @@ class Engine {
   final String id = 'v8-id';
 }
 
+class UnannotatedEngine {
+  final String id = 'without annotation';
+}
+
 @Injectable()
 class MockEngine implements Engine {
   final String id = 'mock-id';
@@ -109,7 +113,6 @@ class StringDependency {
 class BoolDependency {
   BoolDependency(bool value) {}
 }
-
 
 class CircularA {
   CircularA(CircularB b) {}
@@ -199,8 +202,8 @@ void main() {
       (modules, [name]) => new StaticInjector(modules: modules, name: name,
           typeFactories: type_factories_gen.typeFactories));
 
-  dynamicInjectorTest();
-  staticInjectorTest();
+  createDynamicInjectorSpec();
+  createStaticInjectorSpec();
   createKeySpec();
 }
 
@@ -687,7 +690,7 @@ createInjectorSpec(String injectorName, InjectorFactory injectorFactory) {
   });
 }
 
-void dynamicInjectorTest() {
+void createDynamicInjectorSpec() {
   describe('DynamicInjector', () {
 
     it('should throw a comprehensible error message on untyped argument', () {
@@ -756,10 +759,53 @@ void dynamicInjectorTest() {
       expect(id).toEqual('turbo-engine-id');
     });
 
+    it('should assert types are annotated', () {
+      var module = new Module()
+          ..bind(Engine, withAnnotation: Turbo, toImplementation: Engine);
+      expect(() {
+        new DynamicInjector(
+            modules: [module], assertAnnotations: [Injectable, InjectableTest]);
+      }, not(toThrow(NoAnnotationError)));
+
+      module = new Module()..bind(Engine, toImplementation: UnannotatedEngine);
+      expect(() {
+        new DynamicInjector(
+            modules: [module], assertAnnotations: [Injectable, InjectableTest]);
+      }, toThrow(
+          NoAnnotationError,
+          "The type 'UnannotatedEngine' should be annotated with one of "
+          "'Injectable, InjectableTest'"));
+    });
+
+    it('should assert types are annotated in child injectors', () {
+      var module = new Module()
+          ..bind(Engine, withAnnotation: Turbo, toImplementation: Engine);
+      var inj = new DynamicInjector(
+            modules: [module], assertAnnotations: [Injectable, InjectableTest]);
+
+      module = new Module()..bind(Engine, toImplementation: UnannotatedEngine);
+      expect(() {
+        inj.createChild([module]);
+      }, toThrow(
+          NoAnnotationError,
+          "The type 'UnannotatedEngine' should be annotated with one of "
+          "'Injectable, InjectableTest'"));
+    });
+
+    it('should not assert white-listed types are annotated', () {
+      var module = new Module()..bind(Engine, toImplementation: UnannotatedEngine);
+      expect(() {
+        new DynamicInjector(
+            modules: [module],
+            assertAnnotations: [Injectable, InjectableTest],
+            annotationFreeTypes: [UnannotatedEngine]);
+      },
+      not(toThrow(NoAnnotationError)));
+    });
   });
 }
 
-void staticInjectorTest() {
+void createStaticInjectorSpec() {
   describe('StaticInjector', () {
 
     it('should use type factories passed in the constructor', () {
