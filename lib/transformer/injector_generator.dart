@@ -3,6 +3,7 @@ library di.transformer.injector_generator;
 import 'dart:async';
 import 'package:analyzer/src/generated/ast.dart';
 import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/utilities_dart.dart';
 import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 import 'package:path/path.dart' as path;
@@ -281,10 +282,6 @@ class _Processor {
   String _generateInjectLibrary(Iterable<ConstructorElement> constructors) {
     var prefixes = <LibraryElement, String>{};
 
-    var ctorTypes = constructors.map((ctor) => ctor.enclosingElement).toSet();
-    var paramTypes = constructors.expand((ctor) => ctor.parameters)
-        .map((param) => param.type.element).toSet();
-
     var usedLibs = new Set<LibraryElement>();
     String resolveClassName(ClassElement type) {
       var library = type.library;
@@ -308,13 +305,15 @@ class _Processor {
     for (var ctor in constructors) {
       var type = ctor.enclosingElement;
       var typeName = resolveClassName(type);
+      Iterable<ParameterElement> parameters =
+          ctor.parameters.where((p) => p.parameterKind != ParameterKind.NAMED);
 
-      String args = new List.generate(ctor.parameters.length, (i) => 'a${i+1}').join(', ');
+      String args = new List.generate(parameters.length, (i) => 'a${i+1}').join(', ');
       factoriesBuffer.write('  $typeName: ($args) => new $typeName($args),\n');
 
       paramsBuffer.write('  $typeName: ');
-      paramsBuffer.write(ctor.parameters.isEmpty ? 'const[' : '[');
-      var params = ctor.parameters.map((param) {
+      paramsBuffer.write(parameters.isEmpty ? 'const[' : '[');
+      var params = parameters.map((param) {
         var typeName = resolveClassName(param.type.element);
         Iterable<ClassElement> annotations = [];
         if (param.metadata.isNotEmpty) {

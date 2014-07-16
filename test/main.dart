@@ -200,17 +200,31 @@ class SameEngine {
   SameEngine(this.engine);
 }
 
+@Injectable()
+class OptionalParam {
+  Engine engine;
+  OptionalParam([this.engine]);
+}
+
+@Injectable()
+class NamedParam {
+  Engine engine;
+  NamedParam({Engine e}) {
+    engine = e;
+  }
+}
+
 
 void main() {
   testModule();
 
   var static_factory = new GeneratedTypeFactories(
       type_factories_gen.typeFactories, type_factories_gen.parameterKeys);
-  createInjectorSpec('Static ModuleInjector ',
+  createInjectorSpec('Static ModuleInjector',
       () => new Module.withReflector(static_factory));
 
   TypeReflector reflector = new DynamicTypeFactories();
-  createInjectorSpec('Dynamic ModuleInjector ',
+  createInjectorSpec('Dynamic ModuleInjector',
       () => new Module.withReflector(reflector));
 
   testKey();
@@ -523,6 +537,28 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       var injector = new ModuleInjector([]);
 
       expect(injector.get(Injector)).toBe(injector);
+    });
+
+
+    it('should inject optional parameters', () {
+      var module = moduleFactory()
+          ..bind(Engine)
+          ..bind(OptionalParam);
+      var injector = new ModuleInjector([module]);
+
+      var optional = injector.get(OptionalParam);
+      expect(optional.engine).toBeNotNull();
+    });
+
+
+    it('should not inject named parameters', () {
+      var module = moduleFactory()
+          ..bind(Engine)
+          ..bind(NamedParam);
+      var injector = new ModuleInjector([module]);
+
+      var named = injector.get(NamedParam);
+      expect(named.engine).toBeNull();
     });
 
 
