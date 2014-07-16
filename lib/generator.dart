@@ -1,10 +1,12 @@
 /**
  * Generates Factory & paramKeys maps into a file by crawling source files and
  * finding all constructors that are annotated for injection. Does the same thing as
- * transformer.dart (see there for more info), except without modifications
- * to the main function. As such, the user needs to import the generated file, and run
+ * transformer.dart for when transformers are not available,  except without modifications
+ * to the main function and DI. As such, the user needs to import the generated file, and run
  * `Module.DEFAULT_REFLECTOR = new GeneratedTypeFactories(typeFactories, parameterKeys)`
- * with `di_static.dart` imported, before any modules are initialized.
+ * imported, before any modules are initialized. Import 'di_static.dart' instead of 'di.dart'
+ * to avoid mirrors, and import 'reflector_static.dart' for GeneratedTypeFactories.
+ * See transformer.dart for more info.
  */
 library di.generator;
 
@@ -134,17 +136,18 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
     StringBuffer paramList = new StringBuffer();
     List<String> factoryKeys = new List<String>();
     bool skip = false;
-    if (addedKeys.add(clazz.type.name)){
-      toBeAdded[clazz.type.name]=
-      'final Key _KEY_${clazz.type.name} = new Key(${resolveClassIdentifier(clazz.type)});\n';
+    if (addedKeys.add(getUniqueName(clazz.type))){
+      var uniqueName = getUniqueName(clazz.type);
+      toBeAdded[uniqueName] =
+          'final Key _KEY_$uniqueName = new Key(${resolveClassIdentifier(clazz.type)});\n';
     }
-    factoryKeys.add('${clazz.type.name}');
+    factoryKeys.add(getUniqueName(clazz.type));
 
     ConstructorElement constr =
     clazz.constructors.firstWhere((c) => c.name.isEmpty,
     orElse: () {
       throw 'Unable to find default constructor for '
-      '$clazz in ${clazz.source}';
+          '$clazz in ${clazz.source}';
     });
     var args = new List.generate(constr.parameters.length, (i) => 'a$i').join(', ');
     factory.write('${resolveClassIdentifier(clazz.type)}: ($args) => '
@@ -158,28 +161,29 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
       paramList.write(constr.parameters.map((param) {
         if (param.type.element is! ClassElement) {
           throw 'Unable to resolve type for constructor parameter '
-          '"${param.name}" for type "$clazz" in ${clazz.source}';
+              '"${param.name}" for type "$clazz" in ${clazz.source}';
         }
         if (_isParameterized(param)) {
           print('WARNING: parameterized types are not supported: '
-          '$param in $clazz in ${clazz.source}. Skipping!');
+              '$param in $clazz in ${clazz.source}. Skipping!');
           skip = true;
         }
         var annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
-                  (item) => item.element.returnType.name);
+              (item) => item.element.returnType.name);
         }
         String key_name = annotations.isNotEmpty ?
-        '${param.type.name}_${annotations.first}' : param.type.name;
+            '${getUniqueName(param.type)}_${annotations.first}' : getUniqueName(param.type);
         String output = '_KEY_${key_name}';
         if (addedKeys.add(key_name)){
           var annotationParam = "";
           if (param.metadata.isNotEmpty) {
-            annotationParam = ", ${resolveClassIdentifier(param.metadata.first.element.returnType)}";
+            var p = resolveClassIdentifier(param.metadata.first.element.returnType);
+            annotationParam = ", $p";
           }
-          toBeAdded['$key_name']='final Key _KEY_${key_name} = '+
-          'new Key(${resolveClassIdentifier(param.type)}$annotationParam);\n';
+          toBeAdded[key_name] ='final Key _KEY_${key_name} = '
+              'new Key(${resolveClassIdentifier(param.type)}$annotationParam);\n';
         }
         return output;
       }).join(', '));
@@ -203,7 +207,7 @@ _isParameterized(ParameterElement param) {
 
   if (typeName.indexOf('<') > -1) {
     String parameters =
-    typeName.substring(typeName.indexOf('<') + 1, typeName.length - 1);
+        typeName.substring(typeName.indexOf('<') + 1, typeName.length - 1);
     return parameters.split(', ').any((p) => p != 'dynamic');
   }
   return false;
@@ -307,6 +311,13 @@ String getQualifiedName(InterfaceType type) {
   var lib = type.element.library.displayName;
   var name = type.name;
   return lib == null ? name : '$lib.$name';
+}
+
+String getUniqueName(InterfaceType type) {
+  var lib = type.element.library.displayName;
+  var name = type.name;
+  String qualName = lib == null ? name : '$lib.$name';
+  return qualName.replaceAll('.', '_');
 }
 
 String getCanonicalName(InterfaceType type) {

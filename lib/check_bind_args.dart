@@ -35,10 +35,10 @@ checkBindArgs(dynamic toValue, Function toFactory,
   if (toImplementation != null) count++;
   if (count > 1) {
     throw 'Only one of following parameters can be specified: '
-    'toValue, toFactory, toFactoryPos, toImplementation';
+    'toValue, toFactory, toImplementation';
   }
 
-  if (inject.length > 0 && !isSet(toFactory)) {
+  if (inject.isNotEmpty && isNotSet(toFactory)) {
     throw "Received inject list but toFactory is not set.";
   }
 
@@ -62,24 +62,4 @@ typedef _13(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
 typedef _14(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
 typedef _15(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
 
-// Generation script
-
-//main() {
-//  var s = new StringBuffer();
-//
-//  int max_arg_count = 15;
-//
-//  for (var i = 0; i <= max_arg_count; i++) {
-//    s.write("typedef _$i(");
-//    s.write(new List.generate(i, (c) => "a${c+1}").join(", "));
-//    s.write(");\n");
-//  }
-//
-//  s.write("switch (len) {\n");
-//  for (var i = 0; i <= max_arg_count; i++) {
-//    s.write("case $i: argCountMatch = toFactory is _$i; break;\n");
-//  }
-//  s.write('}');
-//
-//  print(s);
-//}
+// Generation script in scripts/check_bind_args_script.dart

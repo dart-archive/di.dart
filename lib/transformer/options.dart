@@ -36,15 +36,15 @@ class TransformOptions {
 
   TransformOptions({EntryFilter entryFilter, String sdkDirectory,
                    List<String> injectableAnnotations, List<String> injectedTypes})
-  : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
+      : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
   sdkDirectory = sdkDirectory,
   injectableAnnotations =
-  (injectableAnnotations != null ? injectableAnnotations : [])
-    ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
+      (injectableAnnotations != null ? injectableAnnotations : [])
+      ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
   injectedTypes =
-  new Set.from(injectedTypes != null ? injectedTypes : []) {
-    if (sdkDirectory == null)
-      throw new ArgumentError('sdkDirectory must be provided.');
+      new Set.from(injectedTypes != null ? injectedTypes : []) {
+        if (sdkDirectory == null)
+          throw new ArgumentError('sdkDirectory must be provided.');
   }
 
   Future<bool> isDartEntry(Asset asset) => new Future.value(entryFilter(asset));

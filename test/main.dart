@@ -23,6 +23,7 @@ import 'package:di/src/module.dart';
 import 'test_annotations.dart';
 // Generated file. Run ../test_tf_gen.sh.
 import 'type_factories_gen.dart' as type_factories_gen;
+import 'main_same_name.dart' as same_name;
 
 import 'dart:mirrors';
 
@@ -193,6 +194,13 @@ class ThrowOnce {
   }
 }
 
+@Injectable()
+class SameEngine {
+  same_name.Engine engine;
+  SameEngine(this.engine);
+}
+
+
 void main() {
   testModule();
 
@@ -214,7 +222,7 @@ testModule() {
   describe('Module', () {
 
     const BIND_ERROR = 'Only one of following parameters can be specified: '
-                       'toValue, toFactory, toFactoryPos, toImplementation';
+                       'toValue, toFactory, toImplementation';
 
     describe('bind', () {
 
@@ -254,7 +262,8 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
   describe(injectorName, () {
 
     it('should instantiate a type', () {
-      var injector = new ModuleInjector([moduleFactory()..bind(Engine)]);
+      var module = moduleFactory()..bind(Engine);
+      var injector = new ModuleInjector([module]);
       var instance = injector.get(Engine);
 
       expect(instance).toBeAnInstanceOf(Engine);
