@@ -541,6 +541,41 @@ main() {
             ]);
       });
 
+      it('ignores named parameters', () {
+        return generates(phases,
+            inputs: {
+              'a|web/main.dart': '''
+                  import "package:inject/inject.dart";
+                  class Car {
+                    Engine engine;
+
+                    @inject
+                    Car({Engine e}) {
+                      engine = e;
+                    }
+                  }
+
+                  class Engine {
+                    @inject
+                    Engine();
+                  }
+
+                  main() {}
+                  '''
+            },
+            imports: [
+              "import 'main.dart' as import_0;",
+            ],
+            factories: [
+              'import_0.Car: () => new import_0.Car(),',
+              'import_0.Engine: () => new import_0.Engine(),',
+            ],
+            paramKeys: [
+              'import_0.Car: const[],',
+              'import_0.Engine: const[],',
+            ]);
+      });
+
       it('supports injectableTypes argument', () {
         return generates(phases,
             inputs: {
