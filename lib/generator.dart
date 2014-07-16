@@ -174,7 +174,6 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
         }
         String key_name = annotations.isNotEmpty ?
             '${getUniqueName(param.type)}_${annotations.first}' : getUniqueName(param.type);
-            '${param.type.name}_${annotations.first}' : param.type.name;
         String output = '_KEY_${key_name}';
         if (addedKeys.add(key_name)){
           var annotationParam = "";
