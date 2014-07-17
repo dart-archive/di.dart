@@ -1,0 +1,116 @@
+import 'package:di/di.dart';
+import 'package:benchmark_harness/benchmark_harness.dart';
+import 'package:di/static_injector.dart';
+
+import 'injector_benchmark_common.dart';
+import 'static_injector_benchmark.dart';
+
+const PAD_LENGTH = 35;
+
+/**
+ * This benchmark creates the same objects as the StaticInjectorBenchmark
+ * without using DI, to serve as a baseline for comparison.
+ */
+class CreateObjectsOnly extends BenchmarkBase {
+  CreateObjectsOnly() : super("Create objects manually without DI".padRight(PAD_LENGTH));
+
+  void run() {
+    var b1 = new B(new D(), new E());
+    var c1 = new C();
+    var d1 = new D();
+    var e1 = new E();
+
+    var a = new A(b1, c1);
+    var b = new B(d1, e1);
+
+    var c = new A(b1, c1);
+    var d = new B(d1, e1);
+  }
+
+  void teardown() {
+    print(count);
+  }
+}
+
+/// create objects manually and an injector
+class CreateSingleInjector extends InjectorBenchmark {
+
+  CreateSingleInjector(injectorFactory)
+      : super('.. and create an injector'.padRight(PAD_LENGTH), injectorFactory);
+
+  void run() {
+    Injector injector = new StaticInjector(modules: [module], typeFactories: typeFactories);
+
+    var b1 = new B(new D(), new E());
+    var c1 = new C();
+    var d1 = new D();
+    var e1 = new E();
+
+    var a = new A(b1, c1);
+    var b = new B(d1, e1);
+
+    var c = new A(b1, c1);
+    var d = new B(d1, e1);
+  }
+}
+
+/// create objects manually, create an injector, and create a child
+class CreateInjectorAndChild extends InjectorBenchmark {
+
+  CreateInjectorAndChild(injectorFactory)
+      : super('.. and a child injector'.padRight(PAD_LENGTH), injectorFactory);
+
+  void run() {
+    Injector injector = new StaticInjector(modules: [module], typeFactories: typeFactories);
+    var childInjector = injector.createChild([module]);
+
+    var b1 = new B(new D(), new E());
+    var c1 = new C();
+    var d1 = new D();
+    var e1 = new E();
+
+    var a = new A(b1, c1);
+    var b = new B(d1, e1);
+
+    var c = new A(b1, c1);
+    var d = new B(d1, e1);
+  }
+}
+
+/// use ModuleInjector with keys
+class InjectByKey extends InjectorBenchmark {
+
+  InjectByKey(injectorFactory)
+    : super('.. and precompute keys'.padRight(PAD_LENGTH), injectorFactory);
+
+  void run() {
+    var injector = new StaticInjector(modules: [module], typeFactories: typeFactories);
+    var childInjector = injector.createChild([module]);
+
+    injector.getByKey(KEY_A);
+    injector.getByKey(KEY_B);
+
+    childInjector.getByKey(KEY_A);
+    childInjector.getByKey(KEY_B);
+  }
+}
+
+main() {
+  var oldTypeFactories = {
+      A: (f) => new A(f(B), f(C)),
+      B: (f) => new B(f(D), f(E)),
+      C: (f) => new C(),
+      D: (f) => new D(),
+      E: (f) => new E(),
+  };
+
+  injectorFactory() => null;
+
+  new CreateObjectsOnly().report();
+  new CreateSingleInjector(injectorFactory).report();
+  new CreateInjectorAndChild(injectorFactory).report();
+  new InjectorBenchmark('DI using ModuleInjector'.padRight(PAD_LENGTH),
+      (m) => new StaticInjector(modules: m, typeFactories: typeFactories)
+  ).report();
+  new InjectByKey(injectorFactory).report();
+}
