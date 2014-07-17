@@ -384,12 +384,45 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 
     it('should allow providing null values', () {
       var module = moduleFactory()
-        ..bind(Engine, toValue: null);
+          ..bind(Engine, toValue: null);
 
       var injector = new ModuleInjector([module]);
       var engineInstance = injector.get(Engine);
 
       expect(engineInstance).toBeNull();
+    });
+
+
+    it('should cache null values', () {
+      var count = 0;
+      factory() {
+        if (count++ == 0) return null;
+        return new Engine();
+      }
+      var module = moduleFactory()..bind(Engine, toFactory: factory);
+      var injector = new ModuleInjector([module]);
+
+      var engine = injector.get(Engine);
+      engine = injector.get(Engine);
+
+      expect(engine).toBeNull();
+    });
+
+
+    it('should only call factories once, even when circular', () {
+      var count = 0;
+      factory(injector) {
+        count++;
+        return injector.get(Engine);
+      }
+      var module = moduleFactory()..bind(Engine, toFactory: factory, inject: [Injector]);
+      var injector = new ModuleInjector([module]);
+
+      try {
+        var engine = injector.get(Engine);
+      } on CircularDependencyError catch (e) {
+        expect(count).toEqual(1);
+      }
     });
 
 
