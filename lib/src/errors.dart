@@ -18,16 +18,9 @@ abstract class ResolvingError extends Error {
   ResolvingError(key): keys = [key];
 
   String get resolveChain {
-    var keysToPrint = [];
-    var seenKeys = new Set();
-    for (Key key in keys.reversed) {
-      keysToPrint.add(key);
-      if (!seenKeys.add(key)) break;
-    }
-
     StringBuffer buffer = new StringBuffer()
         ..write("(resolving ")
-        ..write(keysToPrint.join(" -> "))
+        ..write(keys.reversed.join(" -> "))
         ..write(")");
     return buffer.toString();
   }
