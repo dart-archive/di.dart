@@ -202,7 +202,12 @@ class DynamicTypeFactories extends TypeReflector {
             "'${p.type}' can have only zero on one annotation, but it has "
             "'${p.metadata}'.");
       }
-      var pType = (p.type as ClassMirror).reflectedType;
+      ClassMirror pTypeMirror = (p.type as ClassMirror);
+      var pType = pTypeMirror.reflectedType;
+      if (pTypeMirror.typeArguments.where((m) => m.qualifiedName != #dynamic).isNotEmpty) {
+        throw new DynamicReflectorError("$pType cannot be injected because it is parameterized "
+            "with non-generic types.");
+      }
       var annotationType = p.metadata.isNotEmpty ? p.metadata.first.type.reflectedType : null;
       return new Key(pType, annotationType);
     }, growable:false);

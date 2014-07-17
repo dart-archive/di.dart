@@ -1,4 +1,4 @@
-library di.transformer.export_transformer;
+library di.transformer.module_transformer;
 
 import 'dart:async';
 import 'package:barback/barback.dart';

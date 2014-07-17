@@ -37,7 +37,8 @@ abstract class Injector {
       getByKey(new Key(type, annotation));
 
   /**
-   * Faster version of [get].
+   * Faster version of [get] by saving key creation time. Should be used instead if
+   * a key instance is already available.
    */
   dynamic getByKey(Key key);
 

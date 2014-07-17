@@ -4,6 +4,7 @@ import "../key.dart";
 import "../check_bind_args.dart" show checkBindArgs;
 import "reflector.dart";
 import "reflector_dynamic.dart";
+import "errors.dart" show PRIMITIVE_TYPES;
 
 DEFAULT_VALUE(_) => null;
 IDENTITY(p) => p;
@@ -13,10 +14,18 @@ class Binding {
   List<Key> parameterKeys;
   Function factory;
 
+  _checkPrimitive(Key key) {
+    if (PRIMITIVE_TYPES.contains(key)) {
+      throw "Cannot bind primitive type '${key.type}'.";
+    }
+    return true;
+  }
+
   void bind(k, TypeReflector reflector, {toValue: DEFAULT_VALUE,
           Function toFactory: DEFAULT_VALUE, Type toImplementation,
           List inject: const[]}) {
     key = k;
+    assert(_checkPrimitive(k));
     if (inject.length == 1 && isNotSet(toFactory)) {
       toFactory = IDENTITY;
     }
@@ -53,9 +62,19 @@ bool isNotSet(val) => !isSet(val);
  */
 class Module {
   static TypeReflector DEFAULT_REFLECTOR = getReflector();
+
+  /**
+   * A [TypeReflector] for the module to look up constructors for types when
+   * toFactory and toValue are not specified. This is done with mirroring or
+   * pre-generated typeFactories.
+   */
   final TypeReflector reflector;
 
   Module(): reflector = DEFAULT_REFLECTOR;
+
+  /**
+   * Use a custom reflector instead of the default. Useful for testing purposes.
+   */
   Module.withReflector(this.reflector);
 
   Map<Key, Binding> bindings = new Map<Key, Binding>();
@@ -74,13 +93,17 @@ class Module {
    *
    * * [toImplementation]: The given type will be instantiated using the [new]
    *   operator and the resulting instance will be injected.
-   * * [toFactory]: The result of the factory function is the value that will
-   *   be injected.
+   * * [toFactory]: The result of the factory function called with the types of [inject] as arguments
+   *   is the value that will be injected.
    * * [toValue]: The given value will be injected.
    * * [withAnnotation]: Type decorated with additional annotation.
    *
    * Up to one (0 or 1) of the following parameters can be specified at the
    * same time: [toImplementation], [toFactory], [toValue].
+   *
+   * If [inject] is a single item list with no other parameters specified, the specified
+   * type will be instantiated using its current binding. This is shorthand for
+   * toFactory: (item) => item, inject: [item].
    */
   void bind(Type type, {dynamic toValue: DEFAULT_VALUE,
       Function toFactory: DEFAULT_VALUE, Type toImplementation,

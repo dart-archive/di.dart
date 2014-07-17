@@ -8,6 +8,11 @@ abstract class BaseError extends Error {
   String toString() => message;
 }
 
+final List<Key> PRIMITIVE_TYPES = <Key>[
+    new Key(num), new Key(int), new Key(double), new Key(String),
+    new Key(bool), new Key(dynamic)
+];
+
 class DynamicReflectorError extends BaseError {
   DynamicReflectorError(message) : super(message);
 }
@@ -35,14 +40,9 @@ abstract class ResolvingError extends Error {
 class NoProviderError extends ResolvingError {
   NoProviderError(key): super(key);
 
-  static final List<Key> _PRIMITIVE_TYPES = <Key>[
-      new Key(num), new Key(int), new Key(double), new Key(String),
-      new Key(bool)
-  ];
-
   String toString(){
     var root = keys.first;
-    if (_PRIMITIVE_TYPES.contains(root)) {
+    if (PRIMITIVE_TYPES.contains(root)) {
       return "Cannot inject a primitive type of $root! $resolveChain";
     }
     return "No provider found for $root! $resolveChain";
@@ -58,5 +58,5 @@ class NoGeneratedTypeFactoryError extends BaseError {
   NoGeneratedTypeFactoryError(Type type): super(type.toString());
   String toString() =>
       "Type '$message' not found in generated typeFactory maps. Is the type's "
-      "constructor annotated for injection?";
+      "constructor injectable and annotated for injection?";
 }

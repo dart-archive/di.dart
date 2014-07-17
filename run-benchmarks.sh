@@ -7,6 +7,7 @@ static_injector_benchmark.dart
 instance_benchmark.dart
 large_benchmark.dart"
 
+mkdir -p benchmark/generated_files
 dart scripts/class_gen.dart
 
 # run tests in dart
