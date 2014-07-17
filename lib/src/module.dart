@@ -1,26 +1,47 @@
-part of di;
+library di.module;
 
-// TODO: Make this private in DI 2.0. It is made public to temporarily allow
-//       people create delegates to bind* methods with identical defaults.
-@deprecated
-const DEFAULT_VALUE = _DEFAULT_VALUE;
+import "../key.dart";
+import "../check_bind_args.dart" show checkBindArgs;
+import "reflector.dart";
+import "reflector_dynamic.dart";
 
-_DEFAULT_VALUE(_) => null;
+DEFAULT_VALUE(_) => null;
+IDENTITY(p) => p;
 
-typedef dynamic FactoryFn(Injector injector);
+class Binding {
+  Key key;
+  List<Key> parameterKeys;
+  Function factory;
 
-/**
- * If owned by a [Provider] P bound by the [defining] injector, then this
- * returns whether P is visible to the [requesting] injector.
- * See [Injector.get].
- */
-typedef bool Visibility(Injector requesting, Injector defining);
+  void bind(k, TypeReflector reflector, {toValue: DEFAULT_VALUE,
+          Function toFactory: DEFAULT_VALUE, Type toImplementation,
+          List inject: const[]}) {
+    key = k;
+    if (inject.length == 1 && isNotSet(toFactory)) {
+      toFactory = IDENTITY;
+    }
+    assert(checkBindArgs(toValue, toFactory, toImplementation, inject));
 
-/**
- * Produces an instance of some type, provided [factory] produces instances of
- * the dependencies that type.
- */
-typedef Object TypeFactory(factory(Type type, Type annotation));
+    if (isSet(toValue)) {
+      factory = () => toValue;
+      parameterKeys = const [];
+    } else if (isSet(toFactory)) {
+      factory = toFactory;
+      parameterKeys = inject.map((t) {
+        if (t is Key) return t;
+        if (t is Type) return new Key(t);
+        throw "inject must be Keys or Types. '$t' is not an instance of Key or Type.";
+      }).toList(growable: false);
+    } else {
+      var implementationType = toImplementation == null ? key.type : toImplementation;
+      parameterKeys = reflector.parameterKeysFor(implementationType);
+      factory = reflector.factoryFor(implementationType);
+    }
+  }
+}
+
+bool isSet(val) => !identical(val, DEFAULT_VALUE);
+bool isNotSet(val) => !isSet(val);
 
 /**
  * Module contributes configuration information to an [Injector] by providing
@@ -31,32 +52,18 @@ typedef Object TypeFactory(factory(Type type, Type annotation));
  * no effect on that injector.
  */
 class Module {
-  final _providers = <int, Provider>{};
-  final _childModules = <Module>[];
-  Map<Type, TypeFactory> _typeFactories = {};
+  static TypeReflector DEFAULT_REFLECTOR = getReflector();
+  final TypeReflector reflector;
 
-  Map<Type, TypeFactory> get typeFactories {
-    if (_childModules.isEmpty) return _typeFactories;
+  Module(): reflector = DEFAULT_REFLECTOR;
+  Module.withReflector(this.reflector);
 
-    var factories = new Map.from(_typeFactories);
-    _childModules.forEach((m) {
-      if (m.typeFactories != null) {
-        factories.addAll(m.typeFactories);
-      }
-    });
-    return factories;
-  }
+  Map<Key, Binding> bindings = new Map<Key, Binding>();
 
-  set typeFactories(Map<Type, TypeFactory> factories) {
-    _typeFactories = factories;
-  }
-
-  void updateListWithBindings(List<Provider> providers) {
-    _childModules.forEach((child) => child.updateListWithBindings(providers));
-    _providers.forEach((k, v) {
-      providers[k] = v;
-    });
-  }
+  /**
+   * Copies all bindings of [module] into this one. Overwriting when conflicts are found.
+   */
+  void install(Module module) => bindings.addAll(module.bindings);
 
   /**
    * Registers a binding for a given [type].
@@ -71,123 +78,27 @@ class Module {
    *   be injected.
    * * [toValue]: The given value will be injected.
    * * [withAnnotation]: Type decorated with additional annotation.
-   * * [visibility]: Function which determines if the requesting injector can
-   *   see the type in the current injector.
    *
    * Up to one (0 or 1) of the following parameters can be specified at the
    * same time: [toImplementation], [toFactory], [toValue].
    */
-  void bind(Type type, {dynamic toValue: _DEFAULT_VALUE,
-      Function toFactory: _DEFAULT_VALUE, Type toImplementation,
-      Type withAnnotation, Visibility visibility, List inject}) {
+  void bind(Type type, {dynamic toValue: DEFAULT_VALUE,
+      Function toFactory: DEFAULT_VALUE, Type toImplementation,
+      List inject: const [], Type withAnnotation}) {
     bindByKey(new Key(type, withAnnotation), toValue: toValue,
-        toFactory: toFactory, toImplementation: toImplementation,
-        visibility: visibility, inject: inject);
+        toFactory: toFactory, toImplementation: toImplementation, inject: inject);
   }
 
   /**
    * Same as [bind] except it takes [Key] instead of
-   * [Type] [withAnnotation] combination.
+   * [Type] [withAnnotation] combination. Faster.
    */
-  void bindByKey(Key key, {dynamic toValue: _DEFAULT_VALUE,
-      Function toFactory: _DEFAULT_VALUE, Type toImplementation,
-      Visibility visibility, List inject}) {
-    _checkBindArgs(toValue, toFactory, toImplementation);
+  void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE,
+      Function toFactory: DEFAULT_VALUE, List inject: const [], Type toImplementation}) {
 
-    if (inject != null) {
-      if (toFactory == _DEFAULT_VALUE) {
-        assert (inject.length == 1);
-        toFactory = (i) => i.get(inject[0]);
-      } else {
-        var originalFactory = toFactory;
-        toFactory = (Injector injector) {
-          var keys = inject.map((t) {
-            if (t is Type) return new Key(t);
-            if (t is Key) return t;
-            throw "inject must be a list of keys or types";
-          });
-          var params = keys.map(injector.getByKey).toList();
-          return Function.apply(originalFactory, params);
-        };
-      }
-    }
-
-    if (!identical(toValue, _DEFAULT_VALUE)) {
-      _providers[key.id] = new ValueProvider(key.type, toValue, visibility);
-    } else if (!identical(toFactory, _DEFAULT_VALUE)) {
-      _providers[key.id] = new FactoryProvider(key.type, toFactory, visibility);
-    } else {
-      _providers[key.id] = new TypeProvider(
-          toImplementation == null ? key.type : toImplementation, visibility);
-    }
-  }
-
-  _checkBindArgs(toValue, toFactory, toImplementation) {
-    int count = 0;
-    if (!identical(toValue, _DEFAULT_VALUE)) count++;
-    if (!identical(toFactory, _DEFAULT_VALUE)) count++;
-    if (toImplementation != null) count++;
-    if (count > 1) {
-      throw 'Only one of following parameters can be specified: '
-            'toValue, toFactory, toImplementation';
-    }
-    return true;
-  }
-
-  /**
-   * Register a binding to a concrete value.
-   *
-   * The [value] is what actually will be injected.
-   */
-  @Deprecated("Use bind(type, toValue: value)")
-  void value(Type id, value, {Type withAnnotation, Visibility visibility}) {
-    bind(id, toValue: value, withAnnotation: withAnnotation,
-        visibility: visibility);
-  }
-
-  /**
-   * Registers a binding for a [Type].
-   *
-   * The default behavior is to simply instantiate the type.
-   *
-   * The following parameters can be specified:
-   *
-   * * [withAnnotation]: Type decorated with additional annotation.
-   * * [implementedBy]: The type will be instantiated using the [new] operator
-   *   and the resulting instance will be injected. If no type is provided,
-   *   then it's implied that [type] should be instantiated.
-   * * [visibility]: Function which determines fi the requesting injector can
-   *   see the type in the current injector.
-   */
-  @Deprecated("Use bind(type, implementedBy: impl)")
-  void type(Type type, {Type withAnnotation, Type implementedBy, Visibility visibility}) {
-    bind(type, withAnnotation: withAnnotation, visibility: visibility,
-        toImplementation: implementedBy);
-  }
-
-  /**
-   * Register a binding to a factory function.
-   *
-   * The [factoryFn] will be called and the result of that function is the value
-   * that will be injected.
-   */
-  @Deprecated("Use bind(type, toFactory: factory)")
-  void factory(Type id, FactoryFn factoryFn, {Type withAnnotation,
-      Visibility visibility}) {
-    bind(id, withAnnotation: withAnnotation, visibility: visibility,
-        toFactory: factoryFn);
-  }
-
-  @Deprecated("Use bindByKey(type, toFactory: factory)")
-  void factoryByKey(Key key, FactoryFn factoryFn, {Visibility visibility}) {
-    bindByKey(key, visibility: visibility, toFactory: factoryFn);
-  }
-
-  /**
-   * Installs another module into this module. Bindings defined on this module
-   * take precedence over the installed module.
-   */
-  void install(Module module) {
-    _childModules.add(module);
+    var binding = new Binding();
+    binding.bind(key, reflector, toValue: toValue, toFactory: toFactory,
+                 toImplementation: toImplementation, inject: inject);
+    bindings[key] = binding;
   }
 }
