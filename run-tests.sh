@@ -14,8 +14,13 @@ echo "run dart2js on tests"
 mkdir -p out
 dart2js --minify -c test/main.dart -o out/main.dart.js
 
-echo "run tests in node"
-node out/main.dart.js
+# attach a preamble file to dart2js output to emulate browser
+# so node doesn't complain about lack of browser objects
+cp test_assets/d8.js out/main.js
+cat out/main.dart.js >> out/main.js
+
+echo "Running compiled tests in node..."
+node out/main.js
 
 echo "run transformer tests"
 pub build --mode=debug test
