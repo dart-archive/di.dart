@@ -59,31 +59,32 @@ main() {
           ]);
     });
 
-    it('warns about parameterized classes', () {
+    it('should inject parameterized parameters into object', () {
       return generates(phases,
-          inputs: {
-            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
-            'a|lib/a.dart': '''
+      inputs: {
+          'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
+          'di|lib/type_literal.dart': PACKAGE_TYPE_LITERAL,
+          'a|lib/a.dart': '''
                 import 'package:inject/inject.dart';
-                class Parameterized<T> {
+                import 'package:di/type_literal.dart';
+
+                class Parameterized {
+                  List<num> nums;
+
                   @inject
-                  Parameterized();
+                  Parameterized(this.nums);
                 }
                 '''
-          },
-          imports: [
-            "import 'package:a/a.dart' as import_0;",
-          ],
-          generators: [
-            'import_0.Parameterized: (f) => new import_0.Parameterized(),',
-          ],
-          messages: [
-            'warning: Parameterized is a parameterized type. '
-            '(package:a/a.dart 1 16)',
-          ]);
+      },
+      imports: [
+          "import 'package:a/a.dart' as import_0;",
+      ],
+      generators: [
+          'import_0.Parameterized: (f) => new import_0.Parameterized(f(new TypeLiteral<List<num>>().type)),',
+      ]);
     });
 
-    it('skips and warns about parameterized constructor parameters', () {
+    it('injects parameterized constructor parameters', () {
       return generates(phases,
           inputs: {
             'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
@@ -96,9 +97,11 @@ main() {
                 }
                 '''
           },
-          messages: [
-            'warning: Bar cannot be injected because Foo<bool> is a '
-            'parameterized type. (package:a/a.dart 3 18)'
+          imports: [
+              "import 'package:a/a.dart' as import_0;",
+          ],
+          generators: [
+              'import_0.Bar: (f) => new import_0.Bar(f(new TypeLiteral<import_0.Foo<bool>>().type)),',
           ]);
     });
 
@@ -121,6 +124,53 @@ main() {
           generators: [
             'import_0.Bar: (f) => new import_0.Bar(f(import_0.Foo)),',
           ]);
+    });
+
+    it('allows partially-parameterized parameters', () {
+      return generates(phases,
+      inputs: {
+          'a|web/main.dart': '''
+                import 'package:inject/inject.dart';
+                class Foo<T, U, V> {}
+                class Bar {
+                  @inject
+                  Bar(Foo<bool, dynamic, num> f);
+                }
+                main() {}
+                '''
+      },
+      imports: [
+          "import 'main.dart' as import_0;",
+      ],
+      generators: [
+          'import_0.Bar: (f) => new import_0.Bar(f(new TypeLiteral<import_0.Foo<bool, dynamic, num>>().type)),',
+      ]);
+    });
+
+    it('should generate same method when there\'s no parameters and when all parameters are dynamic', () {
+      return generates(phases,
+      inputs: {
+          'a|web/main.dart': '''
+                import 'package:inject/inject.dart';
+                class Foo<T, U, V> {}
+                class Bar {
+                  @inject
+                  Bar(Foo<dynamic, dynamic, dynamic> f);
+                }
+                class Baz {
+                  @inject
+                  Baz(Foo f);
+                }
+                main() {}
+                '''
+      },
+      imports: [
+          "import 'main.dart' as import_0;",
+      ],
+      generators: [
+          'import_0.Bar: (f) => new import_0.Bar(f(import_0.Foo)),',
+          'import_0.Baz: (f) => new import_0.Baz(f(import_0.Foo)),',
+      ]);
     });
 
     it('follows exports', () {
@@ -703,4 +753,12 @@ library di.auto_injector;
 
 defaultInjector({List modules, String name,
     bool allowImplicitInjection: false}) => null;
+''';
+
+const String PACKAGE_TYPE_LITERAL = '''
+library type_literal;
+
+class TypeLiteral<T> {
+  Type get type => T;
+}
 ''';

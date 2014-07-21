@@ -265,12 +265,6 @@ class _Processor {
     }
     for (var param in ctor.parameters) {
       var type = param.type;
-      if (type is InterfaceType &&
-          type.typeArguments.any((t) => !t.isDynamic)) {
-        _warn('${cls.name} cannot be injected because '
-            '${param.type} is a parameterized type.', ctor);
-        return false;
-      }
       if (type.isDynamic) {
         _warn('${cls.name} cannot be injected because parameter type '
           '${param.name} cannot be resolved.', ctor);
@@ -287,11 +281,9 @@ class _Processor {
     var prefixes = <LibraryElement, String>{};
 
     var ctorTypes = constructors.map((ctor) => ctor.enclosingElement).toSet();
-    var paramTypes = constructors.expand((ctor) => ctor.parameters)
-        .map((param) => param.type.element).toSet();
 
     var usedLibs = new Set<LibraryElement>();
-    String resolveClassName(ClassElement type) {
+    String resolveClassName(ClassElement type, [List<DartType> typeArgs]) {
       var library = type.library;
       usedLibs.add(library);
 
@@ -303,16 +295,20 @@ class _Processor {
       if (prefix.isNotEmpty) {
         prefix = '$prefix.';
       }
-      return '$prefix${type.name}';
+      if (typeArgs == null || typeArgs.isEmpty || !typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
+        return '$prefix${type.name}';
+      };
+
+      return 'new TypeLiteral<$prefix${type.name}<${typeArgs.join(', ')}>>().type';
     }
 
     var factoriesBuffer = new StringBuffer();
     for (var ctor in constructors) {
-      var type = ctor.enclosingElement;
-      var typeName = resolveClassName(type);
+      ClassElement type = ctor.enclosingElement;
+      String typeName = resolveClassName(type);
       factoriesBuffer.write('  $typeName: (f) => new $typeName(');
       var params = ctor.parameters.map((param) {
-        var typeName = resolveClassName(param.type.element);
+        String typeName = resolveClassName(param.type.element, (param.type).typeArguments);
         var annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
