@@ -37,7 +37,7 @@
     There is also some syntactic sugar for this special case.
     - Old code `module.bind(V8Engine, toFactory: (i) => i.get(Engine));`
     - New code `module.bind(V8Engine, toFactory: (e) => e, inject: [Engine]);`
-    - With sugar `module.bind(V8Engine, inject: [Engine]);`
+    - With sugar `module.bind(V8Engine, toInstanceOf: Engine);`
 
 ### Modules have a `TypeReflector` instance attached
   - The `TypeReflector` is how the module will find the `toFactory` and `inject`

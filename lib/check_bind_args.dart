@@ -4,7 +4,7 @@ import "src/module.dart";
 export "src/module.dart" show DEFAULT_VALUE, IDENTITY, isSet, isNotSet;
 
 checkBindArgs(dynamic toValue, Function toFactory,
-              Type toImplementation, List inject) {
+              Type toImplementation, List inject, Type toInstanceOf) {
   int count = 0;
   bool argCountMatch = true;
   if (isSet(toValue)) count++;
@@ -33,9 +33,10 @@ checkBindArgs(dynamic toValue, Function toFactory,
   }
 
   if (toImplementation != null) count++;
+  if (toInstanceOf != null) count++;
   if (count > 1) {
     throw 'Only one of following parameters can be specified: '
-    'toValue, toFactory, toImplementation';
+    'toValue, toFactory, toImplementation, toInstanceOf';
   }
 
   if (inject.isNotEmpty && isNotSet(toFactory)) {
