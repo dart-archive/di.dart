@@ -44,7 +44,12 @@ echo "Compiling tests to JavaScript with dart2js..."
 mkdir -p out
 dart2js --minify -c test/main.dart -o out/main.dart.js
 
+# attach a preamble file to dart2js output to emulate browser
+# so node doesn't complain about lack of browser objects
+cp test_assets/d8.js out/main.js
+cat out/main.dart.js >> out/main.js
+
 echo "Running compiled tests in node..."
-node out/main.dart.js
+node out/main.js
 
 echo "Testing complete."
