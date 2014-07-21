@@ -184,8 +184,9 @@ class DynamicTypeFactories extends TypeReflector {
   List<Key> _generateParameterKeys(Type type) {
     ClassMirror classMirror = _reflectClass(type);
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
+    var posParameters = ctor.parameters.where((p) => !p.isNamed).toList();
 
-    return new List.generate(ctor.parameters.length, (int pos) {
+    return new List.generate(posParameters.length, (int pos) {
       ParameterMirror p = ctor.parameters[pos];
       if (p.type.qualifiedName == #dynamic) {
         var name = MirrorSystem.getName(p.simpleName);
