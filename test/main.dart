@@ -224,7 +224,7 @@ testModule() {
   describe('Module', () {
 
     const BIND_ERROR = 'Only one of following parameters can be specified: '
-                       'toValue, toFactory, toImplementation';
+                       'toValue, toFactory, toImplementation, toInstanceOf';
 
     describe('bind', () {
 
@@ -542,7 +542,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 
     it('should throw an exception when circular dependency in factory', () {
       var injector = new ModuleInjector([moduleFactory()
-          ..bind(CircularA, inject: [CircularA])
+          ..bind(CircularA, toInstanceOf: CircularA)
       ]);
 
       expect(() {
@@ -663,7 +663,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
           moduleFactory()
               ..bind(Log)
               ..bind(ClassOne)
-              ..bind(InterfaceOne, inject: [ClassOne])
+              ..bind(InterfaceOne, toInstanceOf: ClassOne)
       ], rootInjector);
 
       expect(injector.get(InterfaceOne)).toBe(injector.get(ClassOne));
@@ -724,20 +724,22 @@ testCheckBindArgs() {
   describe('CheckBindArgs', () {
     var _ = DEFAULT_VALUE;
     it('should return true when args are well formed', () {
-      expect(checkBindArgs(_, (Engine e, Car c) => 0, null, [Engine, Car])).toBeTrue();
-      expect(checkBindArgs(_, () => 0, null, [])).toBeTrue();
-      expect(checkBindArgs(0, _, null, [])).toBeTrue();
-      expect(checkBindArgs(_, _, Car, [])).toBeTrue();
+      expect(checkBindArgs(_, (Engine e, Car c) => 0, null, [Engine, Car], null)).toBeTrue();
+      expect(checkBindArgs(_, () => 0, null, [], null)).toBeTrue();
+      expect(checkBindArgs(0, _, null, [], null)).toBeTrue();
+      expect(checkBindArgs(_, _, Car, [], null)).toBeTrue();
+      expect(checkBindArgs(_, _, null, [], Car)).toBeTrue();
     });
     
     it('should error when wrong number of args have been set', () {
-      expect(() => checkBindArgs(_, () => 0, Car, [])).toThrowWith();
-      expect(() => checkBindArgs(0, _, null, [Engine, Car])).toThrowWith();
+      expect(() => checkBindArgs(_, () => 0, Car, [], null)).toThrowWith();
+      expect(() => checkBindArgs(0, _, null, [Engine, Car], null)).toThrowWith();
+      expect(() => checkBindArgs(_, () => 0, null, [], Car)).toThrowWith();
     });
     
     it('should error when toFactory argument count does not match inject length', () {
-      expect(() => checkBindArgs(_, (Engine e, Car c) => 0, null, [Engine])).toThrowWith();
-      expect(() => checkBindArgs(_, () => 0, null, [Engine, Car])).toThrowWith();
+      expect(() => checkBindArgs(_, (Engine e, Car c) => 0, null, [Engine], null)).toThrowWith();
+      expect(() => checkBindArgs(_, () => 0, null, [Engine, Car], null)).toThrowWith();
     });
   });
 }

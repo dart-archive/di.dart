@@ -13,6 +13,7 @@ class Binding {
   Key key;
   List<Key> parameterKeys;
   Function factory;
+  static bool printInjectWarning = true;
 
   _checkPrimitive(Key key) {
     if (PRIMITIVE_TYPES.contains(key)) {
@@ -23,14 +24,23 @@ class Binding {
 
   void bind(k, TypeReflector reflector, {toValue: DEFAULT_VALUE,
           Function toFactory: DEFAULT_VALUE, Type toImplementation,
-          List inject: const[]}) {
+          List inject: const[], Type toInstanceOf}) {
     key = k;
     assert(_checkPrimitive(k));
     if (inject.length == 1 && isNotSet(toFactory)) {
+      if (printInjectWarning) {
+        print("${k.type}: Inject list without toFactory is deprecated. "
+              "Use `toInstanceOf: Type` instead.");
+        printInjectWarning = false;
+      }
       toFactory = IDENTITY;
     }
-    assert(checkBindArgs(toValue, toFactory, toImplementation, inject));
+    assert(checkBindArgs(toValue, toFactory, toImplementation, inject, toInstanceOf));
 
+    if (toInstanceOf != null) {
+      toFactory = IDENTITY;
+      inject = [toInstanceOf];
+    }
     if (isSet(toValue)) {
       factory = () => toValue;
       parameterKeys = const [];
@@ -93,22 +103,20 @@ class Module {
    *
    * * [toImplementation]: The given type will be instantiated using the [new]
    *   operator and the resulting instance will be injected.
-   * * [toFactory]: The result of the factory function called with the types of [inject] as arguments
-   *   is the value that will be injected.
+   * * [toFactory]: The result of the factory function called with the types of [inject] as
+   *   arguments is the value that will be injected.
    * * [toValue]: The given value will be injected.
+   * * [toInstanceOf]: An instance of the given type will be fetched with DI. This is shorthand for
+   *   toFactory: (x) => x, inject: [X].
    * * [withAnnotation]: Type decorated with additional annotation.
    *
    * Up to one (0 or 1) of the following parameters can be specified at the
-   * same time: [toImplementation], [toFactory], [toValue].
-   *
-   * If [inject] is a single item list with no other parameters specified, the specified
-   * type will be instantiated using its current binding. This is shorthand for
-   * toFactory: (item) => item, inject: [item].
+   * same time: [toImplementation], [toFactory], [toValue], [toInstanceOf].
    */
   void bind(Type type, {dynamic toValue: DEFAULT_VALUE,
       Function toFactory: DEFAULT_VALUE, Type toImplementation,
-      List inject: const [], Type withAnnotation}) {
-    bindByKey(new Key(type, withAnnotation), toValue: toValue,
+      List inject: const [], Type toInstanceOf, Type withAnnotation}) {
+    bindByKey(new Key(type, withAnnotation), toValue: toValue, toInstanceOf: toInstanceOf,
         toFactory: toFactory, toImplementation: toImplementation, inject: inject);
   }
 
@@ -116,11 +124,11 @@ class Module {
    * Same as [bind] except it takes [Key] instead of
    * [Type] [withAnnotation] combination. Faster.
    */
-  void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE,
+  void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE, Type toInstanceOf,
       Function toFactory: DEFAULT_VALUE, List inject: const [], Type toImplementation}) {
 
     var binding = new Binding();
-    binding.bind(key, reflector, toValue: toValue, toFactory: toFactory,
+    binding.bind(key, reflector, toValue: toValue, toFactory: toFactory, toInstanceOf: toInstanceOf,
                  toImplementation: toImplementation, inject: inject);
     bindings[key] = binding;
   }
