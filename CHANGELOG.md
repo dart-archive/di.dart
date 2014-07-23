@@ -1,3 +1,60 @@
+# 2.0.0
+
+## Breaking Changes
+
+### Calls to `StaticInjector` and `DynamicInjector` should be replaced with `ModuleInjector`
+  - There are no longer `StaticInjectors` and `DynamicInjectors`. They have been replaced
+    by a new `ModuleInjector` class that acts as both types of injectors.
+
+### ModuleInjectors have no visibility
+  - All bindings and instances of parent injectors are now visible in child injectors.
+  - The optional argument `forceNewInstances` of `Injector.createChild` has been removed
+    Instead, create a new module with bindings of the types that require new instances
+    and pass that to the child injector, and the child injector will create new
+    instances instead of returning the instance of the parent injector.
+
+### Use `new ModuleInjector(modules, parent)` instead of `Injector.createChild(modules)`
+  - The latter is still available but deprecated.
+  - Injectors with no parent now have a dummy RootInjector instance as the parent
+    Instead of checking “parent == null”, check for “parent == rootInjector”.
+
+### Injectors no longer have a name field
+
+### typeFactories have changed
+  - Old type factories had the form `(injector) => new Instance(injector.get(dep1), … )`
+  - New factories have the form:
+    - `toFactory(a0, a1, …) => new Instance(a0, a1, …)`
+  - When calling `Module.bind(toFactory: factory)`, there is an additional argument `inject`
+    of a list of types or keys (preferred for performance) whose instances should be
+    passed to the factory. The arguments passed to the factory function will be instances
+    of the types in `inject`.
+
+    Example:
+    - Old code `module.bind(Car, toFactory: (i) => new Car(i.get(Engine)));`
+    - New code
+      - `module.bind(Car, toFactory: (engine) => new Car(engine), inject: [Engine]);`
+
+    There is also some syntactic sugar for this special case.
+    - Old code `module.bind(V8Engine, toFactory: (i) => i.get(Engine));`
+    - New code `module.bind(V8Engine, toFactory: (e) => e, inject: [Engine]);`
+    - With sugar `module.bind(V8Engine, toInstanceOf: Engine);`
+
+### Modules have a `TypeReflector` instance attached
+  - The `TypeReflector` is how the module will find the `toFactory` and `inject`
+    arguments when not explicitly specified. This is either done with mirroring or code
+    generation via transformers. Transformers will set the default to use code gen.
+    For testing and other special purposes where a specific reflector is needed, use
+    `new Module.withReflector(reflector)`.
+
+### The transformer has been updated
+  - Running the transformer will do the necessary code generation and edits to switch the
+    default `TypeReflector` from mirroring to static factories. Enable transformer to use
+    static factories, disable to use mirrors. More docs on the transformer can be found in
+    `transformer.dart`
+    
+### Deprecated module methods removed
+  - `.value`, `.type`, `.factory`, `.factoryByKey` are gone. Use `..bind`.
+
 # 1.2.3
 
 ## Features
