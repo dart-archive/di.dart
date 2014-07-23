@@ -41,7 +41,7 @@ class DynamicTypeFactories extends TypeReflector {
   Function _generateFactory(Type type) {
     ClassMirror classMirror = _reflectClass(type);
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
-    int length = ctor.parameters.length;
+    int length = ctor.parameters.where((p) => !p.isNamed).length;
     Function create = classMirror.newInstance;
     Symbol name = ctor.constructorName;
     Function factory;
@@ -184,9 +184,7 @@ class DynamicTypeFactories extends TypeReflector {
   List<Key> _generateParameterKeys(Type type) {
     ClassMirror classMirror = _reflectClass(type);
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
-
-    return new List.generate(ctor.parameters.length, (int pos) {
-      ParameterMirror p = ctor.parameters[pos];
+    return new List.from(ctor.parameters.where((p) => !p.isNamed).map((ParameterMirror p) {
       if (p.type.qualifiedName == #dynamic) {
         var name = MirrorSystem.getName(p.simpleName);
         throw new DynamicReflectorError("Error getting params for '$type': "
@@ -198,7 +196,7 @@ class DynamicTypeFactories extends TypeReflector {
       }
       if (p.metadata.length > 1) {
         throw new DynamicReflectorError(
-            "Constructor '${classMirror.simpleName}' parameter $pos of type "
+            "Constructor '${classMirror.simpleName}' parameter of type "
             "'${p.type}' can have only zero on one annotation, but it has "
             "'${p.metadata}'.");
       }
@@ -210,7 +208,7 @@ class DynamicTypeFactories extends TypeReflector {
       }
       var annotationType = p.metadata.isNotEmpty ? p.metadata.first.type.reflectedType : null;
       return new Key(pType, annotationType);
-    }, growable:false);
+    }), growable:false);
   }
 
   ClassMirror _reflectClass(Type type) {

@@ -17,6 +17,7 @@ import 'package:analyzer/src/generated/sdk.dart' show DartSdk;
 import 'package:analyzer/src/generated/sdk_io.dart' show DirectoryBasedDartSdk;
 import 'package:analyzer/src/generated/element.dart';
 import 'package:analyzer/src/generated/engine.dart';
+import 'package:analyzer/src/generated/utilities_dart.dart';
 import 'package:path/path.dart' as path;
 
 import 'dart:io';
@@ -148,16 +149,19 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
       throw 'Unable to find default constructor for '
           '$clazz in ${clazz.source}';
     });
-    var args = new List.generate(constr.parameters.length, (i) => 'a$i').join(', ');
+    Iterable<ParameterElement> parameters =
+        constr.parameters.where((p) => p.parameterKind != ParameterKind.NAMED);
+
+    var args = new List.generate(parameters.length, (i) => 'a$i').join(', ');
     factory.write('${resolveClassIdentifier(clazz.type)}: ($args) => '
         'new ${resolveClassIdentifier(clazz.type)}($args),\n');
 
     paramList.write('${resolveClassIdentifier(clazz.type)}: ');
-    if (constr.parameters.isEmpty){
+    if (parameters.isEmpty){
       paramList.write('const [');
     } else {
       paramList.write('[');
-      paramList.write(constr.parameters.map((param) {
+      paramList.write(parameters.map((param) {
         if (param.type.element is! ClassElement) {
           throw 'Unable to resolve type for constructor parameter '
               '"${param.name}" for type "$clazz" in ${clazz.source}';

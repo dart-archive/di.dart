@@ -200,6 +200,20 @@ class SameEngine {
   SameEngine(this.engine);
 }
 
+@Injectable()
+class OptionalParam {
+  Engine engine;
+  OptionalParam([this.engine]);
+}
+
+@Injectable()
+class NamedParam {
+  Engine engine;
+  NamedParam({Engine e}) {
+    engine = e;
+  }
+}
+
 
 const String STATIC_NAME = 'Static ModuleInjector';
 const String DYNAMIC_NAME = 'Dynamic ModuleInjector';
@@ -571,6 +585,28 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       var injector = new ModuleInjector([]);
 
       expect(injector.get(Injector)).toBe(injector);
+    });
+
+
+    it('should inject optional parameters', () {
+      var module = moduleFactory()
+          ..bind(Engine)
+          ..bind(OptionalParam);
+      var injector = new ModuleInjector([module]);
+
+      var optional = injector.get(OptionalParam);
+      expect(optional.engine).toBeNotNull();
+    });
+
+
+    it('should not inject named parameters', () {
+      var module = moduleFactory()
+          ..bind(Engine)
+          ..bind(NamedParam);
+      var injector = new ModuleInjector([module]);
+
+      var named = injector.get(NamedParam);
+      expect(named.engine).toBeNull();
     });
 
 
