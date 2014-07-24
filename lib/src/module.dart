@@ -29,8 +29,13 @@ class Binding {
     assert(_checkPrimitive(k));
     if (inject.length == 1 && isNotSet(toFactory)) {
       if (printInjectWarning) {
-        print("${k.type}: Inject list without toFactory is deprecated. "
-              "Use `toInstanceOf: Type` instead.");
+        try {
+          throw [];
+        } catch (e, stackTrace) {
+          print("bind(${k.type}): Inject list without toFactory is deprecated. "
+                "Use `toInstanceOf: Type` instead. "
+                "Called from:\n$stackTrace");
+        }
         printInjectWarning = false;
       }
       toFactory = IDENTITY;
