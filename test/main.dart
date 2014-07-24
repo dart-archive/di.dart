@@ -258,6 +258,18 @@ testModule() {
         }).toThrowWith(message: "Cannot bind primitive type 'int'.");
       });
 
+      it('should accept a Type as toInstanceOf parameter', () {
+        expect(() {
+          new Module().bind(Engine, toInstanceOf: MockEngine);
+        }).not.toThrow();
+      });
+
+      it('should accept a Key as toInstanceOf parameter', () {
+        expect(() {
+          new Module().bind(Engine, toInstanceOf: key(MockEngine));
+        }).not.toThrow();
+
+      });
     });
 
   });
@@ -729,14 +741,15 @@ testCheckBindArgs() {
       expect(checkBindArgs(0, _, null, [], null)).toBeTrue();
       expect(checkBindArgs(_, _, Car, [], null)).toBeTrue();
       expect(checkBindArgs(_, _, null, [], Car)).toBeTrue();
+      expect(checkBindArgs(_, _, null, [], key(Car))).toBeTrue();
     });
-    
+
     it('should error when wrong number of args have been set', () {
       expect(() => checkBindArgs(_, () => 0, Car, [], null)).toThrowWith();
       expect(() => checkBindArgs(0, _, null, [Engine, Car], null)).toThrowWith();
       expect(() => checkBindArgs(_, () => 0, null, [], Car)).toThrowWith();
     });
-    
+
     it('should error when toFactory argument count does not match inject length', () {
       expect(() => checkBindArgs(_, (Engine e, Car c) => 0, null, [Engine], null)).toThrowWith();
       expect(() => checkBindArgs(_, () => 0, null, [Engine, Car], null)).toThrowWith();

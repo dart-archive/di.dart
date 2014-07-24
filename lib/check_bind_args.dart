@@ -4,7 +4,7 @@ import "src/module.dart";
 export "src/module.dart" show DEFAULT_VALUE, IDENTITY, isSet, isNotSet;
 
 checkBindArgs(dynamic toValue, Function toFactory,
-              Type toImplementation, List inject, Type toInstanceOf) {
+              Type toImplementation, List inject, toInstanceOf) {
   int count = 0;
   bool argCountMatch = true;
   if (isSet(toValue)) count++;

@@ -24,7 +24,7 @@ class Binding {
 
   void bind(k, TypeReflector reflector, {toValue: DEFAULT_VALUE,
           Function toFactory: DEFAULT_VALUE, Type toImplementation,
-          List inject: const[], Type toInstanceOf}) {
+          List inject: const[], toInstanceOf}) {
     key = k;
     assert(_checkPrimitive(k));
     if (inject.length == 1 && isNotSet(toFactory)) {
@@ -33,7 +33,7 @@ class Binding {
           throw [];
         } catch (e, stackTrace) {
           print("bind(${k.type}): Inject list without toFactory is deprecated. "
-                "Use `toInstanceOf: Type` instead. "
+                "Use `toInstanceOf: Type|Key` instead. "
                 "Called from:\n$stackTrace");
         }
         printInjectWarning = false;
@@ -120,7 +120,7 @@ class Module {
    */
   void bind(Type type, {dynamic toValue: DEFAULT_VALUE,
       Function toFactory: DEFAULT_VALUE, Type toImplementation,
-      List inject: const [], Type toInstanceOf, Type withAnnotation}) {
+      List inject: const [], toInstanceOf, Type withAnnotation}) {
     bindByKey(new Key(type, withAnnotation), toValue: toValue, toInstanceOf: toInstanceOf,
         toFactory: toFactory, toImplementation: toImplementation, inject: inject);
   }
@@ -129,7 +129,7 @@ class Module {
    * Same as [bind] except it takes [Key] instead of
    * [Type] [withAnnotation] combination. Faster.
    */
-  void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE, Type toInstanceOf,
+  void bindByKey(Key key, {dynamic toValue: DEFAULT_VALUE, toInstanceOf,
       Function toFactory: DEFAULT_VALUE, List inject: const [], Type toImplementation}) {
 
     var binding = new Binding();
