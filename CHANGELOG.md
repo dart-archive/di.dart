@@ -55,6 +55,13 @@
 ### Deprecated module methods removed
   - `.value`, `.type`, `.factory`, `.factoryByKey` are gone. Use `..bind`.
 
+## Deprecations
+
+- `module.bind()` calls specifying the `inject` parameter but no `toFactory` have been deprecated
+  and will be removed in v3. Use the `toInstanceOf` parameter instead.
+- The dynamic injector shim (dynamic_injector.dart) has been added to ensure backward compatibility
+  with v1 and will be removed in v3.
+
 # 1.2.3
 
 ## Features
