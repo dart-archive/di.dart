@@ -1,3 +1,16 @@
+# 2.0.1
+
+## Bug Fixes
+
+- **bind:** It must accept a Key as well as a Type
+  ([e01bcda6](https://github.com/angular/di.dart/commit/e01bcda6a0bb2522af03d34f08469969baed1d98),
+   [#154](https://github.com/angular/di.dart/issues/154))
+
+## Features
+
+- **Binding:** Display call stack when usign deprecated bind() form
+  ([f20b3ba7](https://github.com/angular/di.dart/commit/f20b3ba7ec45edc5b2f519974454da0e0e0f87df))
+
 # 2.0.0
 
 ## Breaking Changes
