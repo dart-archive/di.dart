@@ -204,10 +204,6 @@ class DynamicTypeFactories extends TypeReflector {
       }
       ClassMirror pTypeMirror = (p.type as ClassMirror);
       var pType = pTypeMirror.reflectedType;
-      if (pTypeMirror.typeArguments.where((m) => m.qualifiedName != #dynamic).isNotEmpty) {
-        throw new DynamicReflectorError("$pType cannot be injected because it is parameterized "
-            "with non-generic types.");
-      }
       var annotationType = p.metadata.isNotEmpty ? p.metadata.first.type.reflectedType : null;
       return new Key(pType, annotationType);
     }, growable:false);
@@ -217,7 +213,7 @@ class DynamicTypeFactories extends TypeReflector {
     ClassMirror classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
       throw new DynamicReflectorError("No implementation provided for "
-          "${getSymbolName(classMirror.qualifiedName)} typedef!");
+                                      "${getSymbolName(classMirror.qualifiedName)} typedef!");
     }
 
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
