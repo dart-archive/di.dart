@@ -1,3 +1,30 @@
+# 2.0.2
+
+## Features
+
+- It is now possible to inject parameterized types by using `TypeLiteral`:
+
+```dart
+import 'package:di/type_literal.dart';
+
+class DependencyWithParameterizedMap {
+  Map<int, String> map;
+  DependencyWithParameterizedMap(this.map);
+}
+
+var injector = new ModuleInjector([moduleFactory()
+    ..bind(new TypeLiteral<Map<int, String>>().type, toValue: {1 : 'first', 2: 'second'})
+    ..bind(DependencyWithParameterizedMap)
+]);
+```
+## Breaking Change
+
+- **annotations:** Users must now explicitly import `di/annotations.dart` to use `@injectable`
+
+## Fixes
+
+- Supports newer versions of barback, code transformers, and analyzer
+
 # 2.0.1
 
 ## Bug Fixes
