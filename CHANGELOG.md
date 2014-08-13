@@ -4,7 +4,7 @@
 
 - When assert mode is enabled, the dynamic version of the DI will make sure that the classes are
   set up for injection when they are bound. By default classes should either be annotated with
-  `@Injectable` or listed in a library level `@Injectables` annotations. The class level and library
+  `@Injectable` or listed in a library level `@Injectables` annotation. The class level and library
   levels annotations could be changed in `Module.classAnnotations` and `Module.libAnnotations`.
 
 # 2.0.2
@@ -28,7 +28,7 @@ var injector = new ModuleInjector([moduleFactory()
 ```
 ## Breaking Change
 
-- **annotations:** Users must now explicitly import `di/annotations.dart` to use `@injectable`
+- **annotations:** Users must now explicitly import `di/annotations.dart` to use `@Injectable`
 
 ## Fixes
 

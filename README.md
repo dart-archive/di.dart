@@ -7,7 +7,7 @@
 Add dependency to your pubspec.yaml.
 
     dependencies:
-      di: ">=2.0.0 <3.0.0"
+      di: ">=3.0.0 <4.0.0"
 
 Then, run `pub install`.
 
@@ -29,7 +29,7 @@ class Fuel {}
 class V8Engine implements Engine {
   Fuel fuel;
   V8Engine(this.fuel);
-  
+
   go() {
     print('Vroom...');
   }
