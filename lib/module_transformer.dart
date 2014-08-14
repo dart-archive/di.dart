@@ -28,8 +28,8 @@ class ModuleTransformer extends Transformer {
       // Note: this rewrite is coupled with how module.dart is
       // written. Make sure both are updated in sync.
       transform.addOutput(new Asset.fromString(id, code
-          .replaceAll(new RegExp('import "reflector_dynamic.dart";'),
-              'import "reflector_null.dart";')));
+          .replaceAll(new RegExp('import \'reflector_dynamic.dart\';'),
+              'import \'reflector_null.dart\';')));
     });
   }
 }

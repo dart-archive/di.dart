@@ -1,7 +1,7 @@
 library di.injector;
 
 import '../key.dart';
-import 'module.dart';
+import 'module_static.dart';
 import 'errors.dart';
 
 final Key _INJECTOR_KEY = new Key(Injector);

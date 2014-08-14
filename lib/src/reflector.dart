@@ -1,8 +1,6 @@
 library di.reflector;
 
 import "../key.dart";
-import "errors.dart";
-import "module.dart";
 
 abstract class TypeReflector {
   /**
