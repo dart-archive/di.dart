@@ -1,3 +1,38 @@
+# 3.0.0
+
+## Breaking Changes
+
+- **annotations:** Users must now explicitly import `di/annotations.dart` to use `@Injectable`
+- Supports newer versions of barback, code transformers, and analyzer
+
+# 2.1.0
+
+## Features
+
+- It is now possible to inject parameterized types by using `TypeLiteral`:
+
+```dart
+import 'package:di/type_literal.dart';
+
+class DependencyWithParameterizedMap {
+  Map<int, String> map;
+  DependencyWithParameterizedMap(this.map);
+}
+
+var injector = new ModuleInjector([moduleFactory()
+    ..bind(new TypeLiteral<Map<int, String>>().type, toValue: {1 : 'first', 2: 'second'})
+    ..bind(DependencyWithParameterizedMap)
+]);
+```
+
+# 2.0.3
+
+This releases reverts all the changes which have been integrated into 2.0.2 because those changes
+violate the semver versioning scheme.
+
+Basically 2.0.3 is the same as 2.0.1. The changes will be re-integrated in subsequent releases
+with a correct versioning scheme.
+
 # 2.0.2
 
 ## Features
@@ -19,7 +54,7 @@ var injector = new ModuleInjector([moduleFactory()
 ```
 ## Breaking Change
 
-- **annotations:** Users must now explicitly import `di/annotations.dart` to use `@injectable`
+- **annotations:** Users must now explicitly import `di/annotations.dart` to use `@Injectable`
 
 ## Fixes
 
@@ -91,7 +126,7 @@ var injector = new ModuleInjector([moduleFactory()
     default `TypeReflector` from mirroring to static factories. Enable transformer to use
     static factories, disable to use mirrors. More docs on the transformer can be found in
     `transformer.dart`
-    
+
 ### Deprecated module methods removed
   - `.value`, `.type`, `.factory`, `.factoryByKey` are gone. Use `..bind`.
 
