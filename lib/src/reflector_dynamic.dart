@@ -213,7 +213,7 @@ class DynamicTypeFactories extends TypeReflector {
     ClassMirror classMirror = reflectType(type);
     if (classMirror is TypedefMirror) {
       throw new DynamicReflectorError("No implementation provided for "
-                                      "${getSymbolName(classMirror.qualifiedName)} typedef!");
+          "${getSymbolName(classMirror.qualifiedName)} typedef!");
     }
 
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];

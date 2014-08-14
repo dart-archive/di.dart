@@ -23,7 +23,8 @@ import 'dart:io';
 
 const String PACKAGE_PREFIX = 'package:';
 const String DART_PACKAGE_PREFIX = 'dart:';
-const List<String> _DEFAULT_INJECTABLE_ANNOTATIONS = const ['di.annotations.Injectable'];
+const List<String> _DEFAULT_INJECTABLE_ANNOTATIONS =
+    const ['di.annotations.Injectable'];
 
 main(List<String> args) {
   if (args.length < 4) {
@@ -33,7 +34,8 @@ main(List<String> args) {
 
   var pathToSdk = args[0];
   var entryPoint = args[1];
-  var classAnnotations = args[2].split(',')..addAll(_DEFAULT_INJECTABLE_ANNOTATIONS);
+  var classAnnotations = args[2].split(',')
+      ..addAll(_DEFAULT_INJECTABLE_ANNOTATIONS);
   var output = args[3];
   var packageRoots = (args.length < 5) ? [Platform.packageRoot] : args.sublist(4);
 
@@ -64,15 +66,14 @@ Map<Chunk, String> generateCode(String entryPoint, List<String> classAnnotations
   Map<String, InterfaceType> typeMappings = {};
 
   c.crawl(entryPoint, (CompilationUnitElement compilationUnit, SourceFile source) {
-      new CompilationUnitVisitor(c.context, source, classAnnotations, imports, typeToImport,
-          typeFactoryTypes, typeMappings, outputFilename).visit(compilationUnit, source);
+      new CompilationUnitVisitor(c.context, source, classAnnotations, imports, typeToImport, typeFactoryTypes,
+          typeMappings, outputFilename).visit(compilationUnit, source);
   });
   return printLibraryCode(typeToImport, imports, typeFactoryTypes, typeMappings);
 }
 
-Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport, List<String> imports,
-                                    Map<Chunk, List<ClassElement>> typeFactoryTypes,
-                                    Map<String, InterfaceType> typeMapping) {
+Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport,
+    List<String> imports, Map<Chunk, List<ClassElement>> typeFactoryTypes, Map<String, InterfaceType> typeMapping) {
 
   Map<Chunk, StringBuffer> factories = <Chunk, StringBuffer>{};
   Map<Chunk, StringBuffer> keys = <Chunk, StringBuffer>{};
@@ -146,13 +147,11 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
     StringBuffer paramList = new StringBuffer();
     List<String> factoryKeys = new List<String>();
     bool skip = false;
-    var className = getUniqueName(clazz.type);
-    var classType = resolveClassIdentifier(clazz.type);
-    if (addedKeys.add(className)) {
-      toBeAdded[className] =
-          'final Key _KEY_$className = new Key($classType);\n';
+    if (addedKeys.add(getUniqueName(clazz.type))) {
+      toBeAdded[getUniqueName(clazz.type)] =
+          'final Key _KEY_${getUniqueName(clazz.type)} = new Key(${resolveClassIdentifier(clazz.type)});\n';
     }
-    factoryKeys.add(className);
+    factoryKeys.add(getUniqueName(clazz.type));
 
     ConstructorElement constr = clazz.constructors.firstWhere((c) => c.name.isEmpty,
         orElse: () {
@@ -160,9 +159,10 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
         });
 
     var args = new List.generate(constr.parameters.length, (i) => 'a$i').join(', ');
-    factory.write('$classType: ($args) => new $classType($args),\n');
+    factory.write('${resolveClassIdentifier(clazz.type)}: ($args) => '
+        'new ${resolveClassIdentifier(clazz.type)}($args),\n');
 
-    paramList.write('$classType: ');
+    paramList.write('${resolveClassIdentifier(clazz.type)}: ');
     if (constr.parameters.isEmpty){
       paramList.write('const [');
     } else {
@@ -174,21 +174,22 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
         }
         var annotations = [];
         if (param.metadata.isNotEmpty) {
-          annotations = param.metadata.map((item) => item.element.returnType.name);
+          annotations = param.metadata.map(
+              (item) => item.element.returnType.name);
         }
-        String keyName = annotations.isNotEmpty ?
+        String key_name = annotations.isNotEmpty ?
             '${param.type.name}_${annotations.first}' :
               param.type.name;
-        param.type.typeArguments.forEach((arg) => keyName = '${keyName}_${arg.name}');
-        String output = '_KEY_${keyName}';
-        if (addedKeys.add(keyName)){
+        param.type.typeArguments.forEach((arg) => key_name = '${key_name}_${arg.name}');
+        String output = '_KEY_${key_name}';
+        if (addedKeys.add(key_name)){
           var annotationParam = "";
           if (param.metadata.isNotEmpty) {
             var p = resolveClassIdentifier(param.metadata.first.element.returnType);
             annotationParam = ", $p";
           }
           var clsId = resolveClassIdentifier(param.type, param.type.typeArguments);
-          toBeAdded[keyName]='final Key _KEY_${keyName} = new Key($clsId$annotationParam);\n';
+          toBeAdded[key_name]='final Key _KEY_${key_name} = new Key($clsId$annotationParam);\n';
         }
         return output;
       }).join(', '));
@@ -241,7 +242,8 @@ class CompilationUnitVisitor {
   }
 
   visitLibrary(LibraryElement libElement, SourceFile source) {
-    CompilationUnit resolvedUnit = context.resolveCompilationUnit(libElement.source, libElement);
+    CompilationUnit resolvedUnit = context
+        .resolveCompilationUnit(libElement.source, libElement);
 
     resolvedUnit.directives.forEach((Directive directive) {
       if (directive is LibraryDirective) {
@@ -252,7 +254,8 @@ class CompilationUnitVisitor {
             getQualifiedName(
                 (ann.element as ConstructorElement).enclosingElement.type) ==
                 'di.annotations.Injectables') {
-            var listLiteral = library.metadata[annotationIdx].arguments.arguments.first;
+            var listLiteral =
+                library.metadata[annotationIdx].arguments.arguments.first;
             for (Expression expr in listLiteral.elements) {
               Element element = (expr as SimpleIdentifier).bestElement;
               if (element == null || element is! ClassElement) {
@@ -271,7 +274,9 @@ class CompilationUnitVisitor {
   }
 
   visitClassElement(ClassElement classElement, SourceFile source) {
-    if (classElement.isPrivate) return; // ignore private classes.
+    if (classElement.name.startsWith('_')) {
+      return; // ignore private classes.
+    }
     var importUri = source.entryPointImport;
     if (Uri.parse(importUri).scheme == '') {
       importUri = path.relative(importUri, from: path.dirname(outputFilename));
@@ -286,7 +291,8 @@ class CompilationUnitVisitor {
     for (ElementAnnotation ann in classElement.metadata) {
       if (ann.element is ConstructorElement) {
         ConstructorElement con = ann.element;
-        if (classAnnotations.contains(getQualifiedName(con.enclosingElement.type))) {
+        if (classAnnotations
+            .contains(getQualifiedName(con.enclosingElement.type))) {
           if (typeFactoryTypes[source.chunk] == null) {
             typeFactoryTypes[source.chunk] = <ClassElement>[];
           }
@@ -318,7 +324,8 @@ String getCanonicalName(InterfaceType type) {
   return '$source:$name';
 }
 
-typedef CompilationUnitCrawler(CompilationUnitElement compilationUnit, SourceFile source);
+typedef CompilationUnitCrawler(CompilationUnitElement compilationUnit,
+                               SourceFile source);
 
 class SourceCrawler {
   final List<String> packageRoots;
@@ -339,8 +346,9 @@ class SourceCrawler {
     context.analysisOptions = contextOptions;
     sdk.context.analysisOptions = contextOptions;
 
-    var packageUriResolver = new PackageUriResolver(packageRoots.map(
-        (pr) => new JavaFile.fromUri(new Uri.file(pr))).toList());
+    var packageUriResolver =
+        new PackageUriResolver(packageRoots.map(
+            (pr) => new JavaFile.fromUri(new Uri.file(pr))).toList());
     context.sourceFactory = new SourceFactory([
       new DartUriResolver(sdk),
       new FileUriResolver(),
@@ -425,7 +433,7 @@ class CrawlerVisitor {
     });
   }
 
-  void visitImportElement(Library library, Source source) {
+  visitImportElement(Library library, Source source) {
     String uri = library.uri;
     if (uri == null) return; // dart:core
 
@@ -439,7 +447,8 @@ class CrawlerVisitor {
       systemImport = currentFile.entryPointImport;
     }
     // check if it's some internal hidden library
-    if (isSystem && systemImport.substring(DART_PACKAGE_PREFIX.length).startsWith('_')) {
+    if (isSystem &&
+        systemImport.substring(DART_PACKAGE_PREFIX.length).startsWith('_')) {
       return;
     }
 
@@ -519,7 +528,7 @@ class Library {
 
   Library(this.element, this.uri, this.compilationUnit, this.name);
 
-  String toString() => 'Library[$name]';
+  toString() => 'Library[$name]';
 }
 
 class Chunk {
@@ -546,7 +555,7 @@ class Chunk {
 
   Chunk createChild(Library library) => new Chunk(this, library);
 
-  String toString() => 'Chunk[$library]';
+  toString() => 'Chunk[$library]';
 }
 
 class SourceFile {
