@@ -15,7 +15,6 @@ import 'package:guinness/guinness.dart';
 import 'package:matcher/matcher.dart' as matcher;
 import 'package:di/di.dart';
 import 'package:di/annotations.dart';
-import 'package:di/type_literal.dart';
 import 'package:di/src/reflector_static.dart';
 import 'package:di/src/reflector_dynamic.dart';
 import 'package:di/check_bind_args.dart';
@@ -114,35 +113,6 @@ class StringDependency {
 
 class BoolDependency {
   BoolDependency(bool value) {}
-}
-
-@InjectableTest()
-class DepedencyWithParameterizedList {
-  List<num> nums;
-  List<String> strs;
-
-  DepedencyWithParameterizedList(this.nums, @StringList() this.strs);
-}
-
-@InjectableTest()
-class DependencyWithParameterizedMap {
-  Map<dynamic, dynamic> map;
-
-  DependencyWithParameterizedMap(this.map);
-}
-
-@InjectableTest()
-class AnotherDependencyWithParameterizedMap {
-  Map<num, String> map;
-
-  AnotherDependencyWithParameterizedMap(this.map);
-}
-
-@InjectableTest()
-class DependencyWithMap {
-  Map map;
-
-  DependencyWithMap(this.map);
 }
 
 
@@ -374,71 +344,6 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       expect(instance.engine.id).toEqual('turbo-engine-id');
     });
 
-    it('should resolve dependencies with parameterized types (TypeLiteral)', () {
-      var injector = new ModuleInjector([moduleFactory()
-          ..bind(new TypeLiteral<List<num>>().type, toValue: [1, 2])
-          ..bind(new TypeLiteral<List<String>>().type,
-                 withAnnotation: StringList,
-                 toValue: ['1', '2'])
-          ..bind(DepedencyWithParameterizedList)
-      ]);
-      var instance = injector.get(DepedencyWithParameterizedList);
-
-      expect(instance).toBeAnInstanceOf(DepedencyWithParameterizedList);
-      expect(instance.nums).toEqual([1, 2]);
-      expect(instance.strs).toEqual(['1', '2']);
-    });
-
-    it('should resolve dependencies with parameterized types (TypeLiteral)', () {
-      var injector = new ModuleInjector([moduleFactory()
-        ..bind(new TypeLiteral<Map<num, String>>().type, toValue: {1 : 'first', 2: 'second'})
-        ..bind(AnotherDependencyWithParameterizedMap)
-        ..bind(DependencyWithParameterizedMap)
-      ]);
-      var instance = injector.get(AnotherDependencyWithParameterizedMap);
-
-      expect(instance).toBeAnInstanceOf(AnotherDependencyWithParameterizedMap);
-      expect(instance.map).toEqual({1 : 'first', 2: 'second'});
-
-      expect(() {
-        var wrongInstance = injector.get(DependencyWithParameterizedMap);
-      }).toThrow();
-    });
-
-    describe('dynamic parameter list', () {
-      it('should treat all-dynamic parameter list same as no parameter list', () {
-        var injector = new ModuleInjector([moduleFactory()
-          ..bind(new TypeLiteral<Map<dynamic, dynamic>>().type, toValue: {1 : 'first', 2: 'second'})
-          ..bind(DependencyWithParameterizedMap)
-          ..bind(DependencyWithMap)
-        ]);
-        var parameterizedMapInstance = injector.get(DependencyWithParameterizedMap);
-        var mapInstance = injector.get(DependencyWithMap);
-
-        expect(parameterizedMapInstance).toBeAnInstanceOf(DependencyWithParameterizedMap);
-        expect(parameterizedMapInstance.map).toEqual({1 : 'first', 2: 'second'});
-
-        expect(mapInstance).toBeAnInstanceOf(DependencyWithMap);
-        expect(mapInstance.map).toEqual({1 : 'first', 2: 'second'});
-      });
-
-      it('should treat parameter with no args same as parameter with all dynamic args', () {
-        var injector = new ModuleInjector([moduleFactory()
-          ..bind(Map, toValue: {1 : 'first', 2: 'second'})
-          ..bind(DependencyWithParameterizedMap)
-          ..bind(DependencyWithMap)
-        ]);
-        var parameterizedMapInstance = injector.get(DependencyWithParameterizedMap);
-        var mapInstance = injector.get(DependencyWithMap);
-
-        expect(parameterizedMapInstance).toBeAnInstanceOf(DependencyWithParameterizedMap);
-        expect(parameterizedMapInstance.map).toEqual({1 : 'first', 2: 'second'});
-
-        expect(mapInstance).toBeAnInstanceOf(DependencyWithMap);
-        expect(mapInstance.map).toEqual({1 : 'first', 2: 'second'});
-      });
-    });
-
     it('should resolve annotated primitive type', () {
       var injector = new ModuleInjector([moduleFactory()
           ..bind(AnnotatedPrimitiveDependency)
@@ -463,6 +368,18 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       ]);
       expect(injector.get(GenericParameterizedDependency))
           .toBeAnInstanceOf(GenericParameterizedDependency);
+    });
+
+    it('should error while resolving parameterized dependencies', () {
+      var module = moduleFactory();
+      expect(() => module.bind(ParameterizedDependency)).toThrowWith(
+        message:
+          injectorName == STATIC_NAME ?
+          "Type 'ParameterizedDependency' not found in generated typeFactory maps. "
+              "Is the type's constructor injectable and annotated for injection?" :
+          "ParameterizedType<bool, int> cannot be injected because it is parameterized "
+              "with non-generic types."
+      );
     });
 
     it('should allow modules and overriding providers', () {
