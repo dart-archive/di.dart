@@ -1,3 +1,10 @@
+# 3.0.0
+
+## Breaking Changes
+
+- **annotations:** Users must now explicitly import `di/annotations.dart` to use `@Injectable`
+- Supports newer versions of barback, code transformers, and analyzer
+
 # 2.1.0
 
 ## Features
