@@ -238,12 +238,12 @@ void main() {
 
   var static_factory = new GeneratedTypeFactories(
       type_factories_gen.typeFactories, type_factories_gen.parameterKeys);
-  createInjectorSpec(STATIC_NAME,
-      () => new Module.withReflector(static_factory));
+  createInjectorSpec(STATIC_NAME, () => new Module.withReflector(static_factory));
 
-  TypeReflector reflector = new DynamicTypeFactories();
-  createInjectorSpec(DYNAMIC_NAME,
-      () => new Module.withReflector(reflector));
+  Module.classAnnotations = [Injectable, InjectableTest];
+  Module.libAnnotations = [Injectables];
+  var reflector = new DynamicTypeFactories();
+  createInjectorSpec(DYNAMIC_NAME, () => new Module.withReflector(reflector));
 
   testKey();
   testCheckBindArgs();
@@ -298,10 +298,55 @@ testModule() {
         expect(() {
           new Module().bind(Engine, toInstanceOf: key(MockEngine));
         }).not.toThrow();
-
       });
     });
 
+    describe('assert annotations', () {
+      var classAnnotations, libAnnotations;
+
+      beforeEach(() {
+        // Save the module configuration
+        classAnnotations = Module.classAnnotations;
+        libAnnotations = Module.libAnnotations;
+      });
+
+      afterEach(() {
+        // Restore the original module configuration
+        Module.classAnnotations = classAnnotations;
+        Module.libAnnotations = libAnnotations;
+      });
+
+      it('should assert class level annotations', () {
+        // By default class annotated with `@Injectable` are detected
+        var reflector = new DynamicTypeFactories();
+        var module = new Module.withReflector(reflector);
+        expect(() =>module.bind(MockEngine)).not.toThrow();
+
+        // `EngineAnnotated` is not annotated with `@InjectableTest`
+        Module.classAnnotations = [InjectableTest];
+        reflector = new DynamicTypeFactories();
+        module = new Module.withReflector(reflector);
+        expect(() => module.bind(MockEngine)).toThrowWith(
+          message: "The class 'MockEngine' should be annotated with one of 'InjectableTest'"
+        );
+      });
+
+      it('should assert library level annotations', () {
+        // By default class listed in `@Injectables` are detected
+        var reflector = new DynamicTypeFactories();
+        var module = new Module.withReflector(reflector);
+        expect(() => module.bind(ClassOne)).not.toThrow();
+
+        // `EngineAnnotated` is not listed in `@InjectableTest`
+        Module.classAnnotations = [Injectable];
+        Module.libAnnotations = [InjectableTest];
+        reflector = new DynamicTypeFactories();
+        module = new Module.withReflector(reflector);
+        expect(() => module.bind(ClassOne)).toThrowWith(
+          message: "The class 'ClassOne' should be annotated with one of 'Injectable'"
+        );
+      });
+    });
   });
 }
 

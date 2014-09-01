@@ -2,6 +2,7 @@ library di.module;
 
 import "../key.dart";
 import "../check_bind_args.dart" show checkBindArgs;
+import "../annotations.dart";
 import "reflector.dart";
 import "reflector_dynamic.dart";
 import "errors.dart" show PRIMITIVE_TYPES;
@@ -85,14 +86,20 @@ class Module {
    */
   final TypeReflector reflector;
 
+  Map<Key, Binding> bindings = new Map<Key, Binding>();
+
+  /// Class level annotations
+  static var classAnnotations = <Type>[Injectable];
+
+  /// Lib level annotations (Injectable types are available in the `types` member field)
+  static var libAnnotations = <Type>[Injectables];
+
   Module(): reflector = DEFAULT_REFLECTOR;
 
   /**
    * Use a custom reflector instead of the default. Useful for testing purposes.
    */
   Module.withReflector(this.reflector);
-
-  Map<Key, Binding> bindings = new Map<Key, Binding>();
 
   /**
    * Copies all bindings of [module] into this one. Overwriting when conflicts are found.

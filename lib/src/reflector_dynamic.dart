@@ -9,7 +9,39 @@ class DynamicTypeFactories extends TypeReflector {
   /// caches of results calculated from mirroring
   final List<Function> _factories = new List<Function>();
   final List<List<Key>> _parameterKeys = new List<List<Key>>();
-  static List<List> lists = new List.generate(26, (i) => new List(i));
+  final List<List> lists = new List.generate(26, (i) => new List(i));
+
+  Set<Type> _injectableAnnotations;
+  Set<Type> _injectableTypes;
+
+  /**
+   * Asserts that the injected classes are set up for static injection. While this is not required
+   * for dynamic injection, asserting could help you catch error before switching to the static
+   * version of the DI.
+   *
+   * The injected classes should either be annotated with one of the `Module.classAnnotations` or
+   * listed in the `types` field of a `Module.libAnnotations`.
+   */
+  DynamicTypeFactories() {
+    assert(() {
+      var typesSymbol = new Symbol('types');
+      if (Module.classAnnotations != null) _injectableAnnotations = Module.classAnnotations.toSet();
+      if (Module.libAnnotations != null) {
+        _injectableTypes = new Set<Type>();
+        currentMirrorSystem().libraries.forEach((uri, LibraryMirror lm) {
+          lm.metadata.forEach((InstanceMirror im) {
+            var cm = im.type;
+            if (cm.hasReflectedType &&
+                Module.libAnnotations.contains(cm.reflectedType) &&
+                cm.declarations.containsKey(typesSymbol)) {
+              _injectableTypes.addAll(im.getField(typesSymbol).reflectee);
+            }
+          });
+        });
+      }
+      return true;
+    });
+  }
 
   Function factoryFor(Type type) {
     var key = new Key(type);
@@ -40,6 +72,20 @@ class DynamicTypeFactories extends TypeReflector {
 
   Function _generateFactory(Type type) {
     ClassMirror classMirror = _reflectClass(type);
+    assert(() {
+      var hasClassAnnotation = classMirror.metadata
+        .any((InstanceMirror im) {
+           var cm = im.type;
+           return cm.hasReflectedType &&
+                  _injectableAnnotations.contains(cm.reflectedType);
+         });
+      if (!hasClassAnnotation && !_injectableTypes.contains(type)) {
+        throw "The class '$type' should be annotated with one of "
+              "'${_injectableAnnotations.join(', ')}'";
+      }
+      return true;
+    });
+
     MethodMirror ctor = classMirror.declarations[classMirror.simpleName];
     int length = ctor.parameters.length;
     Function create = classMirror.newInstance;
