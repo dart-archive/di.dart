@@ -15,7 +15,7 @@ class Binding {
   Function factory;
   static bool printInjectWarning = true;
 
-  _checkPrimitive(Key key) {
+  bool _checkPrimitive(Key key) {
     if (PRIMITIVE_TYPES.contains(key)) {
       throw "Cannot bind primitive type '${key.type}'.";
     }

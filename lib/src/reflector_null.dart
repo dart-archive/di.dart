@@ -7,11 +7,14 @@ import 'errors.dart';
 TypeReflector getReflector() => new NullReflector();
 
 class NullReflector extends TypeReflector {
-  factoryFor(Type type) => throw new NullReflectorError();
-  parameterKeysFor(Type type) => throw new NullReflectorError();
-  addAll(Map<Type, Function> factories, Map<Type, List<Key>> parameterKeys) =>
+  Function factoryFor(Type type) => throw new NullReflectorError();
+
+  List<Key> parameterKeysFor(Type type) => throw new NullReflectorError();
+
+  void addAll(Map<Type, Function> factories, Map<Type, List<Key>> parameterKeys) =>
       throw new NullReflectorError();
-  add(Type type, Function factory, List<Key> parameterKeys) =>
+
+  void add(Type type, Function factory, List<Key> parameterKeys) =>
       throw new NullReflectorError();
 }
 
