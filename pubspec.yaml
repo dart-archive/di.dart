@@ -1,10 +1,11 @@
 name: di
-version: 2.0.2
+version: 3.0.0
 authors:
 - Vojta Jina <vojta.jina@gmail.com>
 - Pavel Jbanov <pavelgj@gmail.com>
 - Anting Shen <shenantingtt@gmail.com>
 - Misko Hevery <misko@hevery.com>
+- Victor Berchet <victor@suumit.com>
 description: Dependency Injection framework
 homepage: https://github.com/angular/di.dart
 environment:

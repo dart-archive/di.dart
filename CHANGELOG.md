@@ -1,3 +1,12 @@
+# 3.0.0
+
+## Breaking Change
+
+- When assert mode is enabled, the dynamic version of the DI will make sure that the classes are
+  set up for injection when they are bound. By default classes should either be annotated with
+  `@Injectable` or listed in a library level `@Injectables` annotations. The class level and library
+  levels annotations could be changed in `Module.classAnnotations` and `Module.libAnnotations`.
+
 # 2.0.2
 
 ## Features
@@ -91,7 +100,7 @@ var injector = new ModuleInjector([moduleFactory()
     default `TypeReflector` from mirroring to static factories. Enable transformer to use
     static factories, disable to use mirrors. More docs on the transformer can be found in
     `transformer.dart`
-    
+
 ### Deprecated module methods removed
   - `.value`, `.type`, `.factory`, `.factoryByKey` are gone. Use `..bind`.
 
