@@ -474,7 +474,7 @@ class CrawlerVisitor {
           source.toString(), newImport,
           nextCompilationUnit, nextCompilationUnit.element, currentFile.chunk);
     }
-    if (isDeferredImport(library)) {
+    if (library.isDeferred || isDeferredImport(library)) {
       var childChunk = currentFile.chunk.createChild(library);
       deferred.add(new SourceFile(source.toString(), sourceFile.entryPointImport,
           nextCompilationUnit, nextCompilationUnit.element, childChunk));
@@ -484,6 +484,7 @@ class CrawlerVisitor {
   }
 }
 
+// TODO(cbracken) eliminate once support for old-style is removed in SDK 1.7.0
 bool isDeferredImport(Library library) {
   var isDeferred = false;
   library.element.metadata.forEach((ElementAnnotation annotation) {
@@ -518,6 +519,8 @@ class Library {
   final String name;
 
   Library(this.element, this.uri, this.compilationUnit, this.name);
+
+  bool get isDeferred => element is ImportElement && element.isDeferred;
 
   String toString() => 'Library[$name]';
 }

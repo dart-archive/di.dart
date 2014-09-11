@@ -9,7 +9,7 @@ authors:
 description: Dependency Injection framework
 homepage: https://github.com/angular/di.dart
 environment:
-  sdk: '>=1.0.0'
+  sdk: '>=1.6.0'
 dependencies:
   analyzer: '>=0.15.0 <0.22.0'
   barback: '>=0.13.0 <0.16.0'

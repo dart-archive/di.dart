@@ -3,23 +3,14 @@ import 'dart:async';
 import 'annotations.dart';
 import 'common1.dart';
 
-@lazyA
-import 'a.dart' as a;
-
-@lazyB
-import 'b.dart' as b;
-
-@lazyC
-import 'c.dart' as c;
-
-const lazyA = const DeferredLibrary('lib_a');
-const lazyB = const DeferredLibrary('lib_b');
-const lazyC = const DeferredLibrary('lib_c');
+import 'a.dart' deferred as a;
+import 'b.dart' deferred as b;
+import 'c.dart' deferred as c;
 
 void main() {
-  lazyA.load().then(onALoaded);
-  lazyB.load().then(onBLoaded);
-  lazyC.load().then(onCLoaded);
+  a.loadLibrary().then(onALoaded);
+  b.loadLibrary().then(onBLoaded);
+  c.loadLibrary().then(onCLoaded);
 }
 
 void onALoaded(_) {
