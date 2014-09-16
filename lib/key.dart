@@ -38,12 +38,13 @@ class Key {
    * Creates a new key or returns one from a cache if given the same inputs that
    * a previous call had.  E.g. `identical(new Key(t, a), new Key(t, a))` holds.
    */
-  factory Key(Type type, [Type annotation]) {
+  factory Key(Type type, [Object annotation]) {
     // Don't use Map.putIfAbsent -- too slow!
     var annotationToKey = _typeToAnnotationToKey[type];
     if (annotationToKey == null) {
       _typeToAnnotationToKey[type] = annotationToKey = new Map();
     }
+    annotation = _toType(annotation);
     Key key = annotationToKey[annotation];
     if (key == null) {
       annotationToKey[annotation] =
@@ -61,7 +62,13 @@ class Key {
     }
     return asString;
   }
+
+  static Type _toType(obj) {
+    if (obj == null) return null;
+    if (obj is Type) return obj;
+    return obj.runtimeType;
+  }
 }
 
 /// shortcut function
-Key key(Type type, [Type annotation]) => new Key(type, annotation);
+Key key(Type type, [annotation]) => new Key(type, annotation);
