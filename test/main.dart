@@ -376,6 +376,17 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       expect(instance.id).toEqual('turbo-engine-id');
     });
 
+    it('should support passing annotations instead of to annotation types', () {
+      var injector = new ModuleInjector([moduleFactory()
+          ..bind(Engine, withAnnotation: const Turbo(), toImplementation: TurboEngine)
+          ..bind(Car, toValue: new Engine())
+      ]);
+      var instance = injector.getByKey(new Key(Engine, Turbo));
+
+      expect(instance).toBeAnInstanceOf(TurboEngine);
+      expect(instance.id).toEqual('turbo-engine-id');
+    });
+
     it('should fail if the type was not bound at injector creation', () {
       var module = moduleFactory();
       var injector = new ModuleInjector([module]);
@@ -855,6 +866,10 @@ testKey() {
       var pType = (p.type as ClassMirror).reflectedType;
 
       expectEquals(new Key(Engine), new Key(pType), true);
+    });
+
+    it('should support passing annotations instead of annotation types', () {
+      expectEquals(new Key(Engine, Old), new Key(Engine, const Old()), true);
     });
   });
 }
