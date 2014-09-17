@@ -19,6 +19,7 @@ import 'package:di/type_literal.dart';
 import 'package:di/src/reflector_static.dart';
 import 'package:di/src/reflector_dynamic.dart';
 import 'package:di/check_bind_args.dart';
+import 'package:di/generation_utils.dart';
 import 'package:di/src/module.dart';
 
 import 'test_annotations.dart';
@@ -86,19 +87,28 @@ class Car {
   Car(this.engine, this.injector);
 }
 
-class Lemon {
-  final engine;
-  final Injector injector;
-
-  Lemon(this.engine, this.injector);
-}
-
 @InjectableTest()
 class Porsche {
   Engine engine;
   Injector injector;
 
-  Porsche(@Turbo() this.engine, this.injector);
+  Porsche(@EngineType('turbo') this.engine, this.injector);
+}
+
+@InjectableTest()
+class OldCar {
+  Engine engine;
+  Injector injector;
+
+  OldCar(@EngineType('old') this.engine, this.injector);
+}
+
+@InjectableTest()
+class PorscheClone {
+  Engine engine;
+  Injector injector;
+
+  PorscheClone(@EngineType(Porsche) this.engine, this.injector);
 }
 
 class NumDependency {
@@ -251,10 +261,12 @@ void main() {
   createInjectorSpec(DYNAMIC_NAME, () => new Module.withReflector(reflector));
 
   testKey();
+  testGenerationUtils();
+  testErrors();
   testCheckBindArgs();
 }
 
-testModule() {
+void testModule() {
 
   describe('Module', () {
 
@@ -360,7 +372,7 @@ testModule() {
 
 typedef Module ModuleFactory();
 
-createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
+void createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 
   describe(injectorName, () {
 
@@ -375,21 +387,10 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 
     it('should instantiate an annotated type', () {
       var injector = new ModuleInjector([moduleFactory()
-          ..bind(Engine, withAnnotation: Turbo, toImplementation: TurboEngine)
-          ..bind(Car, toValue: new Engine())
-      ]);
-      var instance = injector.getByKey(new Key(Engine, Turbo));
-
-      expect(instance).toBeAnInstanceOf(TurboEngine);
-      expect(instance.id).toEqual('turbo-engine-id');
-    });
-
-    it('should support passing annotations instead of to annotation types', () {
-      var injector = new ModuleInjector([moduleFactory()
           ..bind(Engine, withAnnotation: const Turbo(), toImplementation: TurboEngine)
           ..bind(Car, toValue: new Engine())
       ]);
-      var instance = injector.getByKey(new Key(Engine, Turbo));
+      var instance = injector.getByKey(new Key(Engine, const Turbo()));
 
       expect(instance).toBeAnInstanceOf(TurboEngine);
       expect(instance.id).toEqual('turbo-engine-id');
@@ -429,20 +430,36 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
     it('should resolve complex dependencies', () {
       var injector = new ModuleInjector([moduleFactory()
           ..bind(Porsche)
-          ..bind(TurboEngine)
-          ..bind(Engine, withAnnotation: Turbo, toImplementation: TurboEngine)
+          ..bind(OldCar)
+          ..bind(Engine, withAnnotation: const EngineType('turbo'), toImplementation: TurboEngine)
+          ..bind(Engine, withAnnotation: const EngineType('old'), toImplementation: BrokenOldEngine)
       ]);
-      var instance = injector.get(Porsche);
 
-      expect(instance).toBeAnInstanceOf(Porsche);
-      expect(instance.engine.id).toEqual('turbo-engine-id');
+      var porsche = injector.get(Porsche);
+      expect(porsche).toBeAnInstanceOf(Porsche);
+      expect(porsche.engine.id).toEqual('turbo-engine-id');
+
+      var oldCar = injector.get(OldCar);
+      expect(oldCar).toBeAnInstanceOf(OldCar);
+      expect(oldCar.engine.id).toEqual('broken-old-engine-id');
+    });
+
+    it('should support annotations with types', () {
+      var injector = new ModuleInjector([moduleFactory()
+          ..bind(PorscheClone)
+          ..bind(Engine, withAnnotation: const EngineType(Porsche), toImplementation: TurboEngine)
+      ]);
+
+      var porsche = injector.get(PorscheClone);
+      expect(porsche).toBeAnInstanceOf(PorscheClone);
+      expect(porsche.engine.id).toEqual('turbo-engine-id');
     });
 
     it('should resolve dependencies with parameterized types (TypeLiteral)', () {
       var injector = new ModuleInjector([moduleFactory()
           ..bind(new TypeLiteral<List<num>>().type, toValue: [1, 2])
           ..bind(new TypeLiteral<List<String>>().type,
-                 withAnnotation: StringList,
+                 withAnnotation: const StringList(),
                  toValue: ['1', '2'])
           ..bind(DepedencyWithParameterizedList)
       ]);
@@ -506,7 +523,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
     it('should resolve annotated primitive type', () {
       var injector = new ModuleInjector([moduleFactory()
           ..bind(AnnotatedPrimitiveDependency)
-          ..bind(String, toValue: 'Worked!', withAnnotation: Turbo)
+          ..bind(String, toValue: 'Worked!', withAnnotation: const Turbo())
       ]);
       var instance = injector.get(AnnotatedPrimitiveDependency);
 
@@ -832,7 +849,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
 }
 
 
-testKey() {
+void testKey() {
   describe('Key', () {
     void expectEquals(x, y, bool truthValue) {
       expect(x == y).toEqual(truthValue);
@@ -845,12 +862,7 @@ testKey() {
     });
 
     it('should be equal to another key if type and annotation are the same', () {
-      expectEquals(new Key(Car, Turbo), new Key(Car, Turbo), true);
-    });
-
-    it('should not be equal to another key where type and annotation are same '
-        'but reversed', () {
-      expectEquals(new Key(Car, Turbo), new Key(Turbo, Car), false);
+      expectEquals(new Key(Car, const Turbo()), new Key(Car, const Turbo()), true);
     });
 
     it('should not be equal to another key if types are different', () {
@@ -858,12 +870,12 @@ testKey() {
     });
 
     it('should not be equal to another key if annotations are different', () {
-      expectEquals(new Key(Car, Turbo), new Key(Car, Old), false);
+      expectEquals(new Key(Car, const Turbo()), new Key(Car, const Old()), false);
     });
 
     it('should not be equal to another key if type is different and annotation'
         ' is same', () {
-      expectEquals(new Key(Engine, Old), new Key(Car, Old), false);
+      expectEquals(new Key(Engine, const Old()), new Key(Car, const Old()), false);
     });
 
     it('should be equal to a mirrored key of the same type', () {
@@ -875,15 +887,44 @@ testKey() {
 
       expectEquals(new Key(Engine), new Key(pType), true);
     });
+  });
+}
 
-    it('should support passing annotations instead of annotation types', () {
-      expectEquals(new Key(Engine, Old), new Key(Engine, const Old()), true);
+void testGenerationUtils() {
+  describe('Generation Utils', () {
+    describe("toValidDartId", () {
+      it("should replace all non-alphanumeric characters with _", () {
+        expect(toValidDartId("%abc123%()@")).toEqual("_abc123_");
+      });
+
+      it("should do nothing when the given string has only alphanumeric characters", () {
+        expect(toValidDartId("abc123")).toEqual("abc123");
+      });
     });
   });
 }
 
+void testErrors() {
+  describe('NoProviderError', () {
+    it("should return a descriptive error message", () {
+      final e = new NoProviderError(new Key(Engine));
+      expect(e.toString()).toContain("No provider found");
+      expect(e.toString()).not.toContain("the annotation passed");
+    });
 
-testCheckBindArgs() {
+    it("should mention compile-time constants when the given key has an annotation", () {
+      final e = new NoProviderError(new Key(Engine, const Turbo()));
+      expect(e.toString()).toContain("Make sure the annotation");
+    });
+
+    it("should have a separate error message when key the given key is a primitive", () {
+      final e = new NoProviderError(new Key(int));
+      expect(e.toString()).toContain("Cannot inject a primitive");
+    });
+  });
+}
+
+void testCheckBindArgs() {
   describe('CheckBindArgs', () {
     var _ = DEFAULT_VALUE;
     it('should return true when args are well formed', () {

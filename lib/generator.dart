@@ -18,6 +18,7 @@ import 'package:analyzer/src/generated/sdk_io.dart' show DirectoryBasedDartSdk;
 import 'package:analyzer/src/generated/element.dart';
 import 'package:analyzer/src/generated/engine.dart';
 import 'package:path/path.dart' as path;
+import 'generation_utils.dart' as genUtils;
 
 import 'dart:io';
 
@@ -167,31 +168,36 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
       paramList.write('const [');
     } else {
       paramList.write('[');
-      paramList.write(constr.parameters.map((param) {
-        if (param.type.element is! ClassElement) {
-          throw 'Unable to resolve type for constructor parameter '
-                '"${param.name}" for type "$clazz" in ${clazz.source}';
-        }
-        var annotations = [];
-        if (param.metadata.isNotEmpty) {
-          annotations = param.metadata.map((item) => item.element.returnType.name);
-        }
-        String keyName = annotations.isNotEmpty ?
-            '${param.type.name}_${annotations.first}' :
-              param.type.name;
-        param.type.typeArguments.forEach((arg) => keyName = '${keyName}_${arg.name}');
-        String output = '_KEY_${keyName}';
-        if (addedKeys.add(keyName)){
-          var annotationParam = "";
-          if (param.metadata.isNotEmpty) {
-            var p = resolveClassIdentifier(param.metadata.first.element.returnType);
-            annotationParam = ", $p";
+
+      var params = [];
+      if (constr.node != null) {
+        params = constr.node.parameters.parameters.map((FormalParameter param) {
+          final paramType = param.element.type;
+          if (paramType.element is! ClassElement) {
+            throw 'Unable to resolve type for constructor parameter '
+                '"${param.element.name}" for type "$clazz" in ${clazz.source}';
           }
-          var clsId = resolveClassIdentifier(param.type, param.type.typeArguments);
-          toBeAdded[keyName]='final Key _KEY_${keyName} = new Key($clsId$annotationParam);\n';
-        }
-        return output;
-      }).join(', '));
+
+          final annotation = genUtils.parseAnnotation(param, resolveClassIdentifier);
+
+          String keyName = annotation != null ?
+              '${paramType.name}_${annotation.key}' :
+              paramType.name;
+          paramType.typeArguments.forEach((arg) => keyName = '${keyName}_${arg.name}');
+
+          String output = '_KEY_${keyName}';
+          if (addedKeys.add(keyName)){
+            var annotationParam = "";
+            if (annotation != null) {
+              annotationParam = ", ${annotation.constructor}";
+            }
+            var clsId = resolveClassIdentifier(paramType, paramType.typeArguments);
+            toBeAdded[keyName]='final Key _KEY_${keyName} = new Key($clsId$annotationParam);\n';
+          }
+          return output;
+        });
+      }
+      paramList.write(params.join(', '));
     }
     paramList.write('],\n');
     if (!skip) {

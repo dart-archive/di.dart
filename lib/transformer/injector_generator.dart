@@ -7,6 +7,7 @@ import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
 import 'package:path/path.dart' as path;
 import 'options.dart';
+import '../generation_utils.dart' as genUtils;
 
 /**
  * Pub transformer which generates type factories for all injectable types
@@ -308,25 +309,28 @@ class _Processor {
 
       paramsBuffer.write('  $typeName: ');
       paramsBuffer.write(ctor.parameters.isEmpty ? 'const[' : '[');
-      var params = ctor.parameters.map((param) {
-        String typeName = resolveClassName(param.type.element, (param.type).typeArguments);
-        Iterable<ClassElement> annotations = [];
-        if (param.metadata.isNotEmpty) {
-          annotations = param.metadata.map(
-              (item) => item.element.returnType.element);
-        }
 
-        var keyName = '_KEY_${param.type.name}' + (annotations.isNotEmpty ? '_${annotations.first}' : '');
-        var typeArgs = param.type.typeArguments;
-        if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
-          typeArgs.forEach((arg) => keyName = ('${keyName}_${arg.name}'));
-        }
-        if (addedKeys.add(keyName)) {
-          keysBuffer.writeln('final Key $keyName = new Key($typeName' +
-              (annotations.isNotEmpty ? ', ${resolveClassName(annotations.first)});' : ');'));
-        }
-        return keyName;
-      });
+      var params = [];
+      if (ctor.node != null) {
+        params = ctor.node.parameters.parameters.map((FormalParameter param) {
+          final paramType = param.element.type;
+          final typeName = resolveClassName(paramType.element, paramType.typeArguments);
+
+          final annotation = genUtils.parseAnnotation(param,
+              (type) => resolveClassName(type.element));
+          var keyName = '_KEY_${paramType.name}' + (annotation != null ? '_${annotation.key}' : '');
+          var typeArgs = paramType.typeArguments;
+          if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
+            typeArgs.forEach((arg) => keyName = ('${keyName}_${arg.name}'));
+          }
+
+          if (addedKeys.add(keyName)) {
+            keysBuffer.writeln('final Key $keyName = new Key($typeName' +
+                (annotation != null ? ', ${annotation.constructor});' : ');'));
+          }
+          return keyName;
+        });
+      }
       paramsBuffer.write('${params.join(', ')}],\n');
     }
 

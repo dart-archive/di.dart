@@ -256,8 +256,8 @@ class DynamicTypeFactories extends TypeReflector {
       }
       ClassMirror pTypeMirror = (p.type as ClassMirror);
       var pType = pTypeMirror.reflectedType;
-      var annotationType = p.metadata.isNotEmpty ? p.metadata.first.type.reflectedType : null;
-      return new Key(pType, annotationType);
+      var annotation = p.metadata.isNotEmpty ? p.metadata.first.reflectee : null;
+      return new Key(pType, annotation);
     }, growable:false);
   }
 
