@@ -1,4 +1,4 @@
-[![Build Status](https://drone.io/github.com/angular/di.dart/status.png)](https://drone.io/github.com/angular/di.dart/latest)
+[![Build Status](https://travis-ci.org/angular/di.dart.svg?branch=master)](https://travis-ci.org/angular/di.dart)
 
 # Dependency Injection (DI) framework
 
