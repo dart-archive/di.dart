@@ -37,6 +37,22 @@ class InjectableTest {
   const InjectableTest();
 }
 
+@InjectableTest()
+class ParameterizedClass<T> {
+  T t;
+}
+
+class GenericArgument {
+
+}
+
+@InjectableTest()
+class ClassWithParameterizedDependency {
+  ParameterizedClass<GenericArgument> _parameterizedClass;
+
+  ClassWithParameterizedDependency(this._parameterizedClass);
+}
+
 // just some classes for testing
 @InjectableTest()
 class Engine {
@@ -432,6 +448,18 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       expect(instance).toBeAnInstanceOf(DepedencyWithParameterizedList);
       expect(instance.nums).toEqual([1, 2]);
       expect(instance.strs).toEqual(['1', '2']);
+    });
+
+    it('should resolve dependencies with parameterized types using non primitive', () {
+      var injector = new ModuleInjector([moduleFactory()
+          ..bind(new TypeLiteral<ParameterizedClass<GenericArgument>>().type, 
+              inject: [], 
+              toFactory: () => new ParameterizedClass<GenericArgument>())
+          ..bind(ClassWithParameterizedDependency)
+      ]);
+      var instance = injector.get(ClassWithParameterizedDependency);
+
+      expect(instance).toBeAnInstanceOf(ClassWithParameterizedDependency);
     });
 
     it('should resolve dependencies with parameterized types (TypeLiteral)', () {
