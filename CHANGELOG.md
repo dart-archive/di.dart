@@ -1,3 +1,16 @@
+# 3.1.0
+
+## New features
+
+- Classes could be annotated with a child of `Injectable` to mark them as injectable. Before only
+  `Injectable` was allowed.
+
+- An annotation instance must be passed when binding with an annotation.
+  Before: `module.bind(MyType, withAnnotation: MyAnnotation);`
+  After: `module.bind(MyType, withAnnotation: const MyAnnotation());`
+
+  The former syntax is deprecated and the support will be dropped in the next major release.
+
 # 3.0.0
 
 ## Breaking Change
