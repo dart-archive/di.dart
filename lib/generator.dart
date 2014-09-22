@@ -285,8 +285,12 @@ class CompilationUnitVisitor {
     }
     for (ElementAnnotation ann in classElement.metadata) {
       if (ann.element is ConstructorElement) {
-        ConstructorElement con = ann.element;
-        if (classAnnotations.contains(getQualifiedName(con.enclosingElement.type))) {
+        ClassElement classEl = ann.element.enclosingElement;
+        List<DartType> types = [classEl.type]..addAll(classEl.allSupertypes);
+        if (types.any((DartType t) => classAnnotations.contains(getQualifiedName(t)))) {
+          // The class is injectable when the metadata is either:
+          // - an instance of any `classAnnotations` types,
+          // - a subtype of any `classAnnotations` types.
           if (typeFactoryTypes[source.chunk] == null) {
             typeFactoryTypes[source.chunk] = <ClassElement>[];
           }

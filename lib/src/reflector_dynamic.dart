@@ -11,8 +11,8 @@ class DynamicTypeFactories extends TypeReflector {
   final List<List<Key>> _parameterKeys = new List<List<Key>>();
   final List<List> lists = new List.generate(26, (i) => new List(i));
 
-  Set<Type> _injectableAnnotations;
-  Set<Type> _injectableTypes;
+  Iterable<ClassMirror> _injectableAnnotations;
+  Iterable<Type> _injectableTypes;
 
   /**
    * Asserts that the injected classes are set up for static injection. While this is not required
@@ -25,7 +25,9 @@ class DynamicTypeFactories extends TypeReflector {
   DynamicTypeFactories() {
     assert(() {
       var typesSymbol = new Symbol('types');
-      if (Module.classAnnotations != null) _injectableAnnotations = Module.classAnnotations.toSet();
+      if (Module.classAnnotations != null) {
+        _injectableAnnotations = Module.classAnnotations.toSet().map((Type t) => reflectClass(t));
+      }
       if (Module.libAnnotations != null) {
         _injectableTypes = new Set<Type>();
         currentMirrorSystem().libraries.forEach((uri, LibraryMirror lm) {
@@ -72,16 +74,20 @@ class DynamicTypeFactories extends TypeReflector {
 
   Function _generateFactory(Type type) {
     ClassMirror classMirror = _reflectClass(type);
+
     assert(() {
-      var hasClassAnnotation = classMirror.metadata
-        .any((InstanceMirror im) {
+      // TODO(vicb): Skip the assertion in JS where `ClassMirror.isSubtypeOf()` is not implemented
+      if (1.0 is int) return true;
+      // Assert than:
+      // - either the class is annotated with a subtype of any `_injectableAnnotations`,
+      // - or the class type is an `_injectableTypes`.
+      var hasClassAnnotation = classMirror.metadata.any((InstanceMirror im) {
            var cm = im.type;
-           return cm.hasReflectedType &&
-                  _injectableAnnotations.contains(cm.reflectedType);
+           return _injectableAnnotations.any((ClassMirror c) => cm.isSubtypeOf(c));
          });
       if (!hasClassAnnotation && !_injectableTypes.contains(type)) {
         throw "The class '$type' should be annotated with one of "
-              "'${_injectableAnnotations.join(', ')}'";
+              "'${_injectableAnnotations.map((cm) => cm.reflectedType).join(', ')}'";
       }
       return true;
     });

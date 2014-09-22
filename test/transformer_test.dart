@@ -12,7 +12,7 @@ import 'package:di/transformer/injector_generator.dart';
 import 'package:guinness/guinness.dart';
 
 main() {
-  describe('generator', () {
+  describe('transformer', () {
     var injectableAnnotations = [];
     var options = new TransformOptions(
         injectableAnnotations: injectableAnnotations,
@@ -768,6 +768,42 @@ main() {
 }'''
             });
       });
+
+      it('supports using a child of an injectable annotations as an injection marker', () {
+        injectableAnnotations.add('di.annotations.Injectable');
+        return generates(phases,
+            inputs: {
+              'di|lib/annotations.dart': PACKAGE_DI,
+              'a|web/main.dart': '''
+
+                  library a;
+
+                  import 'package:di/annotations.dart';
+
+                  class Child implements Injectable {
+                    const Child();
+                  }
+
+                  @Child()
+                  class Engine {
+                    Engine();
+                  }
+
+                  main() {}
+                  '''
+            },
+            imports: [
+              "import 'main.dart' as import_0;",
+            ],
+            factories: [
+              'import_0.Engine: () => new import_0.Engine(),',
+            ],
+            paramKeys: [
+              'import_0.Engine: const[],'
+            ]).whenComplete(() {
+              injectableAnnotations.clear();
+            });
+      });
   });
 }
 
@@ -838,6 +874,10 @@ library di.annotations;
 class Injectables {
   final List<Type> types;
   const Injectables(this.types);
+}
+
+class Injectable {
+  const Injectable();
 }
 ''';
 

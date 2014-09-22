@@ -37,13 +37,18 @@ class InjectableTest {
   const InjectableTest();
 }
 
+/// The class should be injectable if the annotation is a child of an injectable annotation
+ class InjectableChild implements Injectable {
+  const InjectableChild();
+}
+
 // just some classes for testing
 @InjectableTest()
 class Engine {
   final String id = 'v8-id';
 }
 
-@Injectable()
+@InjectableChild()
 class MockEngine implements Engine {
   final String id = 'mock-id';
 }
@@ -303,6 +308,9 @@ testModule() {
 
     describe('assert annotations', () {
       var classAnnotations, libAnnotations;
+
+      // The assertion is not activated in JS
+      if (1.0 is int) return;
 
       beforeEach(() {
         // Save the module configuration

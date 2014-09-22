@@ -37,13 +37,12 @@ class _Processor {
   /** Asset ID for the location of the generated file, for imports. */
   AssetId _generatedAssetId;
 
-  /** Resolved injectable annotations of the form `@Injectable()`. */
+  /** Resolved injectable annotations of the form `@injectable`. */
   final List<TopLevelVariableElement> injectableMetaConsts =
       <TopLevelVariableElement>[];
 
-  /** Resolved injectable annotations of the form `@injectable`. */
-  final List<ConstructorElement> injectableMetaConstructors =
-      <ConstructorElement>[];
+  /** Resolved injectable annotations of the form `@Injectable()`. */
+  final List<DartType> injectableTypes = <DartType>[];
 
   /** Default list of injectable consts */
   static const List<String> defaultInjectableMetaConsts = const [
@@ -92,7 +91,7 @@ class _Processor {
       }
       var cls = resolver.getType(metaName);
       if (cls != null && cls.unnamedConstructor != null) {
-        injectableMetaConstructors.add(cls.unnamedConstructor);
+        injectableTypes.add(cls.type);
         continue;
       }
       if (!DEFAULT_INJECTABLE_ANNOTATIONS.contains(metaName)) {
@@ -187,9 +186,9 @@ class _Processor {
       if (meta.element is PropertyAccessorElement &&
           injectableMetaConsts.contains(meta.element.variable)) {
         return true;
-      } else if (meta.element is ConstructorElement &&
-          injectableMetaConstructors.contains(meta.element)) {
-        return true;
+      } else if (meta.element is ConstructorElement) {
+        DartType metaType = meta.element.enclosingElement.type;
+        return injectableTypes.any((DartType t) => metaType.isSubtypeOf(t));
       }
     }
     return false;
