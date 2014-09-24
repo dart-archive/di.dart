@@ -1,3 +1,9 @@
+# 3.1.1
+
+## Bug fix
+
+- Revert "perf(Binding): saves a call to `reflector.parameterKeysFor()`" which is buggy
+
 # 3.1.0
 
 ## New features
