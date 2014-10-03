@@ -77,7 +77,7 @@ class DynamicTypeFactories extends TypeReflector {
 
     assert(() {
       // TODO(vicb): Skip the assertion in JS where `ClassMirror.isSubtypeOf()` is not implemented
-      if (1.0 is int) return true;
+      if (!Module.assertAnnotations || 1.0 is int) return true;
       // Assert than:
       // - either the class is annotated with a subtype of any `_injectableAnnotations`,
       // - or the class type is an `_injectableTypes`.

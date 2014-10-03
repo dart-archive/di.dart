@@ -307,7 +307,7 @@ testModule() {
     });
 
     describe('assert annotations', () {
-      var classAnnotations, libAnnotations;
+      var classAnnotations, libAnnotations, assertAnnotations;
 
       // The assertion is not activated in JS
       if (1.0 is int) return;
@@ -316,12 +316,14 @@ testModule() {
         // Save the module configuration
         classAnnotations = Module.classAnnotations;
         libAnnotations = Module.libAnnotations;
+        assertAnnotations = Module.assertAnnotations;
       });
 
       afterEach(() {
         // Restore the original module configuration
         Module.classAnnotations = classAnnotations;
         Module.libAnnotations = libAnnotations;
+        Module.assertAnnotations = assertAnnotations;
       });
 
       it('should assert class level annotations', () {
@@ -353,6 +355,14 @@ testModule() {
         expect(() => module.bind(ClassOne)).toThrowWith(
           message: "The class 'ClassOne' should be annotated with one of 'Injectable'"
         );
+      });
+
+      it('should not assert annotations when the check is disabled', () {
+        Module.assertAnnotations = false;
+        Module.classAnnotations = [InjectableTest];
+        var reflector = new DynamicTypeFactories();
+        var module = new Module.withReflector(reflector);
+        expect(() => module.bind(MockEngine)).not.toThrow();
       });
     });
   });
