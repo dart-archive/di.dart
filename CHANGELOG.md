@@ -1,3 +1,10 @@
+# 3.2.0
+
+## New feature
+
+- It is now possible to disable annotation assertion by setting `Module.assertAnnotations` to
+  `false` (the feature is still enabled by default)
+
 # 3.1.1
 
 ## Bug fix
