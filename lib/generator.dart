@@ -81,10 +81,16 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport, List<Strin
 
   typeFactoryTypes.forEach((Chunk chunk, List<ClassElement> classes) {
     List<String> requiredImports = <String>[];
-    String resolveClassIdentifier(InterfaceType type, [List typeArgs]) {
+    String resolveClassIdentifier(InterfaceType type, [List typeArgs,
+        bool usedToGenerateConstructor = false]) {
       final TYPE_LITERAL = 'TypeLiteral';
       if (type.element.library.isDartCore) {
-        if (type.typeParameters.isNotEmpty) {
+
+        //workaround for https://github.com/angular/di.dart/issues/183
+        final canUseTypeLiteral = typeMapping.containsKey(TYPE_LITERAL) &&
+            !usedToGenerateConstructor;
+
+        if (type.typeParameters.isNotEmpty && canUseTypeLiteral) {
           return 'new ${resolveClassIdentifier(typeMapping[TYPE_LITERAL])}<$type>().type';
         }
         return type.name;
@@ -147,7 +153,7 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
     List<String> factoryKeys = new List<String>();
     bool skip = false;
     var className = getUniqueName(clazz.type);
-    var classType = resolveClassIdentifier(clazz.type);
+    var classType = resolveClassIdentifier(clazz.type, [], true);
     if (addedKeys.add(className)) {
       toBeAdded[className] =
           'final Key _KEY_$className = new Key($classType);\n';

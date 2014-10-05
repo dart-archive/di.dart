@@ -94,7 +94,7 @@ class Module {
   /// Lib level annotations (Injectable types are available in the `types` member field)
   static var libAnnotations = <Type>[Injectables];
 
-  static bool assertAnnotations = true;
+  static bool assertAnnotations = false;
 
   Module(): reflector = DEFAULT_REFLECTOR;
 

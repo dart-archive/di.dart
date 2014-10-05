@@ -7,7 +7,9 @@
   IntDependency,
   DoubleDependency,
   BoolDependency,
-  StringDependency
+  StringDependency,
+
+  Expando // used to test that generator can handle core types in @Injectables
 ])
 library di.tests;
 
@@ -317,6 +319,7 @@ testModule() {
         classAnnotations = Module.classAnnotations;
         libAnnotations = Module.libAnnotations;
         assertAnnotations = Module.assertAnnotations;
+        Module.assertAnnotations = true;
       });
 
       afterEach(() {

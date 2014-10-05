@@ -1,3 +1,12 @@
+# 3.3.0
+
+This release makes DI 3.0 backward compatible with DI 2.0.
+
+- Annotation assertions are now disabled by default. To enable them set
+  `Module.assertAnnotations` to `true`.
+- The `di.dart` library now exports Injectable and Injectables.
+- Core types can be listed in a library level `@Injectables` annotation.
+
 # 3.2.0
 
 ## New feature
