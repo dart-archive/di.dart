@@ -45,7 +45,12 @@ class NoProviderError extends ResolvingError {
     if (PRIMITIVE_TYPES.contains(root)) {
       return "Cannot inject a primitive type of $root! $resolveChain";
     }
-    return "No provider found for $root! $resolveChain";
+
+    var annotationSuffix = "";
+    if (root.annotation != null) {
+      annotationSuffix = " Make sure the annotation passed to `bind` is a compile-time constant.";
+    }
+    return "No provider found for $root!$annotationSuffix $resolveChain";
   }
 }
 

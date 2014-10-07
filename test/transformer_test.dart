@@ -714,8 +714,9 @@ main() {
               'a|web/main.dart': '''
                   import "package:inject/inject.dart";
 
-                  class Turbo {
-                    const Turbo();
+                  class EngineType {
+                    final String value;
+                    const EngineType(this.value);
                   }
 
                   @inject
@@ -723,7 +724,7 @@ main() {
 
                   @inject
                   class Car {
-                    Car(@Turbo() Engine engine);
+                    Car(@EngineType('turbo123!') Engine engine);
                   }
 
                   main() {}
@@ -733,7 +734,7 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             keys: [
-              "Engine_Turbo = new Key(import_0.Engine, import_0.Turbo);"
+              "Engine__EngineType_turbo123_ = new Key(import_0.Engine, const import_0.EngineType('turbo123!'));"
             ],
             factories: [
               'import_0.Engine: () => new import_0.Engine(),',
@@ -741,7 +742,7 @@ main() {
             ],
             paramKeys: [
               'import_0.Engine: const[],',
-              'import_0.Car: [_KEY_Engine_Turbo],'
+              'import_0.Car: [_KEY_Engine__EngineType_turbo123_],'
             ]);
       });
 

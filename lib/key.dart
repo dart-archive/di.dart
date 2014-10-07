@@ -16,7 +16,7 @@ class Key {
 
   final Type type;
   /// Optional.
-  final Type annotation;
+  final Object annotation;
   /// Assigned via auto-increment.
   final int id;
 
@@ -44,7 +44,6 @@ class Key {
     if (annotationToKey == null) {
       _typeToAnnotationToKey[type] = annotationToKey = new Map();
     }
-    annotation = _toType(annotation);
     Key key = annotationToKey[annotation];
     if (key == null) {
       annotationToKey[annotation] =
@@ -61,12 +60,6 @@ class Key {
       asString += ' annotated with: $annotation';
     }
     return asString;
-  }
-
-  static Type _toType(obj) {
-    if (obj == null) return null;
-    if (obj is Type) return obj;
-    return obj.runtimeType;
   }
 }
 

@@ -11,3 +11,8 @@ class Old {
 class Turbo {
   const Turbo();
 }
+
+class EngineType {
+  final name;
+  const EngineType(this.name);
+}

@@ -122,7 +122,8 @@ class Module {
    * * [toValue]: The given value will be injected.
    * * [toInstanceOf]: An instance of the given type will be fetched with DI. This is shorthand for
    *   toFactory: (x) => x, inject: [X].
-   * * [withAnnotation]: Type decorated with additional annotation.
+   * * [withAnnotation]: Type decorated with additional annotation. The given value must
+   *   be a compile-time constant.
    *
    * Up to one (0 or 1) of the following parameters can be specified at the
    * same time: [toImplementation], [toFactory], [toValue], [toInstanceOf].
@@ -130,7 +131,7 @@ class Module {
   void bind(Type type, {dynamic toValue: DEFAULT_VALUE,
       Function toFactory: DEFAULT_VALUE, Type toImplementation,
       List inject: const [], toInstanceOf, Object withAnnotation}) {
-    bindByKey(new Key(type, _toType(withAnnotation)), toValue: toValue, toInstanceOf: toInstanceOf,
+    bindByKey(new Key(type, withAnnotation), toValue: toValue, toInstanceOf: toInstanceOf,
         toFactory: toFactory, toImplementation: toImplementation, inject: inject);
   }
 
@@ -145,20 +146,5 @@ class Module {
     binding.bind(key, reflector, toValue: toValue, toFactory: toFactory, toInstanceOf: toInstanceOf,
                  toImplementation: toImplementation, inject: inject);
     bindings[key] = binding;
-  }
-
-  static Type _toType(obj) {
-    if (obj == null) return null;
-    if (obj is Type) {
-      try {
-        throw "ignore";
-      } catch (e,s) {
-        final line = s.toString().split("\n")[2];
-        final location = line.substring(line.indexOf('('));
-        print("DEPRECATED: Use `withAnnotation: const $obj()` instead of `withAnnotation: $obj`. $location");
-      }
-      return obj;
-    }
-    return obj.runtimeType;
   }
 }
