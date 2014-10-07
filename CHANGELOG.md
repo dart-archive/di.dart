@@ -1,3 +1,9 @@
+# 3.3.1
+
+## Bug fix
+
+- Fix a bug in FF caused by using a stack trace in a warning message.
+
 # 3.3.0
 
 This release makes DI 3.0 backward compatible with DI 2.0.
