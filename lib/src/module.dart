@@ -150,13 +150,7 @@ class Module {
   static Type _toType(obj) {
     if (obj == null) return null;
     if (obj is Type) {
-      try {
-        throw "ignore";
-      } catch (e,s) {
-        final line = s.toString().split("\n")[2];
-        final location = line.substring(line.indexOf('('));
-        print("DEPRECATED: Use `withAnnotation: const $obj()` instead of `withAnnotation: $obj`. $location");
-      }
+      print("DEPRECATED: Use `withAnnotation: const $obj()` instead of `withAnnotation: $obj`.");
       return obj;
     }
     return obj.runtimeType;
