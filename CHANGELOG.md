@@ -1,3 +1,10 @@
+# 3.3.2
+
+## Bug fix
+
+- A class would only be marked as injectable if the first annotation was one of the injectable
+  annotations (GH-191). The DI now checks all the annotations and no more the first one only.
+
 # 3.3.1
 
 ## Bug fix
