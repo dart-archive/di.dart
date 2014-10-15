@@ -188,7 +188,7 @@ class _Processor {
         return true;
       } else if (meta.element is ConstructorElement) {
         DartType metaType = meta.element.enclosingElement.type;
-        return injectableTypes.any((DartType t) => metaType.isSubtypeOf(t));
+        if (injectableTypes.any((DartType t) => metaType.isSubtypeOf(t))) return true;
       }
     }
     return false;

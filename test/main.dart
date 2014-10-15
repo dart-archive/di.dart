@@ -45,6 +45,7 @@ class InjectableTest {
 }
 
 // just some classes for testing
+@Deprecated("I'm here because of https://github.com/angular/di.dart/issues/191")
 @InjectableTest()
 class Engine {
   final String id = 'v8-id';
