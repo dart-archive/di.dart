@@ -1,7 +1,5 @@
 library di.key;
 
-import 'dart:collection';
-
 /**
  * Key to which an [Injector] binds a [Provider].  This is a pair consisting of
  * a [type] and an optional [annotation].

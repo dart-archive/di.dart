@@ -100,11 +100,6 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport, List<Strin
         requiredImports.add(import);
       }
       String prefix = _calculateImportPrefix(import, imports);
-      if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! dynamic)) {
-        var typeParameters = type.typeArguments.join(', ');
-        var typeLiteral = resolveClassIdentifier(typeMapping[TYPE_LITERAL]);
-        return  'new ${typeLiteral}<$prefix.${type.name}<${typeParameters}>>().type';
-      }
       return '$prefix.${type.name}';
     }
 
@@ -133,7 +128,7 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport, List<Strin
   return result;
 }
 
-typedef String IdentifierResolver(InterfaceType type, [List typeArgs]);
+typedef String IdentifierResolver(InterfaceType type, [List typeArgs, bool usedToGenerateConstructor]);
 /**
  * Takes classes and writes to StringBuffers the corresponding keys, factories,
  * and paramLists needed for static injection.
@@ -530,7 +525,7 @@ class Library {
 
   Library(this.element, this.uri, this.compilationUnit, this.name);
 
-  bool get isDeferred => element is ImportElement && element.isDeferred;
+  bool get isDeferred => element is ImportElement && (element as ImportElement).isDeferred;
 
   String toString() => 'Library[$name]';
 }

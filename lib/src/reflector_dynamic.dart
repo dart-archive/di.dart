@@ -12,7 +12,7 @@ class DynamicTypeFactories extends TypeReflector {
   final List<List> lists = new List.generate(26, (i) => new List(i));
 
   Iterable<ClassMirror> _injectableAnnotations;
-  Iterable<Type> _injectableTypes;
+  Set<Type> _injectableTypes;
 
   /**
    * Asserts that the injected classes are set up for static injection. While this is not required

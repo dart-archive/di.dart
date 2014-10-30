@@ -39,10 +39,10 @@ class TransformOptions {
       : entryFilter = entryFilter != null ? entryFilter : isPossibleDartEntry,
   sdkDirectory = sdkDirectory,
   injectableAnnotations =
-      (injectableAnnotations != null ? injectableAnnotations : [])
+      (injectableAnnotations != null ? injectableAnnotations : <String>[])
       ..addAll(DEFAULT_INJECTABLE_ANNOTATIONS),
   injectedTypes =
-      new Set.from(injectedTypes != null ? injectedTypes : []) {
+      new Set.from(injectedTypes != null ? injectedTypes : <String>[]) {
         if (sdkDirectory == null)
           throw new ArgumentError('sdkDirectory must be provided.');
   }
