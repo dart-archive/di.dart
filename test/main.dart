@@ -456,7 +456,7 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       var injector = new ModuleInjector([moduleFactory()
           ..bind(new TypeLiteral<List<num>>().type, toValue: [1, 2])
           ..bind(new TypeLiteral<List<String>>().type,
-                 withAnnotation: StringList,
+                 withAnnotation: const StringList(),
                  toValue: ['1', '2'])
           ..bind(DepedencyWithParameterizedList)
       ]);
