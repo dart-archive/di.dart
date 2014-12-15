@@ -1,3 +1,13 @@
+# 3.3.3
+
+## Dependencies
+
+- Upgraded pubspec dependencies to use newer versions.
+
+## Clean-up
+
+- Eliminate dead code and analyzer warnings.
+
 # 3.3.2
 
 ## Bug fix
