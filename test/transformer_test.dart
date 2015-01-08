@@ -769,6 +769,53 @@ main() {
             });
       });
 
+      it('transforms main with library', () {
+        return tests.applyTransformers(phases,
+            inputs: {
+              'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+
+main() {
+  print('abc');
+}''',
+              'a|web/lib.dart': '''
+library lib;
+part "a.dart";
+part "b.dart";''',
+              'a|web/a.dart': '''
+part of lib;
+Class A {
+}''',
+              'a|web/b.dart': '''
+part of lib;
+Class B{
+}'''
+            },
+            results: {
+              'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+import 'main_generated_type_factory_maps.dart' show setStaticReflectorAsDefault;
+
+main() {
+  setStaticReflectorAsDefault();
+  print('abc');
+}''',
+              'a|web/lib.dart': '''
+library lib;
+part "a.dart";
+part "b.dart";''',
+              'a|web/a.dart': '''
+part of lib;
+Class A {
+}''',
+              'a|web/b.dart': '''
+part of lib;
+Class B{
+}'''        });
+      });
+
       it('supports using a child of an injectable annotations as an injection marker', () {
         injectableAnnotations.add('di.annotations.Injectable');
         return generates(phases,
