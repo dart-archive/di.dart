@@ -244,18 +244,13 @@ class DynamicTypeFactories extends TypeReflector {
         throw new DynamicReflectorError("Error getting params for '$type': "
             "The '$name' parameter must be typed");
       }
-      if (p.type is TypedefMirror) {
-        throw new DynamicReflectorError("Typedef '${p.type}' in constructor "
-            "'${classMirror.simpleName}' is not supported.");
-      }
       if (p.metadata.length > 1) {
         throw new DynamicReflectorError(
             "Constructor '${classMirror.simpleName}' parameter $pos of type "
             "'${p.type}' can have only zero on one annotation, but it has "
             "'${p.metadata}'.");
       }
-      ClassMirror pTypeMirror = (p.type as ClassMirror);
-      var pType = pTypeMirror.reflectedType;
+      var pType = p.type.reflectedType;
       var annotationType = p.metadata.isNotEmpty ? p.metadata.first.type.reflectedType : null;
       return new Key(pType, annotationType);
     }, growable:false);

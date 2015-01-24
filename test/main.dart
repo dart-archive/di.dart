@@ -166,6 +166,7 @@ typedef int CompareInt(int a, int b);
 
 int compareIntAsc(int a, int b) => b.compareTo(a);
 
+@InjectableTest()
 class WithTypeDefDependency {
   CompareInt compare;
 
@@ -762,6 +763,16 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
         var injector = new ModuleInjector([moduleFactory()..bind(WithTypeDefDependency)]);
         injector.get(WithTypeDefDependency);
       }).toThrowWith();
+    });
+
+    it('should inject typedef dependencies', () {
+      var injector = new ModuleInjector([moduleFactory()
+        ..bind(WithTypeDefDependency)
+        ..bind(CompareInt, toValue: compareIntAsc)
+      ]);
+
+      var instance = injector.get(WithTypeDefDependency);
+      expect(instance.compare).toBe(compareIntAsc);
     });
 
     it('should instantiate via the default/unnamed constructor', () {
