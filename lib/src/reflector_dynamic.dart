@@ -239,7 +239,7 @@ class DynamicTypeFactories extends TypeReflector {
 
     return new List.generate(ctor.parameters.length, (int pos) {
       ParameterMirror p = ctor.parameters[pos];
-      if (p.type.qualifiedName == #dynamic) {
+      if (p.type is! TypedefMirror && p.type.qualifiedName == #dynamic) {
         var name = MirrorSystem.getName(p.simpleName);
         throw new DynamicReflectorError("Error getting params for '$type': "
             "The '$name' parameter must be typed");
