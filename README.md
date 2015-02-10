@@ -68,10 +68,11 @@ class ElectricCar {
 
 void main() {
   var injector = new ModuleInjector([new Module()
+      ..bind(Fuel)
       ..bind(GenericCar)
       ..bind(ElectricCar)
       ..bind(Engine, toFactory: (fuel) => new V8Engine(fuel), inject: [Fuel])
-      ..bind(Engine, toImplementation: ElectricEngine, withAnnotation: Electric)
+      ..bind(Engine, toImplementation: ElectricEngine, withAnnotation: const Electric())
   ]);
   injector.get(GenericCar).drive(); // Vroom...
   injector.get(ElectricCar).drive(); // Hum...
