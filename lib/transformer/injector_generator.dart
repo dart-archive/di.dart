@@ -398,6 +398,7 @@ library ${id.package}.$libName.generated_type_factory_maps;
 
 import 'package:di/di.dart';
 import 'package:di/src/reflector_static.dart';
+import 'package:di/type_literal.dart';
 
 ''');
 }
