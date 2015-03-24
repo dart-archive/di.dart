@@ -1,3 +1,9 @@
+# 3.3.5
+
+## Bug fix
+
+- Fix incorrect type signature for RootInjector getByKey and createChild methods.
+
 # 3.3.4
 
 - Widen dependency on package:analyzer.
