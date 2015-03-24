@@ -61,8 +61,8 @@ abstract class Injector {
 class RootInjector extends Injector {
   Injector get parent => null;
   List<Object> get _instances => null;
-  dynamic getByKey(key, [depth]) => throw new NoProviderError(key);
-  Injector createChild(m) => null;
+  dynamic getByKey(Key key) => throw new NoProviderError(key);
+  Injector createChild(List<Module> modules) => null;
 }
 
 class ModuleInjector extends Injector {
