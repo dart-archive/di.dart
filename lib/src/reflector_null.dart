@@ -20,6 +20,6 @@ class NullReflector extends TypeReflector {
 
 class NullReflectorError extends BaseError {
   NullReflectorError()
-      : super("Module.DEFAULT_REFLECTOR not initialized for dependency injection."
+      : super("Module.DEFAULT_REFLECTOR not initialized for dependency injection. "
               "http://goo.gl/XFXx9G");
 }
