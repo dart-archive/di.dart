@@ -14,7 +14,6 @@
 library di.tests;
 
 import 'package:guinness/guinness.dart';
-import 'package:matcher/matcher.dart' as matcher;
 import 'package:di/di.dart';
 import 'package:di/annotations.dart';
 import 'package:di/type_literal.dart';
@@ -788,8 +787,15 @@ createInjectorSpec(String injectorName, ModuleFactory moduleFactory) {
       var parent = new ModuleInjector([moduleFactory()..bind(Engine)]);
       var child = new ModuleInjector([moduleFactory()..bind(MockEngine)], parent);
 
-      expect(parent.types).to(matcher.unorderedEquals([Engine, Injector]));
-      expect(child.types).to(matcher.unorderedEquals([Engine, MockEngine, Injector]));
+      void expectUnorderedEquals(actual, expected) {
+        expect(actual.length).toEqual(expected.length);
+        expected.forEach((item) {
+          expect(actual).toContain(item);
+        });
+      }
+
+      expectUnorderedEquals(parent.types, [Engine, Injector]);
+      expectUnorderedEquals(child.types, [Engine, MockEngine, Injector]);
     });
 
     it('should inject instance from parent if not provided in child', () {
