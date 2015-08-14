@@ -277,22 +277,70 @@ class _Processor {
     var ctorTypes = constructors.map((ctor) => ctor.enclosingElement).toSet();
 
     var usedLibs = new Set<LibraryElement>();
-    String resolveClassName(ClassElement type, [List<DartType> typeArgs]) {
-      var library = type.library;
-      usedLibs.add(library);
 
-      var prefix = prefixes[library];
-      if (prefix == null) {
-        prefix = prefixes[library] =
-            library.isDartCore ? '' : 'import_${prefixes.length}';
+    // Returns a Dart-type expression representing [instanceType] and which is
+    // suitable for use as an r-value. E.g.: Foo<bar> can be used as a generic
+    // type parameter, but not as an r-value, since t = Foo<bar> is a syntax
+    // error.
+    //
+    // When [instanceType] has no generic paramaters, this method returns code
+    // in the format 'import_1.Foo', but when [instanceType] has generic
+    // parameters, this method returns code that instantiates a [TypeLiteral],
+    // e.g. `new TypeLiteral<import_1.Foo<import_2.Bar>>().type`.
+    //
+    // Assumes that [instanceTypeGenericTypes] is the types of the generic
+    // parameters of [instanceType], if any.
+    String resolveClassIdentifier(ParameterizedType instanceType,
+        [List<DartType> instanceTypeGenericTypes = const [],
+        bool recursiveCall = false]) {
+
+      // Returns import_xxx.{instanceType}.
+      String resolveRawType() {
+        // Short circuit if it's a dart core type. We don't want to resolve.
+        if (instanceType.element.library.isDartCore) {
+          return instanceType.name;
+        }
+        var library = instanceType.element.library;
+        usedLibs.add(library);
+
+        var prefix = prefixes[library];
+        if (prefix == null) {
+          prefix = prefixes[library] =
+              library.isDartCore ? '' : 'import_${prefixes.length}';
+        }
+        if (prefix.isNotEmpty) {
+          prefix = '$prefix.';
+        }
+        return '$prefix${instanceType.name}';
       }
-      if (prefix.isNotEmpty) {
-        prefix = '$prefix.';
+
+      // 1. If we have generics, we must use a type literal.
+      // To prevent invalid syntax, new TypeLiteral object is only instantiated
+      // if this is the first (e.g. non-recursive) call into
+      // resolveClassIdentifier.
+      if (!recursiveCall && instanceTypeGenericTypes.any((type) => type.displayName != 'dynamic')) {
+        return 'new TypeLiteral<${resolveClassIdentifier(instanceType, instanceTypeGenericTypes, true)}>().type';
       }
-      if (typeArgs == null || typeArgs.isEmpty || !typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
-        return '$prefix${type.name}';
+
+      // 2. If we do not have any typed generics, immediately resolve the type.
+      // Returns import_xxx.{instanceType}.
+      if (instanceTypeGenericTypes
+          .every((type) => type.displayName == 'dynamic')) {
+        return resolveRawType();
       }
-      return 'new TypeLiteral<$prefix${type.name}<${typeArgs.join(', ')}>>().type';
+
+      // 3. If we DO have generics, continue recursing. Returns
+      // import_xxx.{instanceType}<import_xxx.{arg0}..., import_xxx.{argN}>.
+      final resolvedGenericTypes = instanceTypeGenericTypes.map((genericType) {
+        if (genericType is DynamicTypeImpl) {
+          return genericType.displayName;
+        }
+        return resolveClassIdentifier(genericType,
+            genericType is ParameterizedType
+                ? genericType.typeArguments
+                : const [], true);
+      });
+      return '${resolveRawType()}<${resolvedGenericTypes.join(', ')}>';
     }
 
     var keysBuffer = new StringBuffer();
@@ -301,7 +349,7 @@ class _Processor {
     var addedKeys = new Set<String>();
     for (var ctor in constructors) {
       ClassElement type = ctor.enclosingElement;
-      String typeName = resolveClassName(type);
+      String typeName = resolveClassIdentifier(type.type);
 
       String args = new List.generate(ctor.parameters.length, (i) => 'a${i+1}').join(', ');
       factoriesBuffer.write('  $typeName: ($args) => new $typeName($args),\n');
@@ -309,7 +357,7 @@ class _Processor {
       paramsBuffer.write('  $typeName: ');
       paramsBuffer.write(ctor.parameters.isEmpty ? 'const[' : '[');
       var params = ctor.parameters.map((param) {
-        String typeName = resolveClassName(param.type.element, (param.type).typeArguments);
+        String typeName = resolveClassIdentifier(param.type, param.type.typeArguments);
         Iterable<ClassElement> annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
@@ -323,7 +371,7 @@ class _Processor {
         }
         if (addedKeys.add(keyName)) {
           keysBuffer.writeln('final Key $keyName = new Key($typeName' +
-              (annotations.isNotEmpty ? ', ${resolveClassName(annotations.first)});' : ');'));
+              (annotations.isNotEmpty ? ', ${resolveClassIdentifier(annotations.first.type)});' : ');'));
         }
         return keyName;
       });

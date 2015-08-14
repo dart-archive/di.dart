@@ -128,6 +128,34 @@ main() {
           ]);
     });
 
+    it('injects nested parameterized constructor parameters', () {
+      return generates(phases,
+          inputs: {
+            'a|web/main.dart': 'import "package:a/a.dart"; main() {}',
+            'a|lib/a.dart': '''
+                import 'package:inject/inject.dart';
+                class Foo<T> {}
+                class Spam<T> {}
+                class Bar {
+                  @inject
+                  Bar(Foo<Spam<bool>> f);
+                }
+                '''
+          },
+          imports: [
+              "import 'package:a/a.dart' as import_0;",
+          ],
+          keys: [
+            'Foo_Spam = new Key(new TypeLiteral<import_0.Foo<import_0.Spam<bool>>>().type);',
+          ],
+          factories: [
+              'import_0.Bar: (a1) => new import_0.Bar(a1),',
+          ],
+          paramKeys: [
+            'import_0.Bar: [_KEY_Foo_Spam],',
+          ]);
+    });
+
     it('allows un-parameterized parameters', () {
       return generates(phases,
           inputs: {
