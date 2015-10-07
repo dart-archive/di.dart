@@ -1,3 +1,7 @@
+# 3.3.5
+
+- Widen dependency on package:analyzer.
+
 # 3.3.4
 
 - Widen dependency on package:analyzer.

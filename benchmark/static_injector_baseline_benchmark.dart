@@ -5,7 +5,7 @@ import 'package:di/src/reflector_static.dart';
 import 'injector_benchmark_common.dart';
 import 'static_injector_benchmark.dart';
 
-import 'dart:profiler';
+import 'dart:developer';
 
 /**
  * This benchmark creates the same objects as the StaticInjectorBenchmark
