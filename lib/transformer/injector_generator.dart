@@ -364,15 +364,20 @@ class _Processor {
     var unit = lib.definingCompilationUnit.node;
     var transaction = resolver.createTextEditTransaction(lib);
 
+    FunctionDeclaration main = unit.declarations.firstWhere(
+        (d) => d is FunctionDeclaration && d.name.toString() == 'main',
+        orElse: () => null);
+
+    if (main == null) {
+      return;
+    }
+
     var imports = unit.directives.where((d) => d is ImportDirective);
     transaction.edit(imports.last.end, imports.last.end, '\nimport '
         "'${path.url.basenameWithoutExtension(id.path)}"
         "_generated_type_factory_maps.dart' show setStaticReflectorAsDefault;");
 
-    FunctionExpression main = unit.declarations.where((d) =>
-        d is FunctionDeclaration && d.name.toString() == 'main')
-        .first.functionExpression;
-    var body = main.body;
+    var body = main.functionExpression.body;
     if (body is BlockFunctionBody) {
       var location = body.beginToken.end;
       transaction.edit(location, location, '\n  setStaticReflectorAsDefault();');
