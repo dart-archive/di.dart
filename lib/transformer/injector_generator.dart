@@ -374,7 +374,7 @@ class _Processor {
         .first.functionExpression;
     var body = main.body;
     if (body is BlockFunctionBody) {
-      var location = body.beginToken.end;
+      var location = body.block.leftBracket.end;
       transaction.edit(location, location, '\n  setStaticReflectorAsDefault();');
     } else if (body is ExpressionFunctionBody) {
       transaction.edit(body.beginToken.offset, body.endToken.end,

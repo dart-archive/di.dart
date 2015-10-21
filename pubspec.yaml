@@ -1,5 +1,5 @@
 name: di
-version: 3.3.5
+version: 3.3.5+1
 authors:
 - Vojta Jina <vojta.jina@gmail.com>
 - Pavel Jbanov <pavelgj@gmail.com>
@@ -18,5 +18,6 @@ dependencies:
 dev_dependencies:
   benchmark_harness: ">=1.0.4 <2.0.0"
   guinness: '>=0.1.16 <0.2.0'
+  matcher: '>=0.11.0 <0.13.0'
 transformers:
 - di/module_transformer

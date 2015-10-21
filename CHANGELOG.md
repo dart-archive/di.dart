@@ -1,3 +1,9 @@
+# 3.3.5+1
+
+## Bug fix
+
+- Properly transform an `async` main method in an entry point.
+
 # 3.3.5
 
 - Widen dependency on package:analyzer.

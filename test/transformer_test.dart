@@ -769,6 +769,31 @@ main() {
             });
       });
 
+      it('transforms main async ', () {
+        return tests.applyTransformers(phases,
+            inputs: {
+              'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+
+main() async {
+  print('abc');
+}'''
+            },
+            results: {
+              'a|web/main.dart': '''
+library main;
+import 'package:di/di.dart';
+import 'main_generated_type_factory_maps.dart' show setStaticReflectorAsDefault;
+
+main() async {
+  setStaticReflectorAsDefault();
+  print('abc');
+}'''
+            });
+      });
+
+
       it('supports using a child of an injectable annotations as an injection marker', () {
         injectableAnnotations.add('di.annotations.Injectable');
         return generates(phases,
