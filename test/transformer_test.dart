@@ -53,8 +53,8 @@ main() {
             "import 'package:a/seat.dart' as import_2;",
           ],
           keys: [
-            'Engine = new Key(import_1.Engine);',
-            'Seat = new Key(import_2.Seat);',
+            'import_1_Engine = new Key(import_1.Engine);',
+            'import_2_Seat = new Key(import_2.Seat);',
           ],
           factories: [
             'import_0.Car: (a1, a2) => new import_0.Car(a1, a2),',
@@ -62,7 +62,7 @@ main() {
             'import_2.Seat: () => new import_2.Seat(),',
           ],
           paramKeys: [
-            'import_0.Car: [_KEY_Engine, _KEY_Seat],',
+            'import_0.Car: [_KEY_import_1_Engine, _KEY_import_2_Seat],',
             'import_1.Engine: const[],',
             'import_2.Seat: const[],'
           ]);
@@ -118,13 +118,13 @@ main() {
               "import 'package:a/a.dart' as import_0;",
           ],
           keys: [
-            'Foo_bool = new Key(new TypeLiteral<import_0.Foo<bool>>().type);',
+            'import_0_Foo_bool = new Key(new TypeLiteral<import_0.Foo<bool>>().type);',
           ],
           factories: [
               'import_0.Bar: (a1) => new import_0.Bar(a1),',
           ],
           paramKeys: [
-            'import_0.Bar: [_KEY_Foo_bool],',
+            'import_0.Bar: [_KEY_import_0_Foo_bool],',
           ]);
     });
 
@@ -145,13 +145,13 @@ main() {
             "import 'main.dart' as import_0;",
           ],
           keys: [
-            "Foo = new Key(import_0.Foo);"
+            "import_0_Foo = new Key(import_0.Foo);"
           ],
           factories: [
             'import_0.Bar: (a1) => new import_0.Bar(a1),',
           ],
           paramKeys: [
-            'import_0.Bar: [_KEY_Foo],'
+            'import_0.Bar: [_KEY_import_0_Foo],'
           ]);
     });
 
@@ -172,13 +172,13 @@ main() {
               "import 'main.dart' as import_0;",
           ],
           keys: [
-            'Foo_bool_dynamic_num = new Key(new TypeLiteral<import_0.Foo<bool, dynamic, num>>().type);',
+            'import_0_Foo_bool_dynamic_num = new Key(new TypeLiteral<import_0.Foo<bool, dynamic, num>>().type);',
           ],
           factories: [
             'import_0.Bar: (a1) => new import_0.Bar(a1),',
           ],
           paramKeys: [
-            'import_0.Bar: [_KEY_Foo_bool_dynamic_num],'
+            'import_0.Bar: [_KEY_import_0_Foo_bool_dynamic_num],'
           ]);
     });
 
@@ -203,15 +203,15 @@ main() {
               "import 'main.dart' as import_0;",
           ],
           keys: [
-            'Foo = new Key(import_0.Foo);',
+            'import_0_Foo = new Key(import_0.Foo);',
           ],
           factories: [
               'import_0.Bar: (a1) => new import_0.Bar(a1),',
               'import_0.Baz: (a1) => new import_0.Baz(a1),',
           ],
           paramKeys: [
-            'import_0.Bar: [_KEY_Foo],',
-            'import_0.Baz: [_KEY_Foo],',
+            'import_0.Bar: [_KEY_import_0_Foo],',
+            'import_0.Baz: [_KEY_import_0_Foo],',
           ]);
     });
 
@@ -296,14 +296,14 @@ main() {
             "import 'package:a/b.dart' as import_1;",
           ],
           keys: [
-            "Engine = new Key(import_1.Engine);"
+            "import_1_Engine = new Key(import_1.Engine);"
           ],
           factories: [
             'import_0.Car: (a1) => new import_0.Car(a1),',
             'import_1.Engine: () => new import_1.Engine(),',
           ],
           paramKeys: [
-            'import_0.Car: [_KEY_Engine],',
+            'import_0.Car: [_KEY_import_1_Engine],',
             'import_1.Engine: const[],',
           ]);
     });
@@ -478,13 +478,13 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             keys: [
-              "Fuel = new Key(import_0.Fuel);",
+              "import_0_Fuel = new Key(import_0.Fuel);",
             ],
             factories: [
               'import_0.Engine: (a1) => new import_0.Engine(a1),',
             ],
             paramKeys: [
-              'import_0.Engine: [_KEY_Fuel],'
+              'import_0.Engine: [_KEY_import_0_Fuel],'
             ]);
       });
 
@@ -509,13 +509,13 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             keys: [
-              "JetFuel = new Key(import_0.JetFuel);",
+              "import_0_JetFuel = new Key(import_0.JetFuel);",
             ],
             factories: [
               'import_0.Engine: (a1) => new import_0.Engine(a1),',
             ],
             paramKeys: [
-              'import_0.Engine: [_KEY_JetFuel],'
+              'import_0.Engine: [_KEY_import_0_JetFuel],'
             ]);
       });
 
@@ -603,14 +603,14 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             keys: [
-              "Engine = new Key(import_0.Engine);"
+              "import_0_Engine = new Key(import_0.Engine);"
             ],
             factories: [
               'import_0.Car: (a1) => new import_0.Car(a1),',
               'import_0.Engine: () => new import_0.Engine(),',
             ],
             paramKeys: [
-              'import_0.Car: [_KEY_Engine],',
+              'import_0.Car: [_KEY_import_0_Engine],',
               'import_0.Engine: const[],',
             ]);
       });
@@ -733,7 +733,7 @@ main() {
               "import 'main.dart' as import_0;",
             ],
             keys: [
-              "Engine_Turbo = new Key(import_0.Engine, import_0.Turbo);"
+              "import_0_Engine_Turbo = new Key(import_0.Engine, import_0.Turbo);"
             ],
             factories: [
               'import_0.Engine: () => new import_0.Engine(),',
@@ -741,7 +741,7 @@ main() {
             ],
             paramKeys: [
               'import_0.Engine: const[],',
-              'import_0.Car: [_KEY_Engine_Turbo],'
+              'import_0.Car: [_KEY_import_0_Engine_Turbo],'
             ]);
       });
 
@@ -829,7 +829,72 @@ main() async {
               injectableAnnotations.clear();
             });
       });
+
+      it('supports multiple classes with the same name', () {
+        injectableAnnotations.add('di.annotations.Injectable');
+        return generates(phases,
+            inputs: {
+              'di|lib/annotations.dart': PACKAGE_DI,
+              'a|lib/first.dart': '''
+                  library first;
+
+                  import 'package:di/annotations.dart';
+
+                  @Injectable()
+                  class Foobar {
+                    Foobar()
+                  }
+                  ''',
+              'a|lib/second.dart': '''
+                  library second;
+
+                  import 'package:di/annotations.dart';
+
+                  @Injectable()
+                  class Foobar {
+                    Foobar()
+                  }
+                  ''',
+              'a|web/main.dart': '''
+
+                  library main;
+
+                  import 'package:di/annotations.dart';
+                  import 'package:a/first.dart' as first;
+                  import 'package:a/second.dart' as second;
+
+                  @Injectable
+                  class FooUser {
+                    FooUser(first.Foobar first_foobar, second.Foobar second_foobar);
+                  }
+
+                  main() {}
+                  '''
+            },
+            imports: [
+              "import 'main.dart' as import_0;",
+              "import 'package:a/first.dart' as import_1;",
+              "import 'package:a/second.dart' as import_2;",
+            ],
+            keys: [
+              'import_1_Foobar = new Key(import_1.Foobar);',
+              'import_2_Foobar = new Key(import_2.Foobar);',
+            ],
+            factories: [
+              'import_0.FooUser: (a1, a2) => new import_0.FooUser(a1, a2),',
+              'import_1.Foobar: () => new import_1.Foobar(),',
+              'import_2.Foobar: () => new import_2.Foobar(),',
+            ],
+            paramKeys: [
+               'import_0.FooUser: [_KEY_import_1_Foobar, _KEY_import_2_Foobar],',
+               'import_1.Foobar: const[],',
+               'import_2.Foobar: const[],',
+            ]).whenComplete(() {
+              injectableAnnotations.clear();
+            });
+      });
   });
+
 }
 
 Future generates(List<List<Transformer>> phases,

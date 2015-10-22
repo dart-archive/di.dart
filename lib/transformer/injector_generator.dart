@@ -316,7 +316,8 @@ class _Processor {
               (item) => item.element.returnType.element);
         }
 
-        var keyName = '_KEY_${param.type.name}' + (annotations.isNotEmpty ? '_${annotations.first}' : '');
+        var prefix = prefixes[param.type.element.library];
+        var keyName = '_KEY${prefix.isNotEmpty ? '_$prefix' : ''}_${param.type.name}${annotations.isNotEmpty ? '_${annotations.first}' : ''}';
         var typeArgs = param.type.typeArguments;
         if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
           typeArgs.forEach((arg) => keyName = ('${keyName}_${arg.name}'));
