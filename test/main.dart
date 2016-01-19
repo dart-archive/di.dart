@@ -13,7 +13,7 @@
 ])
 library di.tests;
 
-import 'package:guinness/guinness.dart';
+import 'package:guinness2/guinness2.dart';
 import 'package:matcher/matcher.dart' as matcher;
 import 'package:di/di.dart';
 import 'package:di/annotations.dart';

@@ -1,5 +1,7 @@
 node_modules
 packages
+.packages
+.pub
 pubspec.lock
 .idea
 test/type_factories_gen.dart

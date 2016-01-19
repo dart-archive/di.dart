@@ -363,7 +363,7 @@ class SourceCrawler {
       entryPointImport = entryPointFile.getAbsolutePath();
     }
 
-    Source source = new FileBasedSource.con1(entryPointFile);
+    Source source = new FileBasedSource(entryPointFile);
     ChangeSet changeSet = new ChangeSet();
     changeSet.addedSource(source);
     context.applyChanges(changeSet);

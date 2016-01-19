@@ -9,7 +9,7 @@ import 'package:di/transformer.dart';
 import 'package:di/transformer/options.dart';
 import 'package:di/transformer/injector_generator.dart';
 
-import 'package:guinness/guinness.dart';
+import 'package:guinness2/guinness2.dart';
 
 main() {
   describe('transformer', () {

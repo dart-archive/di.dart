@@ -1,3 +1,8 @@
+# 3.3.6
+
+- Move to analyzer 0.27.1
+- Move to guinness2
+
 # 3.3.5+1
 
 ## Bug fix
@@ -340,4 +345,3 @@ StaticInjectorBenchmark(RunTime): 291.9281856663261 us.
   - skip _checkKeyConditions in dart2js
   ([6763552a](https://github.com/angular/di.dart/commit/6763552adccdc41ef1043930ea50e0425509e6c5))
   - +29%. Use an array for type lookup instead of a map.
-

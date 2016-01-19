@@ -1,6 +1,5 @@
 import 'package:di/di.dart';
 import 'package:di/annotations.dart';
-import 'dart:html';
 
 @Injectable()
 class Application {

@@ -12,7 +12,7 @@ dart --checked test/transformer_test.dart
 echo "Building example..."
 rm -rf example/build/
 cd example
-pub_out=$(pub build | tee /dev/tty | grep -F "mirror" || : )
+pub_out=$(pub build 2>&1 | tee /dev/tty | grep -F "dart:mirrors" || : )
 cd ..
 echo "--------"
 

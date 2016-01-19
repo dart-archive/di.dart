@@ -135,7 +135,7 @@ class _Processor {
       var annotationIdx = 0;
       for (var annotation in lib.metadata) {
         if (annotation.element == injectablesCtor) {
-          var libDirective = lib.definingCompilationUnit.node.directives
+          var libDirective = lib.definingCompilationUnit.computeNode().directives
               .where((d) => d is LibraryDirective).single;
           var annotationDirective = libDirective.metadata[annotationIdx];
           var listLiteral = annotationDirective.arguments.arguments.first;
@@ -273,9 +273,6 @@ class _Processor {
    */
   String _generateInjectLibrary(Iterable<ConstructorElement> constructors) {
     var prefixes = <LibraryElement, String>{};
-
-    var ctorTypes = constructors.map((ctor) => ctor.enclosingElement).toSet();
-
     var usedLibs = new Set<LibraryElement>();
     String resolveClassName(ClassElement type, [List<DartType> typeArgs]) {
       var library = type.library;
@@ -316,7 +313,7 @@ class _Processor {
               (item) => item.element.returnType.element);
         }
 
-        var keyName = '_KEY_${param.type.name}' + (annotations.isNotEmpty ? '_${annotations.first}' : '');
+        var keyName = '_KEY_${param.type.name}' + (annotations.isNotEmpty ? '_${annotations.first.name}' : '');
         var typeArgs = param.type.typeArguments;
         if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
           typeArgs.forEach((arg) => keyName = ('${keyName}_${arg.name}'));
@@ -361,7 +358,7 @@ class _Processor {
   void _editMain() {
     AssetId id = transform.primaryInput.id;
     var lib = resolver.getLibrary(id);
-    var unit = lib.definingCompilationUnit.node;
+    var unit = lib.definingCompilationUnit.computeNode();
     var transaction = resolver.createTextEditTransaction(lib);
 
     var imports = unit.directives.where((d) => d is ImportDirective);
