@@ -35,7 +35,9 @@ main(List<String> args) {
   var entryPoint = args[1];
   var classAnnotations = args[2].split(',')..addAll(_DEFAULT_INJECTABLE_ANNOTATIONS);
   var output = args[3];
-  var packageRoots = (args.length < 5) ? [Platform.packageRoot] : args.sublist(4);
+  var packageRoots = (args.length < 5)
+      ? [path.fromUri(Platform.packageRoot ?? '')]
+      : args.sublist(4);
 
   print('pathToSdk: $pathToSdk');
   print('entryPoint: $entryPoint');
