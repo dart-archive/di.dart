@@ -1,3 +1,7 @@
+# 3.3.7
+
+- Update dependencies. Support dart 1.14 sdk.
+
 # 3.3.6
 
 - Move to analyzer 0.27.1
