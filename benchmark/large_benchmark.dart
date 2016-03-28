@@ -48,7 +48,7 @@ class LargeBenchmark extends BenchmarkBase {
 }
 
 class GetFromRoot extends LargeBenchmark {
-  GetFromRoot() : super('FromRoot', (m) => new ModuleInjector(m));
+  GetFromRoot() : super('FromRoot', (List<Module> m) => new ModuleInjector(m));
 
   run() {
     leafInjector.getByKey(key999);

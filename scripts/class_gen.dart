@@ -4,7 +4,6 @@
  * and factories. Called from run-benchmarks.sh
  */
 import 'dart:io';
-import 'dart:async';
 
 main() {
   int numClasses = 1000;
