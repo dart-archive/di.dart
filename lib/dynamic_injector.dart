@@ -9,5 +9,5 @@ export 'di.dart';
  */
 @Deprecated("3.0")
 class DynamicInjector extends ModuleInjector {
-	DynamicInjector({modules}) : super(modules);
+	DynamicInjector({List<Module> modules}) : super(modules);
 }

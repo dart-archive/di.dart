@@ -17,8 +17,6 @@ class _Instance {
 
 abstract class Injector {
 
-  final Injector parent = null;
-
   /**
    * Returns the instance associated with the given key (i.e. [type] and
    * [annotation]) according to the following rules.
@@ -109,7 +107,7 @@ class ModuleInjector extends Injector {
     return types;
   }
 
-  dynamic getByKey(Key key) {
+  getByKey(Key key) {
     var id = key.id;
     if (id >= _instances.length) {
       throw new NoProviderError(key);

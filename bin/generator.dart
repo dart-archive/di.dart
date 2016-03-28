@@ -1,5 +1,5 @@
 import 'package:di/generator.dart' as generator;
 
-main(args) {
+main(List<String> args) {
   generator.main(args);
 }

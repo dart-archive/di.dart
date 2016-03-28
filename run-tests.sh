@@ -8,6 +8,10 @@ echo "Running tests in Dart..."
 dart --checked test/main.dart
 dart --checked test/transformer_test.dart
 
+echo "Running analyzer..."
+dartanalyzer --fatal-warnings lib/*.dart
+dartanalyzer --fatal-warnings example/web/*.dart
+
 # Example app test
 echo "Building example..."
 rm -rf example/build/

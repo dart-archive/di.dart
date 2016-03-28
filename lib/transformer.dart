@@ -68,10 +68,8 @@
  */
 library di.transformer;
 
-import 'dart:io';
 import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
-import 'package:path/path.dart' as path;
 import 'transformer/injector_generator.dart';
 import 'transformer/options.dart';
 
@@ -120,13 +118,13 @@ _readStringValue(Map args, String name, {bool required: true}) {
   return value;
 }
 
-_readStringListValue(Map args, String name) {
+List<String> _readStringListValue(Map args, String name) {
   var value = args[name];
   if (value == null) return [];
-  var results = [];
+  List<String> results = [];
   bool error;
   if (value is List) {
-    results = value;
+    results = value as List<String>;
     error = value.any((e) => e is! String);
   } else if (value is String) {
     results = [value];

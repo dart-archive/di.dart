@@ -175,22 +175,22 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
           throw 'Unable to resolve type for constructor parameter '
                 '"${param.name}" for type "$clazz" in ${clazz.source}';
         }
-        var annotations = [];
+        var annotations = new Iterable.empty();
         if (param.metadata.isNotEmpty) {
-          annotations = param.metadata.map((item) => item.element.returnType.name);
+          annotations = param.metadata.map((item) => (item.element as FunctionTypedElement).returnType.name);
         }
         String keyName = annotations.isNotEmpty ?
             '${param.type.name}_${annotations.first}' :
               param.type.name;
-        param.type.typeArguments.forEach((arg) => keyName = '${keyName}_${arg.name}');
+        (param.type as ParameterizedType).typeArguments.forEach((arg) => keyName = '${keyName}_${arg.name}');
         String output = '_KEY_${keyName}';
         if (addedKeys.add(keyName)){
           var annotationParam = "";
           if (param.metadata.isNotEmpty) {
-            var p = resolveClassIdentifier(param.metadata.first.element.returnType);
+            var p = resolveClassIdentifier((param.metadata.first.element as FunctionTypedElement).returnType);
             annotationParam = ", $p";
           }
-          var clsId = resolveClassIdentifier(param.type, param.type.typeArguments);
+          var clsId = resolveClassIdentifier(param.type, (param.type as ParameterizedType).typeArguments);
           toBeAdded[keyName]='final Key _KEY_${keyName} = new Key($clsId$annotationParam);\n';
         }
         return output;
@@ -257,7 +257,7 @@ class CompilationUnitVisitor {
             getQualifiedName(
                 (ann.element as ConstructorElement).enclosingElement.type) ==
                 'di.annotations.Injectables') {
-            var listLiteral = library.metadata[annotationIdx].arguments.arguments.first;
+            ListLiteral listLiteral = library.metadata[annotationIdx].arguments.arguments.first;
             for (Expression expr in listLiteral.elements) {
               Element element = (expr as SimpleIdentifier).bestElement;
               if (element == null || element is! ClassElement) {
@@ -420,16 +420,16 @@ class CrawlerVisitor {
     cu.directives.forEach((Directive directive) {
       if (directive.element == null) return; // unresolvable, ignore
       if (directive is ImportDirective) {
-        var import = directive.element;
+        ImportElement import = directive.element;
         visitImportElement(
             new Library(import, import.uri, cu, import.importedLibrary.name),
             import.importedLibrary.source);
       }
       if (directive is ExportDirective) {
-        var import = directive.element;
+        ExportElement export = directive.element;
         visitImportElement(
-            new Library(import, import.uri, cu, import.exportedLibrary.name),
-            import.exportedLibrary.source);
+            new Library(export, export.uri, cu, export.exportedLibrary.name),
+            export.exportedLibrary.source);
       }
     });
   }

@@ -36,7 +36,7 @@ class DynamicTypeFactories extends TypeReflector {
             if (cm.hasReflectedType &&
                 Module.libAnnotations.contains(cm.reflectedType) &&
                 cm.declarations.containsKey(typesSymbol)) {
-              _injectableTypes.addAll(im.getField(typesSymbol).reflectee);
+              _injectableTypes.addAll(im.getField(typesSymbol).reflectee as Iterable<Type>);
             }
           });
         });
@@ -96,7 +96,6 @@ class DynamicTypeFactories extends TypeReflector {
     int length = ctor.parameters.length;
     Function create = classMirror.newInstance;
     Symbol name = ctor.constructorName;
-    Function factory;
     if (length > 25) throw "Too many arguments in $name constructor for dynamic DI to handle :(";
     List l = lists[length];
     // script for this is in scripts/reflector_dynamic_script.dart
@@ -229,6 +228,10 @@ class DynamicTypeFactories extends TypeReflector {
         return (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25) {
           l[0]=a1;l[1]=a2;l[2]=a3;l[3]=a4;l[4]=a5;l[5]=a6;l[6]=a7;l[7]=a8;l[8]=a9;l[9]=a10;l[10]=a11;l[11]=a12;l[12]=a13;l[13]=a14;l[14]=a15;l[15]=a16;l[16]=a17;l[17]=a18;l[18]=a19;l[19]=a20;l[20]=a21;l[21]=a22;l[22]=a23;l[23]=a24;l[24]=a25;
           return create(name, l).reflectee;
+        };
+      default:
+        return () {
+          return null;
         };
     }
   }

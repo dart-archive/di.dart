@@ -124,12 +124,12 @@ class _Processor {
    *     @Injectables(const[ElementName])
    *     library my.library;
    */
-  Iterable<ConstructorElement> _gatherInjectablesContents() {
+  List<ConstructorElement> _gatherInjectablesContents() {
     var injectablesClass = resolver.getType('di.annotations.Injectables');
     if (injectablesClass == null) return const [];
     var injectablesCtor = injectablesClass.unnamedConstructor;
 
-    var ctors = [];
+    var ctors = new List<ConstructorElement>();
 
     for (var lib in resolver.libraries) {
       var annotationIdx = 0;
@@ -138,7 +138,7 @@ class _Processor {
           var libDirective = lib.definingCompilationUnit.computeNode().directives
               .where((d) => d is LibraryDirective).single;
           var annotationDirective = libDirective.metadata[annotationIdx];
-          var listLiteral = annotationDirective.arguments.arguments.first;
+          ListLiteral listLiteral = annotationDirective.arguments.arguments.first;
 
           for (var expr in listLiteral.elements) {
             var element = (expr as SimpleIdentifier).bestElement;
@@ -161,8 +161,8 @@ class _Processor {
    * Finds all types which were manually specified as being injected in
    * the options file.
    */
-  Iterable<ConstructorElement> _gatherManuallyInjected() {
-    var ctors = [];
+  List<ConstructorElement> _gatherManuallyInjected() {
+    var ctors = new List<ConstructorElement>();
     for (var injectedName in options.injectedTypes) {
       var injectedClass = resolver.getType(injectedName);
       if (injectedClass == null) {
@@ -184,10 +184,10 @@ class _Processor {
   bool _isElementAnnotated(Element e) {
     for (var meta in e.metadata) {
       if (meta.element is PropertyAccessorElement &&
-          injectableMetaConsts.contains(meta.element.variable)) {
+          injectableMetaConsts.contains((meta.element as PropertyAccessorElement).variable)) {
         return true;
       } else if (meta.element is ConstructorElement) {
-        DartType metaType = meta.element.enclosingElement.type;
+        DartType metaType = (meta.element.enclosingElement as TypeDefiningElement).type;
         if (injectableTypes.any((DartType t) => metaType.isSubtypeOf(t))) return true;
       }
     }
@@ -306,15 +306,15 @@ class _Processor {
       paramsBuffer.write('  $typeName: ');
       paramsBuffer.write(ctor.parameters.isEmpty ? 'const[' : '[');
       var params = ctor.parameters.map((param) {
-        String typeName = resolveClassName(param.type.element, (param.type).typeArguments);
+        String typeName = resolveClassName(param.type.element, (param.type as ParameterizedType).typeArguments);
         Iterable<ClassElement> annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map(
-              (item) => item.element.returnType.element);
+              (item) => (item.element as FunctionTypedElement).returnType.element as ClassElement);
         }
 
         var keyName = '_KEY_${param.type.name}' + (annotations.isNotEmpty ? '_${annotations.first.name}' : '');
-        var typeArgs = param.type.typeArguments;
+        var typeArgs = (param.type as ParameterizedType).typeArguments;
         if (typeArgs != null && typeArgs.isNotEmpty && typeArgs.any((arg) => arg is! DynamicTypeImpl)) {
           typeArgs.forEach((arg) => keyName = ('${keyName}_${arg.name}'));
         }
@@ -366,9 +366,9 @@ class _Processor {
         "'${path.url.basenameWithoutExtension(id.path)}"
         "_generated_type_factory_maps.dart' show setStaticReflectorAsDefault;");
 
-    FunctionExpression main = unit.declarations.where((d) =>
+    FunctionExpression main = (unit.declarations.where((d) =>
         d is FunctionDeclaration && d.name.toString() == 'main')
-        .first.functionExpression;
+        .first as FunctionDeclaration).functionExpression;
     var body = main.body;
     if (body is BlockFunctionBody) {
       var location = body.block.leftBracket.end;
