@@ -200,7 +200,9 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
     if (!skip) {
       factoryKeys.forEach((key) {
         var keyString = toBeAdded.remove(key);
-        keys.write(keyString);
+        if (keyString != null) {
+          keys.write(keyString);
+        }
       });
       factories.write(factory);
       paramLists.write(paramList);
