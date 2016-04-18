@@ -81,9 +81,10 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport, List<Strin
   Map<Chunk, StringBuffer> paramLists = <Chunk, StringBuffer>{};
   Map<Chunk, String> result = <Chunk, String>{};
 
-  typeFactoryTypes.forEach((Chunk chunk, List<ClassElement> classes) {
+  typeFactoryTypes.forEach((Chunk chunk, List<Element> elements) {
     List<String> requiredImports = <String>[];
-    String resolveClassIdentifier(InterfaceType type, [List typeArgs,
+
+    String resolveClassIdentifier(ParameterizedType type, [List typeArgs,
         bool usedToGenerateConstructor = false]) {
       final TYPE_LITERAL = 'TypeLiteral';
       if (type.element.library.isDartCore) {
@@ -109,8 +110,8 @@ Map<Chunk, String> printLibraryCode(Map<String, String> typeToImport, List<Strin
     keys[chunk] = new StringBuffer();
     paramLists[chunk] = new StringBuffer();
 
-    process_classes(classes, keys[chunk], factories[chunk], paramLists[chunk],
-                    resolveClassIdentifier);
+    process_elements(elements, keys[chunk], factories[chunk], paramLists[chunk],
+                     resolveClassIdentifier);
 
     StringBuffer code = new StringBuffer();
     String libSuffix = chunk.library == null ? '' : '.${chunk.library.name}';
@@ -137,29 +138,29 @@ typedef String IdentifierResolver(InterfaceType type, [List typeArgs, bool usedT
  *
  * resolveClassIdentifier is a function passed in to be called to resolve imports
  */
-void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
-                     StringBuffer factories, StringBuffer paramLists,
-                     IdentifierResolver resolveClassIdentifier) {
+void process_elements(Iterable<Element> elements, StringBuffer keys,
+                      StringBuffer factories, StringBuffer paramLists,
+                      IdentifierResolver resolveClassIdentifier) {
 
   Map<String, String> toBeAdded = new Map<String, String>();
   Set<String> addedKeys = new Set();
 
-  classes.forEach((ClassElement clazz) {
+  elements.forEach((Element el) {
     StringBuffer factory = new StringBuffer();
     StringBuffer paramList = new StringBuffer();
     List<String> factoryKeys = new List<String>();
     bool skip = false;
-    var className = getUniqueName(clazz.type);
-    var classType = resolveClassIdentifier(clazz.type, [], true);
+    var className = getUniqueName(el.type);
+    var classType = resolveClassIdentifier(el.type, [], true);
     if (addedKeys.add(className)) {
       toBeAdded[className] =
           'final Key _KEY_$className = new Key($classType);\n';
     }
     factoryKeys.add(className);
 
-    ConstructorElement constr = clazz.constructors.firstWhere((c) => c.name.isEmpty,
+    ConstructorElement constr = el.constructors.firstWhere((c) => c.name.isEmpty,
         orElse: () {
-          throw 'Unable to find default constructor for $clazz in ${clazz.source}';
+          throw 'Unable to find default constructor for $el in ${el.source}';
         });
 
     var args = new List.generate(constr.parameters.length, (i) => 'a$i').join(', ');
@@ -171,10 +172,6 @@ void process_classes(Iterable<ClassElement> classes, StringBuffer keys,
     } else {
       paramList.write('[');
       paramList.write(constr.parameters.map((param) {
-        if (param.type.element is! ClassElement) {
-          throw 'Unable to resolve type for constructor parameter '
-                '"${param.name}" for type "$clazz" in ${clazz.source}';
-        }
         var annotations = [];
         if (param.metadata.isNotEmpty) {
           annotations = param.metadata.map((item) => item.element.returnType.name);
@@ -235,14 +232,16 @@ class CompilationUnitVisitor {
     }
     visitLibrary(compilationUnit.enclosingElement, source);
 
-    List<ClassElement> types = <ClassElement>[];
-    types.addAll(compilationUnit.types);
+    List<Element> types = <Element>[];
+    types..addAll(compilationUnit.types)
+         ..addAll(compilationUnit.functionTypeAliases);
 
     for (CompilationUnitElement part in compilationUnit.enclosingElement.parts) {
-      types.addAll(part.types);
+      types..addAll(part.types)
+           ..addAll(part.functionTypeAliases);
     }
 
-    types.forEach((clazz) => visitClassElement(clazz, source));
+    types.forEach((element) => visitElement(element, source));
   }
 
   visitLibrary(LibraryElement libElement, SourceFile source) {
@@ -275,32 +274,32 @@ class CompilationUnitVisitor {
     });
   }
 
-  visitClassElement(ClassElement classElement, SourceFile source) {
-    if (classElement.isPrivate) return; // ignore private classes.
+  visitElement(Element element, SourceFile source) {
+    if (element.isPrivate) return; // ignore private classes.
     var importUri = source.entryPointImport;
     if (Uri.parse(importUri).scheme == '') {
       importUri = path.relative(importUri, from: path.dirname(outputFilename));
     }
-    typeToImport[getCanonicalName(classElement.type)] = importUri;
-    if (classElement.name == 'TypeLiteral' && classElement.library.name == 'di.type_literal') {
-      typeMappings.putIfAbsent(classElement.name, () => classElement.type);
+    typeToImport[getCanonicalName(element.type)] = importUri;
+    if (element.name == 'TypeLiteral' && element.library.name == 'di.type_literal') {
+      typeMappings.putIfAbsent(element.name, () => element.type);
     }
     if (!imports.contains(importUri)) {
       imports.add(importUri);
     }
-    for (ElementAnnotation ann in classElement.metadata) {
+    for (ElementAnnotation ann in element.metadata) {
       if (ann.element is ConstructorElement) {
-        ClassElement classEl = ann.element.enclosingElement;
+        Element classEl = ann.element.enclosingElement;
         List<DartType> types = [classEl.type]..addAll(classEl.allSupertypes);
         if (types.any((DartType t) => classAnnotations.contains(getQualifiedName(t)))) {
           // The class is injectable when the metadata is either:
           // - an instance of any `classAnnotations` types,
           // - a subtype of any `classAnnotations` types.
           if (typeFactoryTypes[source.chunk] == null) {
-            typeFactoryTypes[source.chunk] = <ClassElement>[];
+            typeFactoryTypes[source.chunk] = <Element>[];
           }
-          if (!typeFactoryTypes[source.chunk].contains(classElement)) {
-            typeFactoryTypes[source.chunk].add(classElement);
+          if (!typeFactoryTypes[source.chunk].contains(element)) {
+            typeFactoryTypes[source.chunk].add(element);
           }
         }
       }
@@ -308,21 +307,21 @@ class CompilationUnitVisitor {
   }
 }
 
-String getQualifiedName(InterfaceType type) {
+String getQualifiedName(DartType type) {
   var lib = type.element.library.displayName;
   var name = type.name;
   return lib == null ? name : '$lib.$name';
 }
 
-String getUniqueName(InterfaceType type) {
+String getUniqueName(DartType type) {
   var lib = type.element.library.displayName;
   var name = type.name;
   String qualName = lib == null ? name : '$lib.$name';
   return qualName.replaceAll('.', '_');
 }
 
-String getCanonicalName(InterfaceType type) {
-  var source = type.element.source.toString();
+String getCanonicalName(DartType type) {
+  var source = type.element.source;
   var name = type.name;
   return '$source:$name';
 }
