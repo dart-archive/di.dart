@@ -62,7 +62,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "3.3.9"
+    version: "3.3.10"
   glob:
     description: glob
     source: hosted
