@@ -16,6 +16,7 @@ class _Instance {
 }
 
 abstract class Injector {
+  Injector get parent;
 
   /**
    * Returns the instance associated with the given key (i.e. [type] and
