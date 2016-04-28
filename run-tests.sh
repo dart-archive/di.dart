@@ -4,6 +4,12 @@ set -e
 echo "Running generator..."
 ./test_tf_gen.sh
 
+echo "Running pub get..."
+pub get
+cd example
+pub get
+cd ..
+
 echo "Running tests in Dart..."
 dart --checked test/main.dart
 dart --checked test/transformer_test.dart
