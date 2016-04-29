@@ -339,14 +339,14 @@ class SourceCrawler {
   void crawl(String entryPoint, CompilationUnitCrawler _visitor,
              {bool preserveComments : false}) {
     JavaSystemIO.setProperty("com.google.dart.sdk", sdkPath);
-    DartSdk sdk = DirectoryBasedDartSdk.defaultSdk;
+    DirectoryBasedDartSdk sdk = DirectoryBasedDartSdk.defaultSdk;
 
     AnalysisOptionsImpl contextOptions = new AnalysisOptionsImpl();
     contextOptions.cacheSize = 256;
     contextOptions.preserveComments = preserveComments;
     contextOptions.analyzeFunctionBodies = false;
     context.analysisOptions = contextOptions;
-    sdk.context.analysisOptions = contextOptions;
+    sdk.analysisOptions = contextOptions;
 
     var packageUriResolver = new PackageUriResolver(packageRoots.map(
         (pr) => new JavaFile.fromUri(new Uri.file(pr))).toList());
