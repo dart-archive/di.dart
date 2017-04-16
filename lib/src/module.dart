@@ -58,8 +58,15 @@ class Binding {
         throw "inject must be Keys or Types. '$t' is not an instance of Key or Type.";
       }).toList(growable: false);
     } else {
-      var implementationType = toImplementation == null ? key.type : toImplementation;
-      parameterKeys = reflector.parameterKeysFor(implementationType);
+      var implementationType;
+      if (toImplementation == null) {
+        implementationType = key.type;
+        parameterKeys = reflector.parameterKeysFor(implementationType);
+      } else {
+        implementationType = toImplementation;
+        assert(reflector.parameterKeysFor(implementationType).isEmpty);
+        parameterKeys = const [];
+      }
       factory = reflector.factoryFor(implementationType);
     }
   }
