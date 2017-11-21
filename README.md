@@ -2,6 +2,10 @@
 
 # Dependency Injection (DI) framework
 
+*Note:* This package does not work with Flutter
+(because this package uses dart:mirrors, which
+Flutter does not support).
+
 ## Installation
 
 Add dependency to your pubspec.yaml.
