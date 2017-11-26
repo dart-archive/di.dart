@@ -4,7 +4,7 @@ import 'dart:async';
 
 import 'package:barback/barback.dart';
 import 'package:code_transformers/resolver.dart';
-import 'package:code_transformers/tests.dart' as tests;
+import 'package:transformer_test/utils.dart' as tests;
 import 'package:di/transformer.dart';
 import 'package:di/transformer/options.dart';
 import 'package:di/transformer/injector_generator.dart';
