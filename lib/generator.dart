@@ -342,7 +342,6 @@ class SourceCrawler {
     DartSdk sdk = DirectoryBasedDartSdk.defaultSdk;
 
     AnalysisOptionsImpl contextOptions = new AnalysisOptionsImpl();
-    contextOptions.cacheSize = 256;
     contextOptions.preserveComments = preserveComments;
     contextOptions.analyzeFunctionBodies = false;
     context.analysisOptions = contextOptions;
